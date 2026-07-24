@@ -35,8 +35,8 @@ const baseInput = {
     cicdUrl: "https://github.com/example/rag/actions",
   },
   architecture: {
-    modelProvider: "Anthropic",
-    modelName: "Claude",
+    modelProvider: "OpenAI",
+    modelName: "gpt-4.1",
     vectorDatabase: "Pinecone",
     embeddingModel: "text-embedding-model",
   },
@@ -51,6 +51,8 @@ test("server-renders the complete assessment workspace", async () => {
   assert.match(html, /Evaluate only what matters/);
   assert.match(html, /Define scope/);
   assert.match(html, /Select standards/);
+  assert.match(html, /OpenAI engine configured/);
+  assert.doesNotMatch(html, /Anthropic|Claude/);
   assert.doesNotMatch(html, /codex-preview/);
   assert.doesNotMatch(html, /react-loading-skeleton/);
 });
@@ -165,4 +167,3 @@ test("SSE workflow emits start, control, standard completion, OWASP, and final-r
   assert.match(stream, /"standardId":"hipaa"/);
   assert.doesNotMatch(stream, /iso42001/);
 });
-

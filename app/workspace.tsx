@@ -65,8 +65,8 @@ const emptyInput: AssessmentInput = {
   tier: 1,
   credentials: {},
   architecture: {
-    modelProvider: "",
-    modelName: "",
+    modelProvider: "OpenAI",
+    modelName: "gpt-4.1",
     vectorDatabase: "",
     embeddingModel: "",
   },
@@ -99,8 +99,8 @@ function loadDemoInput(): AssessmentInput {
       cicdUrl: "https://github.com/example/rag/actions",
     },
     architecture: {
-      modelProvider: "Anthropic",
-      modelName: "Claude",
+      modelProvider: "OpenAI",
+      modelName: "gpt-4.1",
       vectorDatabase: "Pinecone",
       embeddingModel: "text-embedding-3-large",
     },
@@ -321,7 +321,7 @@ export function AssessmentWorkspace() {
           <span>Govern<span>AI</span></span>
         </a>
         <div className="topbar-meta">
-          <span className="system-status"><i /> Assessment engine online</span>
+          <span className="system-status"><i /> OpenAI engine configured</span>
           <span className="divider" />
           <span>Standard-driven RAG assurance</span>
         </div>
@@ -414,8 +414,8 @@ export function AssessmentWorkspace() {
                   </div>
                   <div className="field-grid two">
                     {[
-                      ["modelProvider", "Model provider", "Anthropic, OpenAI, Bedrock…"],
-                      ["modelName", "Model name", "Production model identifier"],
+                      ["modelProvider", "Model provider", "OpenAI"],
+                      ["modelName", "OpenAI model", "gpt-4.1"],
                       ["vectorDatabase", "Vector database", "Pinecone, Weaviate, pgvector…"],
                       ["embeddingModel", "Embedding model", "Embedding model identifier"],
                     ].map(([key, label, placeholder]) => (
@@ -714,4 +714,3 @@ export function AssessmentWorkspace() {
     </main>
   );
 }
-
