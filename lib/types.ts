@@ -1,0 +1,117 @@
+export type Pillar =
+  | "trust"
+  | "security"
+  | "governance"
+  | "compliance"
+  | "data_protection";
+
+export type ControlStatus = "pass" | "fail" | "partial" | "not_assessed";
+
+export type AccessTier = 1 | 2 | 3;
+
+export type StandardKind = "Mandatory" | "Certifiable" | "Methodological";
+
+export interface Control {
+  id: string;
+  name: string;
+  category: string;
+  tierMinimum: AccessTier;
+  pillars: Pillar[];
+  testType: "adversarial_probe" | "config_check" | "document_verify";
+  remediation: string;
+}
+
+export interface StandardDefinition {
+  id: string;
+  shortName: string;
+  name: string;
+  version: string;
+  kind: StandardKind;
+  jurisdiction: string;
+  description: string;
+  reportFormat: string;
+  scoringMethod: string;
+  passThreshold: string;
+  controls: Control[];
+  coverage: Record<AccessTier, number>;
+}
+
+export interface IndustryDefinition {
+  id: string;
+  name: string;
+  description: string;
+  recommendations: Array<{
+    standardId: string;
+    reason: string;
+  }>;
+}
+
+export interface AssessmentInput {
+  organization: string;
+  systemName: string;
+  industryId: string;
+  standardIds: string[];
+  tier: AccessTier;
+  credentials: Record<string, string>;
+  architecture: {
+    modelProvider: string;
+    modelName: string;
+    vectorDatabase: string;
+    embeddingModel: string;
+  };
+}
+
+export interface ControlResult extends Control {
+  status: ControlStatus;
+  score: number;
+  confidence: number;
+  evidence: string;
+}
+
+export interface StandardReport {
+  standardId: string;
+  shortName: string;
+  name: string;
+  version: string;
+  score: number;
+  readiness: string;
+  scoringMethod: string;
+  passThreshold: string;
+  nativeSections: string[];
+  summary: string;
+  assessedControls: number;
+  totalControls: number;
+  controls: ControlResult[];
+}
+
+export interface AssessmentResult {
+  assessmentId: string;
+  generatedAt: string;
+  scope: {
+    organization: string;
+    systemName: string;
+    industry: string;
+    tier: AccessTier;
+    selectedStandards: string[];
+    architecture: AssessmentInput["architecture"];
+  };
+  reports: StandardReport[];
+  owasp: ControlResult[];
+  pillarScores: Record<Pillar, number>;
+  crossInsights: null | {
+    sharedGaps: Array<{
+      title: string;
+      standards: string[];
+      pillars: Pillar[];
+      priority: "Critical" | "High" | "Medium";
+      singleFix: string;
+    }>;
+    standardSpecificGaps: Array<{
+      standard: string;
+      control: string;
+      pillar: Pillar;
+    }>;
+    effortEstimate: string;
+  };
+}
+
