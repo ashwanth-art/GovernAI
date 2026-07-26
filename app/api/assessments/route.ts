@@ -12,8 +12,14 @@ export async function POST(request: Request) {
   }
   const errors = validateAssessmentInput(input);
   if (errors.length) return Response.json({ errors }, { status: 422 });
-  return Response.json(runAssessment(input), {
-    headers: { "Cache-Control": "no-store" },
-  });
+  try {
+    return Response.json(await runAssessment(input), {
+      headers: { "Cache-Control": "no-store" },
+    });
+  } catch (error) {
+    return Response.json(
+      { errors: [error instanceof Error ? error.message : "The live assessment failed."] },
+      { status: 502 },
+    );
+  }
 }
-

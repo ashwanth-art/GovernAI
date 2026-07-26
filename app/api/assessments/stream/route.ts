@@ -17,42 +17,20 @@ export async function POST(request: Request) {
   const errors = validateAssessmentInput(input);
   if (errors.length) return Response.json({ errors }, { status: 422 });
 
-  const result = runAssessment(input);
   const stream = new ReadableStream({
     async start(controller) {
-      controller.enqueue(event("assessment_start", {
-        assessmentId: result.assessmentId,
-        standards: result.scope.selectedStandards,
-      }));
-      for (const report of result.reports) {
-        controller.enqueue(event("standard_start", {
-          standardId: report.standardId,
-          standard: report.shortName,
-          total: report.totalControls,
+      try {
+        const result = await runAssessment(input, (name, data) => {
+          controller.enqueue(event(name, data));
+        });
+        controller.enqueue(event("assessment_complete", result));
+      } catch (error) {
+        controller.enqueue(event("assessment_error", {
+          message: error instanceof Error ? error.message : "The live assessment failed.",
         }));
-        for (const control of report.controls) {
-          controller.enqueue(event("control_result", {
-            standardId: report.standardId,
-            standard: report.shortName,
-            controlId: control.id,
-            control: control.name,
-            status: control.status,
-            score: control.score,
-            pillars: control.pillars,
-          }));
-        }
-        controller.enqueue(event("standard_complete", {
-          standardId: report.standardId,
-          standard: report.shortName,
-          score: report.score,
-        }));
+      } finally {
+        controller.close();
       }
-      controller.enqueue(event("owasp_complete", {
-        total: result.owasp.length,
-        findings: result.owasp.filter((control) => control.status !== "pass").length,
-      }));
-      controller.enqueue(event("assessment_complete", result));
-      controller.close();
     },
   });
 
@@ -64,4 +42,3 @@ export async function POST(request: Request) {
     },
   });
 }
-

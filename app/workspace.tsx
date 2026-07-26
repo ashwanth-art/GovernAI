@@ -58,17 +58,20 @@ const tierDetails: Array<{
 ];
 
 const emptyInput: AssessmentInput = {
-  organization: "",
-  systemName: "",
-  industryId: "healthcare",
-  standardIds: ["hipaa", "iso42001", "nist_ai_rmf"],
+  organization: "ACI Infotech",
+  systemName: "ACI Knowledge Assistant",
+  industryId: "finance",
+  standardIds: ["mas_ai", "soc2", "iso42001"],
   tier: 1,
-  credentials: {},
+  credentials: {
+    chatbotEndpoint: "https://chat-bot-22j5.onrender.com/",
+    tenantId: "aci-infotech",
+  },
   architecture: {
     modelProvider: "OpenAI",
-    modelName: "gpt-4.1",
-    vectorDatabase: "",
-    embeddingModel: "",
+    modelName: "Service-managed OpenAI model",
+    vectorDatabase: "MongoDB",
+    embeddingModel: "Service-managed embeddings",
   },
 };
 
@@ -82,27 +85,22 @@ function StatusBadge({ status }: { status: ControlStatus }) {
   return <span className={`status status-${status}`}>{statusLabel(status)}</span>;
 }
 
-function loadDemoInput(): AssessmentInput {
+function loadLiveTargetInput(): AssessmentInput {
   return {
-    organization: "Northstar Health",
-    systemName: "Clinical Knowledge Assistant",
-    industryId: "healthcare",
-    standardIds: ["hipaa", "iso42001", "nist_ai_rmf"],
-    tier: 2,
+    organization: "ACI Infotech",
+    systemName: "ACI Knowledge Assistant",
+    industryId: "finance",
+    standardIds: ["mas_ai", "soc2", "iso42001"],
+    tier: 1,
     credentials: {
-      chatbotEndpoint: "https://api.example.com/v1/rag/chat",
-      chatbotApiKey: "demo-key-not-transmitted-externally",
-      cloudProvider: "AWS",
-      cloudApiKey: "demo-read-only-cloud-key",
-      monitoringProvider: "Datadog",
-      monitoringApiKey: "demo-monitoring-key",
-      cicdUrl: "https://github.com/example/rag/actions",
+      chatbotEndpoint: "https://chat-bot-22j5.onrender.com/",
+      tenantId: "aci-infotech",
     },
     architecture: {
       modelProvider: "OpenAI",
-      modelName: "gpt-4.1",
-      vectorDatabase: "Pinecone",
-      embeddingModel: "text-embedding-3-large",
+      modelName: "Service-managed OpenAI model",
+      vectorDatabase: "MongoDB",
+      embeddingModel: "Service-managed embeddings",
     },
   };
 }
@@ -145,6 +143,11 @@ function createReportHtml(result: AssessmentResult, report?: StandardReport) {
     <style>body{font-family:Arial,sans-serif;color:#172126;max-width:1000px;margin:40px auto;line-height:1.5}h1{font-size:30px}h2{margin-top:40px;border-bottom:2px solid #1c6255;padding-bottom:8px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #ccd7d3;padding:8px;text-align:left;vertical-align:top}th{background:#edf4f1}@media print{body{margin:16mm}section{break-before:page}section:first-of-type{break-before:auto}}</style>
     </head><body><h1>GovernAI RAG Compliance Assessment</h1>
     <p><strong>${result.scope.organization}</strong> · ${result.scope.systemName}<br/>Assessment ${result.assessmentId} · Tier ${result.scope.tier} · ${new Date(result.generatedAt).toLocaleString()}</p>
+    <section><h2>Live endpoint evidence</h2>
+    <p><strong>Target:</strong> ${result.liveEvidence.target}<br/><strong>Chat API:</strong> ${result.liveEvidence.chatEndpoint}<br/><strong>Duration:</strong> ${result.liveEvidence.durationMs} ms</p>
+    <table><thead><tr><th>Live check</th><th>Status</th><th>Summary</th><th>HTTP / latency</th></tr></thead>
+    <tbody>${result.liveEvidence.probes.map((probe) => `<tr><td>${probe.label}</td><td>${statusLabel(probe.status)}</td><td>${probe.summary}</td><td>${probe.httpStatus ?? "n/a"} / ${probe.latencyMs ?? "n/a"} ms</td></tr>`).join("")}</tbody></table>
+    </section>
     ${reportsHtml}<script>window.onload=()=>window.print()</script></body></html>`;
 }
 
@@ -221,7 +224,9 @@ export function AssessmentWorkspace() {
     if (index === 2) {
       credentialFields[input.tier].forEach((field) => {
         const value = input.credentials[field.key]?.trim();
-        if (!value) nextErrors.push(`${field.label} is required for Tier ${input.tier}.`);
+        if (field.required !== false && !value) {
+          nextErrors.push(`${field.label} is required for Tier ${input.tier}.`);
+        }
         if (field.type === "url" && value) {
           try {
             if (new URL(value).protocol !== "https:") nextErrors.push(`${field.label} must use HTTPS.`);
@@ -272,6 +277,11 @@ export function AssessmentWorkspace() {
           const parsed = parseEventBlock(block);
           if (parsed.name === "assessment_complete") {
             setResult(parsed.data as AssessmentResult);
+          } else if (parsed.name === "assessment_error") {
+            const message = String(
+              (parsed.data as { message?: string })?.message ?? "Assessment failed.",
+            );
+            setErrors([message]);
           } else {
             setEvents((current) => [
               ...current.slice(-119),
@@ -312,6 +322,8 @@ export function AssessmentWorkspace() {
 
   const completedControls = events.filter((item) => item.name === "control_result").length;
   const totalControls = selectedDefinitions.reduce((sum, item) => sum + item.controls.length, 0);
+  const assessedControls =
+    result?.reports.reduce((sum, report) => sum + report.assessedControls, 0) ?? completedControls;
 
   return (
     <main className="app-shell">
@@ -321,7 +333,7 @@ export function AssessmentWorkspace() {
           <span>Govern<span>AI</span></span>
         </a>
         <div className="topbar-meta">
-          <span className="system-status"><i /> OpenAI engine configured</span>
+          <span className="system-status"><i /> Live assessment engine</span>
           <span className="divider" />
           <span>Standard-driven RAG assurance</span>
         </div>
@@ -369,8 +381,8 @@ export function AssessmentWorkspace() {
                     {step === 3 && "Confirm the exact scope before launching parallel standard engines."}
                   </p>
                 </div>
-                <button className="text-button" type="button" onClick={() => setInput(loadDemoInput())}>
-                  Load demo assessment
+                <button className="text-button" type="button" onClick={() => setInput(loadLiveTargetInput())}>
+                  Load ACI live target
                 </button>
               </div>
 
@@ -491,7 +503,16 @@ export function AssessmentWorkspace() {
                         key={tier.tier}
                         type="button"
                         aria-pressed={input.tier === tier.tier}
-                        onClick={() => patchInput({ tier: tier.tier, credentials: {} })}
+                        onClick={() =>
+                          patchInput({
+                            tier: tier.tier,
+                            credentials: {
+                              chatbotEndpoint: input.credentials.chatbotEndpoint ?? "",
+                              tenantId: input.credentials.tenantId ?? "",
+                              chatbotApiKey: input.credentials.chatbotApiKey ?? "",
+                            },
+                          })
+                        }
                       >
                         <span className="tier-top"><strong>Tier {tier.tier}</strong><em>{tier.coverage}</em></span>
                         <b>{tier.title}</b>
@@ -511,12 +532,12 @@ export function AssessmentWorkspace() {
                   </div>
                   <div className="section-label">
                     <span>Tier {input.tier} access</span>
-                    <em>All fields below are required for this tier</em>
+                    <em>Required fields are marked; optional credentials may be left blank</em>
                   </div>
                   <div className="field-grid two">
                     {credentialFields[input.tier].map((field) => (
                       <label className="field" key={field.key}>
-                        <span>{field.label} <b>*</b></span>
+                        <span>{field.label} {field.required !== false && <b>*</b>}</span>
                         <input
                           type={field.type}
                           value={input.credentials[field.key] ?? ""}
@@ -528,6 +549,7 @@ export function AssessmentWorkspace() {
                             })
                           }
                         />
+                        {field.help && <small>{field.help}</small>}
                       </label>
                     ))}
                   </div>
@@ -542,6 +564,7 @@ export function AssessmentWorkspace() {
                       <div><dt>Industry</dt><dd>{industry.name}</dd></div>
                       <div><dt>Architecture</dt><dd>{input.architecture.modelName} + {input.architecture.vectorDatabase}</dd></div>
                       <div><dt>Access</dt><dd>Tier {input.tier} · {tierDetails[input.tier - 1].title}</dd></div>
+                      <div><dt>Live target</dt><dd>{input.credentials.chatbotEndpoint}</dd></div>
                     </dl>
                   </div>
                   <div className="review-card">
@@ -555,7 +578,10 @@ export function AssessmentWorkspace() {
                   </div>
                   <div className="scope-promise">
                     <span aria-hidden="true">✓</span>
-                    <div><strong>Selection governs execution</strong><p>Only {selectedDefinitions.map((item) => item.shortName).join(", ")} will be evaluated. No unrelated framework is loaded.</p></div>
+                    <div>
+                      <strong>Selection governs live execution</strong>
+                      <p>Tier 1 sends bounded requests to the public chatbot. Tier 2 additionally reads protected monitoring, audit configuration, and CI/CD evidence using the credentials supplied above.</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -587,7 +613,7 @@ export function AssessmentWorkspace() {
               </div>
               <div className="scope-banner">
                 <span>◆</span>
-                <p><strong>Selection-locked evaluation</strong> Only {selectedDefinitions.map((item) => item.shortName).join(", ")} were evaluated. OWASP adversarial probes ran alongside them.</p>
+                <p><strong>Live endpoint evaluation</strong> Only {selectedDefinitions.map((item) => item.shortName).join(", ")} are mapped from the observed target responses. No answer is precomputed.</p>
                 {result && <em>{result.assessmentId}</em>}
               </div>
               <div className="result-tabs" role="tablist" aria-label="Assessment results">
@@ -602,26 +628,40 @@ export function AssessmentWorkspace() {
               {activeTab === "progress" && (
                 <div className="progress-panel">
                   <div className="progress-overview">
-                    <div><span>{running ? completedControls : totalControls}</span><p>controls processed</p></div>
+                    <div><span>{assessedControls}</span><p>controls assessed</p></div>
                     <div><span>{selectedDefinitions.length}</span><p>standard engines</p></div>
-                    <div><span>8</span><p>OWASP probes</p></div>
+                    <div><span>{result?.liveEvidence.probes.length ?? events.filter((item) => item.name === "probe_complete").length}</span><p>live checks completed</p></div>
                   </div>
                   <div className="master-progress"><i><b style={{ width: running ? `${Math.min(98, (completedControls / Math.max(1, totalControls)) * 100)}%` : "100%" }} /></i><span>{running ? "Evaluating controls…" : "Evaluation and reporting complete"}</span></div>
                   <div className="event-log" aria-live="polite">
                     {events.slice(-18).reverse().map((item, index) => (
                       <div className="event-row" key={`${item.name}-${index}`}>
                         <span className={`event-dot ${String(item.data.status ?? item.name)}`} />
-                        <div><strong>{String(item.data.standard ?? item.name.replaceAll("_", " "))}</strong><p>{String(item.data.control ?? item.data.controlId ?? "Workflow checkpoint complete")}</p></div>
+                        <div><strong>{String(item.data.standard ?? item.name.replaceAll("_", " "))}</strong><p>{String(item.data.message ?? item.data.control ?? item.data.controlId ?? "Workflow checkpoint complete")}</p></div>
                         <em>{item.data.status ? statusLabel(item.data.status as ControlStatus) : "Done"}</em>
                       </div>
                     ))}
                     {events.length === 0 && <p className="empty-state">Preparing validation and loading selected control packs…</p>}
                   </div>
                   {result && (
-                    <div className="pillar-grid">
-                      {(Object.entries(result.pillarScores) as Array<[Pillar, number]>).map(([pillar, score]) => (
-                        <div key={pillar}><span>{pillarLabels[pillar]}</span><strong>{score}%</strong><i><b style={{ width: `${score}%` }} /></i></div>
-                      ))}
+                    <div className="live-result-stack">
+                      <div className="live-evidence-card">
+                        <div><span>Observed target</span><strong>{result.liveEvidence.target}</strong></div>
+                        <div><span>Chat endpoint</span><strong>{result.liveEvidence.chatEndpoint}</strong></div>
+                        <div><span>Live duration</span><strong>{(result.liveEvidence.durationMs / 1000).toFixed(1)} seconds</strong></div>
+                        <div>
+                          <span>Tier {result.scope.tier} evidence</span>
+                          <strong>
+                            {result.liveEvidence.probes.filter((probe) => probe.status === "pass").length} passed ·{" "}
+                            {result.liveEvidence.probes.filter((probe) => probe.status === "not_assessed").length} not assessed
+                          </strong>
+                        </div>
+                      </div>
+                      <div className="pillar-grid">
+                        {(Object.entries(result.pillarScores) as Array<[Pillar, number]>).map(([pillar, score]) => (
+                          <div key={pillar}><span>{pillarLabels[pillar]}</span><strong>{score}%</strong><i><b style={{ width: `${score}%` }} /></i></div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

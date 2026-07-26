@@ -87,6 +87,24 @@ export interface StandardReport {
 export interface AssessmentResult {
   assessmentId: string;
   generatedAt: string;
+  liveEvidence: {
+    mode: "live";
+    target: string;
+    chatEndpoint: string;
+    startedAt: string;
+    durationMs: number;
+    probes: Array<{
+      id: string;
+      label: string;
+      status: ControlStatus;
+      summary: string;
+      latencyMs?: number;
+      httpStatus?: number;
+      requestId?: string;
+      sourceCount?: number;
+      bestSourceScore?: number;
+    }>;
+  };
   scope: {
     organization: string;
     systemName: string;
@@ -114,4 +132,3 @@ export interface AssessmentResult {
     effortEstimate: string;
   };
 }
-
