@@ -110,10 +110,213 @@ function buildControls(prefix: string, total: number, coverage: [number, number,
   });
 }
 
-type StandardSeed = Omit<StandardDefinition, "controls" | "coverage"> & {
+type StandardSeed = Omit<StandardDefinition, "controls" | "coverage" | "officialReference"> & {
   total: number;
   coverage: [number, number, number];
   prefix: string;
+};
+
+const officialReferences: Record<string, StandardDefinition["officialReference"]> = {
+  hipaa: {
+    authority: "U.S. Department of Health and Human Services",
+    title: "HIPAA Security Rule",
+    url: "https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html",
+    status: "current",
+    note: "Official regulator summary and links to the governing regulations.",
+  },
+  iso42001: {
+    authority: "International Organization for Standardization",
+    title: "ISO/IEC 42001:2023",
+    url: "https://www.iso.org/standard/42001",
+    status: "licensed_preview",
+    note: "Official ISO catalog and preview; the complete standard is licensed.",
+  },
+  nist_ai_rmf: {
+    authority: "National Institute of Standards and Technology",
+    title: "AI Risk Management Framework",
+    url: "https://www.nist.gov/itl/ai-risk-management-framework",
+    status: "under_revision",
+    note: "Official NIST framework page; AI RMF 1.0 is currently being revised.",
+  },
+  mas_ai: {
+    authority: "Monetary Authority of Singapore",
+    title: "FEAT Principles",
+    url: "https://www.mas.gov.sg/-/media/mas/news-and-publications/monographs-and-information-papers/feat-principles-updated-7-feb-19.pdf",
+    status: "current",
+    note: "Official MAS publication URL; the MAS site may occasionally show maintenance.",
+  },
+  sr_11_7: {
+    authority: "Board of Governors of the Federal Reserve System",
+    title: "SR 26-2 Revised Guidance on Model Risk Management",
+    url: "https://www.federalreserve.gov/supervisionreg/srletters/SR2602.htm",
+    status: "superseded",
+    note: "SR 26-2 superseded SR 11-7 on April 17, 2026; the catalog retains the legacy selection label for continuity.",
+  },
+  soc2: {
+    authority: "AICPA & CIMA",
+    title: "SOC 2 Reporting Guide",
+    url: "https://www.aicpa-cima.com/cpe-learning/publication/soc-2-reporting-on-an-examination-of-controls-at-a-service-organization-relevant-to-security-availability-processing-integrity-confidentiality-or-privacy-OPL",
+    status: "licensed_preview",
+    note: "Official AICPA publication page; detailed Trust Services Criteria content is licensed.",
+  },
+  naic: {
+    authority: "National Association of Insurance Commissioners",
+    title: "Model Bulletin on the Use of AI Systems by Insurers",
+    url: "https://content.naic.org/sites/default/files/cmte-h-big-data-artificial-intelligence-wg-ai-model-bulletin.pdf.pdf",
+    status: "current",
+    note: "Official adopted model bulletin; applicability depends on state adoption.",
+  },
+  eu_ai_act: {
+    authority: "EUR-Lex",
+    title: "Regulation (EU) 2024/1689 — Artificial Intelligence Act",
+    url: "https://eur-lex.europa.eu/eli/reg/2024/1689/oj?locale=en",
+    status: "current",
+    note: "Official Journal text of the EU Artificial Intelligence Act.",
+  },
+  nyc_ll144: {
+    authority: "New York City Department of Consumer and Worker Protection",
+    title: "Automated Employment Decision Tools",
+    url: "https://www.nyc.gov/site/dca/about/automated-employment-decision-tools.page",
+    status: "current",
+    note: "Official NYC enforcement, rule, FAQ, and notice resources.",
+  },
+  colorado_ai_act: {
+    authority: "Colorado General Assembly",
+    title: "SB24-205 Consumer Protections for Artificial Intelligence",
+    url: "https://leg.colorado.gov/bills/sb24-205",
+    status: "current",
+    note: "Official bill history and enrolled legislation.",
+  },
+  ferpa: {
+    authority: "U.S. Department of Education",
+    title: "What is FERPA?",
+    url: "https://studentprivacy.ed.gov/faq/what-ferpa",
+    status: "current",
+    note: "Official Student Privacy Policy Office guidance.",
+  },
+  unece_ads: {
+    authority: "United Nations Economic Commission for Europe",
+    title: "Framework document on automated/autonomous vehicles",
+    url: "https://unece.org/transport/publications/framework-document-automatedautonomous-vehicles-updated",
+    status: "current",
+    note: "Official UNECE automated-driving framework publication.",
+  },
+  iso21448: {
+    authority: "International Organization for Standardization",
+    title: "ISO 21448:2022",
+    url: "https://www.iso.org/standard/77490.html",
+    status: "licensed_preview",
+    note: "Official ISO catalog and preview; the complete standard is licensed.",
+  },
+  uk_av_act: {
+    authority: "The National Archives, United Kingdom",
+    title: "Automated Vehicles Act 2024",
+    url: "https://www.legislation.gov.uk/ukpga/2024/10/contents/enacted",
+    status: "current",
+    note: "Official enacted legislation.",
+  },
+  cepej: {
+    authority: "Council of Europe CEPEJ",
+    title: "European Ethical Charter on AI in Judicial Systems",
+    url: "https://www.coe.int/en/web/cepej/cepej-european-ethical-charter-on-the-use-of-artificial-intelligence-ai-in-judicial-systems-and-their-environment",
+    status: "current",
+    note: "Official CEPEJ charter and supporting material.",
+  },
+  canada_aia: {
+    authority: "Treasury Board of Canada Secretariat",
+    title: "Directive on Automated Decision-Making",
+    url: "https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32592",
+    status: "current",
+    note: "Official directive governing federal automated administrative decisions.",
+  },
+  eu_machinery: {
+    authority: "EUR-Lex",
+    title: "Regulation (EU) 2023/1230 on machinery",
+    url: "https://eur-lex.europa.eu/eli/reg/2023/1230/oj?locale=en",
+    status: "current",
+    note: "Official Journal text and consolidated versions.",
+  },
+  iec62443: {
+    authority: "International Electrotechnical Commission",
+    title: "IEC 62443-2-4:2023",
+    url: "https://webstore.iec.ch/en/publication/67631",
+    status: "licensed_preview",
+    note: "Official IEC catalog entry representing the IEC 62443 series; complete standards are licensed.",
+  },
+  iso13849: {
+    authority: "International Organization for Standardization",
+    title: "ISO 13849-1:2023",
+    url: "https://www.iso.org/standard/73481.html",
+    status: "licensed_preview",
+    note: "Official ISO catalog and preview; the complete standard is licensed.",
+  },
+  china_deep_synthesis: {
+    authority: "Cyberspace Administration of China",
+    title: "Provisions on Deep Synthesis Internet Information Services",
+    url: "https://www.cac.gov.cn/2022-12/11/c_1672221949354811.htm",
+    status: "current",
+    note: "Official Chinese-language regulatory text.",
+  },
+  c2pa: {
+    authority: "Coalition for Content Provenance and Authenticity",
+    title: "C2PA Specifications",
+    url: "https://spec.c2pa.org/specifications/",
+    status: "current",
+    note: "Official technical specifications and implementation guidance.",
+  },
+  omb_m_24_10: {
+    authority: "U.S. Office of Management and Budget",
+    title: "M-25-21 Accelerating Federal Use of AI",
+    url: "https://www.whitehouse.gov/wp-content/uploads/2025/02/M-25-21-Accelerating-Federal-Use-of-AI-through-Innovation-Governance-and-Public-Trust.pdf",
+    status: "superseded",
+    note: "M-25-21 replaced the M-24-10 federal AI governance policy in April 2025; the catalog retains the legacy selection label for continuity.",
+  },
+  netherlands_iama: {
+    authority: "Government of the Netherlands — Digital Government",
+    title: "Impact Assessment Human Rights and Algorithms (IAMA)",
+    url: "https://www.digitaleoverheid.nl/nieuws/iama-aangepast-aan-praktijk-en-regelgeving/",
+    status: "current",
+    note: "Official government notice for the updated 2026 IAMA aligned with EU AI Act Article 27.",
+  },
+};
+
+const officialSectionLocators: Record<string, string[]> = {
+  hipaa: [
+    "45 CFR §164.308(a)(1) Security management process",
+    "45 CFR §164.308(a)(4) Information access management",
+    "45 CFR §164.312(a) and (e) Access and transmission security",
+    "45 CFR §164.316(b) Documentation retention and availability",
+    "45 CFR §164.308(a)(2) Assigned security responsibility",
+    "45 CFR §164.308(a)(8) Evaluation",
+    "45 CFR §164.308(a)(1)(ii)(A) Risk analysis",
+    "45 CFR §164.308(a)(6) Security incident procedures",
+    "45 CFR §164.308(b) Business associate arrangements",
+    "45 CFR §164.316 Policies, procedures, and documentation",
+    "45 CFR §164.312(c) Integrity",
+    "45 CFR §164.312(d) Person or entity authentication",
+  ],
+  iso42001: ["Clauses 4–10", "Annex A.2–A.10"],
+  nist_ai_rmf: ["GOVERN function", "MAP function", "MEASURE function", "MANAGE function"],
+  mas_ai: ["Fairness principle", "Ethics principle", "Accountability principle", "Transparency principle"],
+  sr_11_7: ["SR 26-2: Governance", "SR 26-2: Model development, implementation, and use", "SR 26-2: Model validation"],
+  soc2: ["Trust Services Criteria CC1–CC9", "Availability A1", "Confidentiality C1", "Privacy P1–P8"],
+  naic: ["Model Bulletin Section 1", "Model Bulletin Section 2", "Model Bulletin Section 3", "Model Bulletin Section 4"],
+  eu_ai_act: ["Articles 9–15", "Articles 26–27", "Articles 43 and 49–50"],
+  nyc_ll144: ["NYC Administrative Code §§20-870–20-874", "Rules of the City of New York §5-300 et seq."],
+  colorado_ai_act: ["Colorado Revised Statutes §§6-1-1701–1707"],
+  ferpa: ["34 CFR §§99.3, 99.30–99.37"],
+  unece_ads: ["UNECE automated/autonomous vehicles framework document"],
+  iso21448: ["ISO 21448:2022 Clauses 4–12"],
+  uk_av_act: ["Automated Vehicles Act 2024 Parts 1–7"],
+  cepej: ["CEPEJ Charter: five ethical principles"],
+  canada_aia: ["Directive on Automated Decision-Making Sections 4–6", "Directive appendices B–D"],
+  eu_machinery: ["Regulation (EU) 2023/1230 Articles 10–18", "Regulation (EU) 2023/1230 Annex III"],
+  iec62443: ["IEC 62443-2-1", "IEC 62443-2-4", "IEC 62443-3-2", "IEC 62443-3-3", "IEC 62443-4-1", "IEC 62443-4-2"],
+  iso13849: ["ISO 13849-1:2023 Clauses 4–11"],
+  china_deep_synthesis: ["Deep Synthesis Provisions Articles 4–17"],
+  c2pa: ["C2PA Technical Specification: trust model, manifests, assertions, and validation"],
+  omb_m_24_10: ["OMB M-25-21 Sections 1–5 and implementation appendix"],
+  netherlands_iama: ["IAMA 2026 human-rights impact assessment modules"],
 };
 
 const standardSeeds: StandardSeed[] = [
@@ -466,10 +669,23 @@ const standardSeeds: StandardSeed[] = [
 
 export const standards: StandardDefinition[] = standardSeeds.map((seed) => {
   const { total, coverage, prefix, ...definition } = seed;
+  const reference = officialReferences[seed.id];
+  const sections = officialSectionLocators[seed.id] ?? [reference.title];
   return {
     ...definition,
+    officialReference: reference,
     coverage: { 1: coverage[0], 2: coverage[1], 3: coverage[2] },
-    controls: buildControls(prefix, total, coverage),
+    controls: buildControls(prefix, total, coverage).map((control, index) => ({
+      ...control,
+      sourceCitation: {
+        authority: reference.authority,
+        document: reference.title,
+        section: sections[index % sections.length],
+        url: reference.url,
+        mappingType: "governai_evidence_mapping" as const,
+        note: "GovernAI evidence check mapped to this official section; it is not a verbatim official questionnaire or certification control.",
+      },
+    })),
   };
 });
 
@@ -587,4 +803,3 @@ export const standardKindOrder: Record<StandardKind, number> = {
   Certifiable: 1,
   Methodological: 2,
 };
-

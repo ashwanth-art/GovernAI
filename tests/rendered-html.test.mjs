@@ -129,7 +129,15 @@ test("client supports unlimited standard selection and printable reports", async
   assert.match(bundle, /createObjectURL/);
   assert.match(bundle, /OWASP LLM security appendix/);
   assert.match(bundle, /standards selected/);
-  assert.match(bundle, /Why control mapping is fast/);
+  assert.match(bundle, /How to read this trace/);
+  assert.match(bundle, /Now running/);
+  assert.match(bundle, /Official references for the selected standards/);
+  assert.match(bundle, /Official page fetched in this run/);
+  assert.match(bundle, /Validation method/);
+  assert.match(bundle, /completed steps/);
+  assert.match(bundle, /pending steps/);
+  assert.match(bundle, /Final execution summary/);
+  assert.match(bundle, /Retry assessment/);
   assert.match(bundle, /What ran, where it ran, and what returned/);
   assert.match(bundle, /Official standards pages fetched: No/);
   assert.match(bundle, /Target-host adapters \+ supplied CI\/CD URL/);
@@ -144,6 +152,11 @@ test("catalog exposes all industries, standards, and tier-specific fields", asyn
   const catalog = await response.json();
   assert.equal(catalog.industries.length, 10);
   assert.ok(catalog.standards.length >= 23);
+  assert.ok(catalog.standards.every((standard) => standard.officialReference?.url.startsWith("https://")));
+  assert.equal(
+    catalog.standards.find((standard) => standard.id === "sr_11_7").officialReference.status,
+    "superseded",
+  );
   assert.deepEqual(
     catalog.industries.find((item) => item.id === "healthcare").recommendations.map((item) => item.standardId),
     ["hipaa", "iso42001", "nist_ai_rmf"],
@@ -197,6 +210,9 @@ test("evaluation generates exactly one native report per selected standard plus 
   assert.equal(result.liveEvidence.execution.runner, "GovernAI assessment backend");
   assert.equal(result.liveEvidence.execution.officialStandardsPagesFetched, false);
   assert.ok(result.liveEvidence.probes.every((probe) => probe.endpoint && probe.method && probe.sourceType));
+  assert.ok(result.liveEvidence.probes.every((probe) => probe.validationMethod && probe.officialPageFetched === false));
+  assert.equal(result.reports[0].officialReference.authority, "U.S. Department of Health and Human Services");
+  assert.match(result.reports[0].officialReference.url, /^https:\/\/www\.hhs\.gov\//);
   assert.equal(
     result.liveEvidence.probes.find((probe) => probe.id === "monitoring-evidence").endpoint,
     "https://target.test/api/monitoring/summary",
@@ -206,7 +222,13 @@ test("evaluation generates exactly one native report per selected standard plus 
     "https://target.test/api/audit/config",
   );
   assert.equal(result.liveEvidence.probes.find((probe) => probe.id === "cicd-evidence").method, "HEAD");
-  assert.equal(result.owasp.length, 8);
+  assert.equal(result.owasp.length, 10);
+  assert.ok(result.reports.every((report) => report.controls.every((control) => control.sourceCitation?.url)));
+  assert.ok(result.liveEvidence.execution.summary.totalSteps > 0);
+  assert.equal(
+    result.liveEvidence.execution.summary.completedSteps,
+    result.liveEvidence.execution.summary.totalSteps,
+  );
   assert.ok(result.crossInsights);
   assert.deepEqual(Object.keys(result.pillarScores).sort(), [
     "compliance",
@@ -260,7 +282,7 @@ test("single-standard assessment omits cross-standard report and respects Tier 1
   assert.equal(result.reports.length, 1);
   assert.equal(result.reports[0].assessedControls, 7);
   assert.equal(result.crossInsights, null);
-  assert.equal(result.owasp.length, 8);
+  assert.equal(result.owasp.length, 10);
   assert.equal(result.liveEvidence.probes.length, 5);
 });
 
@@ -285,6 +307,58 @@ test("SSE workflow emits start, control, standard completion, OWASP, and final-r
   assert.match(stream, /"sourceType":"target_adapter"/);
   assert.match(stream, /"endpoint":"https:\/\/target\.test\/api\/monitoring\/summary"/);
   assert.match(stream, /"sourceType":"control_mapping"/);
+  assert.match(stream, /"officialPageFetched":false/);
+  assert.match(stream, /"officialAuthority":"U\.S\. Department of Health and Human Services"/);
+  assert.match(stream, /"officialReferenceUrl":"https:\/\/www\.hhs\.gov\//);
+  assert.match(stream, /"validationMethod":/);
+  assert.match(stream, /"progress":\{"totalSteps":/);
+  assert.match(stream, /event: execution_summary/);
+  assert.match(stream, /"pendingSteps":0,"percentage":100/);
   assert.match(stream, /"standardId":"hipaa"/);
   assert.doesNotMatch(stream, /iso42001/);
+});
+
+test("Tier 3 performs transparent reachability preflight without claiming document review", async () => {
+  const response = await request("/api/assessments", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      ...baseInput,
+      standardIds: ["hipaa"],
+      tier: 3,
+      credentials: {
+        ...baseInput.credentials,
+        repoUrl: "https://ci.target.test/source?token=must-not-be-displayed",
+        stagingUrl: "https://ci.target.test/staging",
+        modelRegistryUrl: "https://ci.target.test/models",
+      },
+    }),
+  });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.equal(result.liveEvidence.probes.length, 11);
+  assert.equal(
+    result.liveEvidence.probes.find((probe) => probe.id === "source-repository-evidence").status,
+    "partial",
+  );
+  assert.doesNotMatch(
+    result.liveEvidence.probes.find((probe) => probe.id === "source-repository-evidence").endpoint,
+    /token=/,
+  );
+  assert.ok(
+    result.reports[0].controls
+      .filter((control) => control.tierMinimum === 3)
+      .every((control) => control.status === "not_assessed"),
+  );
+});
+
+test("stream route returns detailed validation errors before execution", async () => {
+  const response = await request("/api/assessments/stream", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ ...baseInput, standardIds: [] }),
+  });
+  assert.equal(response.status, 422);
+  const body = await response.json();
+  assert.ok(body.errors.some((error) => /at least one compliance standard/i.test(error)));
 });

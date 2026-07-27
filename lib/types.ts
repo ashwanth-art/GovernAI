@@ -11,6 +11,23 @@ export type AccessTier = 1 | 2 | 3;
 
 export type StandardKind = "Mandatory" | "Certifiable" | "Methodological";
 
+export interface OfficialReference {
+  authority: string;
+  title: string;
+  url: string;
+  status: "current" | "under_revision" | "superseded" | "licensed_preview";
+  note: string;
+}
+
+export interface SourceCitation {
+  authority: string;
+  document: string;
+  section: string;
+  url: string;
+  mappingType: "official_requirement" | "official_guidance" | "governai_evidence_mapping";
+  note: string;
+}
+
 export type EvidenceSourceType =
   | "target_service"
   | "chatbot_probe"
@@ -25,6 +42,7 @@ export interface Control {
   pillars: Pillar[];
   testType: "adversarial_probe" | "config_check" | "document_verify";
   remediation: string;
+  sourceCitation?: SourceCitation;
 }
 
 export interface StandardDefinition {
@@ -38,6 +56,7 @@ export interface StandardDefinition {
   reportFormat: string;
   scoringMethod: string;
   passThreshold: string;
+  officialReference: OfficialReference;
   controls: Control[];
   coverage: Record<AccessTier, number>;
 }
@@ -83,6 +102,7 @@ export interface StandardReport {
   readiness: string;
   scoringMethod: string;
   passThreshold: string;
+  officialReference: OfficialReference;
   nativeSections: string[];
   summary: string;
   assessedControls: number;
@@ -112,6 +132,8 @@ export interface AssessmentResult {
       sourceType: EvidenceSourceType;
       endpoint: string;
       method: "GET" | "POST" | "HEAD";
+      validationMethod?: string;
+      officialPageFetched?: false;
     }>;
     execution: {
       runner: string;
@@ -120,6 +142,15 @@ export interface AssessmentResult {
       tier2RequestsParallel: boolean;
       infrastructureProvider?: string;
       monitoringProvider?: string;
+      summary: {
+        startedAt: string;
+        completedAt: string;
+        totalSteps: number;
+        completedSteps: number;
+        warningSteps: number;
+        failedSteps: number;
+        durationMs: number;
+      };
     };
   };
   scope: {

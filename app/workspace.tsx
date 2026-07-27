@@ -119,6 +119,19 @@ function eventTime(value: unknown) {
     : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
+function officialReferenceStatusLabel(status: string) {
+  switch (status) {
+    case "under_revision":
+      return "Under revision";
+    case "superseded":
+      return "Superseded — use current link";
+    case "licensed_preview":
+      return "Official licensed preview";
+    default:
+      return "Current official reference";
+  }
+}
+
 function StatusBadge({ status }: { status: ControlStatus }) {
   return <span className={`status status-${status}`}>{statusLabel(status)}</span>;
 }
@@ -168,7 +181,7 @@ function createReportHtml(result: AssessmentResult, report?: StandardReport) {
     controls
       .map(
         (control) =>
-          `<tr><td>${escapeReportText(control.id)} — ${escapeReportText(control.name)}</td><td>${escapeReportText(statusLabel(control.status))}</td><td>${escapeReportText(control.evidence)}</td><td>${control.status === "pass" ? "—" : escapeReportText(control.remediation)}</td></tr>`,
+          `<tr><td>${escapeReportText(control.id)} — ${escapeReportText(control.name)}</td><td>${escapeReportText(statusLabel(control.status))}</td><td>${escapeReportText(control.evidence)}${control.sourceCitation ? `<br/><strong>Official mapping:</strong> ${escapeReportText(control.sourceCitation.section)} — ${escapeReportText(control.sourceCitation.url)}` : ""}</td><td>${control.status === "pass" ? "—" : escapeReportText(control.remediation)}</td></tr>`,
       )
       .join("");
   const reportsHtml = selected
@@ -180,6 +193,7 @@ function createReportHtml(result: AssessmentResult, report?: StandardReport) {
         <p><strong>Assessment result:</strong> ${item.score}% · ${item.readiness}</p>
         <p><strong>Native scoring:</strong> ${escapeReportText(item.scoringMethod)}</p>
         <p><strong>Pass threshold:</strong> ${escapeReportText(item.passThreshold)}</p>
+        <p><strong>Official authority reference:</strong> ${escapeReportText(item.officialReference.authority)} — <a href="${escapeReportText(item.officialReference.url)}">${escapeReportText(item.officialReference.title)}</a><br/><strong>Assessment access:</strong> Reference link recorded; official page not fetched during this run.</p>
         <h3>Report structure</h3>
         <ol>${item.nativeSections.map((section) => `<li>${escapeReportText(section)}</li>`).join("")}</ol>
         <h3>Control evidence</h3>
@@ -216,6 +230,7 @@ export function AssessmentWorkspace() {
   const [errors, setErrors] = useState<string[]>([]);
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [running, setRunning] = useState(false);
+  const [lastRunFailed, setLastRunFailed] = useState(false);
   const [events, setEvents] = useState<Array<{ name: string; data: Record<string, unknown> }>>([]);
   const [activeTab, setActiveTab] = useState("progress");
 
@@ -308,6 +323,7 @@ export function AssessmentWorkspace() {
     setEvents([]);
     setActiveTab("progress");
     setErrors([]);
+    setLastRunFailed(false);
     try {
       const response = await fetch("/api/assessments/stream", {
         method: "POST",
@@ -331,11 +347,20 @@ export function AssessmentWorkspace() {
           const parsed = parseEventBlock(block);
           if (parsed.name === "assessment_complete") {
             setResult(parsed.data as AssessmentResult);
+            setLastRunFailed(false);
           } else if (parsed.name === "assessment_error") {
-            const message = String(
-              (parsed.data as { message?: string })?.message ?? "Assessment failed.",
-            );
-            setErrors([message]);
+            const failure = parsed.data as {
+              message?: string;
+              details?: string;
+              errorCode?: string;
+            };
+            const message = String(failure.details ?? failure.message ?? "Assessment failed.");
+            setEvents((current) => [
+              ...current.slice(-399),
+              { name: parsed.name, data: parsed.data as Record<string, unknown> },
+            ]);
+            setLastRunFailed(true);
+            setErrors([`${failure.errorCode ?? "ASSESSMENT_FAILED"}: ${message}`]);
           } else {
             setEvents((current) => [
               ...current.slice(-399),
@@ -346,6 +371,7 @@ export function AssessmentWorkspace() {
         if (done) break;
       }
     } catch (error) {
+      setLastRunFailed(true);
       setErrors([error instanceof Error ? error.message : "Assessment failed."]);
     } finally {
       setRunning(false);
@@ -383,6 +409,44 @@ export function AssessmentWorkspace() {
   const totalControls = selectedDefinitions.reduce((sum, item) => sum + item.controls.length, 0);
   const assessedControls =
     result?.reports.reduce((sum, report) => sum + report.assessedControls, 0) ?? completedControls;
+  const currentEvent = events.length > 0 ? events[events.length - 1] : null;
+  const currentData = currentEvent?.data;
+  const currentEndpoint =
+    currentData?.method && currentData?.endpoint
+      ? `${String(currentData.method)} ${String(currentData.endpoint)}`
+      : currentData?.sourceType === "control_mapping" || currentData?.sourceType === "control_catalog"
+        ? "GovernAI assessment backend / built-in control catalog"
+        : "GovernAI assessment workflow";
+  const runtimeProgress = currentData?.progress as
+    | {
+        totalSteps?: number;
+        completedSteps?: number;
+        pendingSteps?: number;
+        percentage?: number;
+      }
+    | undefined;
+  const executionSummary = result?.liveEvidence.execution.summary;
+  const progressPercentage = executionSummary
+    ? 100
+    : Number(runtimeProgress?.percentage ?? 0);
+  const completedExecutionSteps = executionSummary?.completedSteps
+    ?? Number(runtimeProgress?.completedSteps ?? 0);
+  const pendingExecutionSteps = executionSummary
+    ? 0
+    : Number(runtimeProgress?.pendingSteps ?? 0);
+  const firstEventData = events[0]?.data;
+  const executionStartedAt = String(
+    executionSummary?.startedAt
+      ?? firstEventData?.startedAt
+      ?? firstEventData?.occurredAt
+      ?? "",
+  );
+  const latestEventAt = String(currentData?.occurredAt ?? "");
+  const liveElapsedMs =
+    executionStartedAt && latestEventAt
+      ? Math.max(0, new Date(latestEventAt).getTime() - new Date(executionStartedAt).getTime())
+      : 0;
+  const executionDurationMs = executionSummary?.durationMs ?? liveElapsedMs;
 
   return (
     <main className="app-shell">
@@ -449,6 +513,11 @@ export function AssessmentWorkspace() {
                 <div className="error-box" role="alert">
                   <strong>Check the required information</strong>
                   <ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul>
+                  {lastRunFailed && (
+                    <button className="button secondary retry-button" type="button" onClick={runEvaluation} disabled={running}>
+                      Retry assessment
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -643,6 +712,13 @@ export function AssessmentWorkspace() {
                             <p>A HEAD request checks whether the supplied page responds. Workflow runs, jobs, and logs are not inspected.</p>
                             <code>{input.credentials.cicdUrl || "Add a CI/CD pipeline URL"}</code>
                           </article>
+                          {input.tier >= 3 && (
+                            <article>
+                              <strong>Tier 3 access preflight</strong>
+                              <p>HEAD requests check the source repository, staging, and model registry URLs. Source, runtime, model-card, and artifact inspection are not yet implemented, so document controls remain not assessed.</p>
+                              <code>3 reachability checks · no content download</code>
+                            </article>
+                          )}
                         </>
                       )}
                       <article className="catalog-route">
@@ -726,16 +802,74 @@ export function AssessmentWorkspace() {
 
               {activeTab === "progress" && (
                 <div className="progress-panel">
-                  <div className="progress-overview">
-                    <div><span>{assessedControls}</span><p>controls assessed</p></div>
-                    <div><span>{selectedDefinitions.length}</span><p>standard engines</p></div>
+                  <div className="progress-overview runtime-overview">
+                    <div><span>{progressPercentage}%</span><p>overall completed</p></div>
+                    <div><span>{completedExecutionSteps}</span><p>completed steps</p></div>
+                    <div><span>{pendingExecutionSteps}</span><p>pending steps</p></div>
                     <div><span>{result?.liveEvidence.probes.length ?? events.filter((item) => item.name === "probe_complete").length}</span><p>live checks completed</p></div>
+                    <div><span className="metric-time">{executionStartedAt ? eventTime(executionStartedAt) : "—"}</span><p>start time</p></div>
+                    <div><span className="metric-time">{(executionDurationMs / 1000).toFixed(1)}s</span><p>elapsed time</p></div>
+                    <div><span className="metric-time">{assessedControls}/{totalControls}</span><p>controls mapped</p></div>
+                    <div><span>{selectedDefinitions.length}</span><p>assessment engines</p></div>
                   </div>
                   <div className="execution-note">
-                    <strong>Why control mapping is fast</strong>
-                    <p>“Live checks” are real network requests. “Controls assessed” are local mappings of that collected evidence, so many controls can complete within seconds without pretending that each one is a separate provider or official-website call.</p>
+                    <strong>How to read this trace</strong>
+                    <p>Live checks are real network requests. Controls are paced and shown one by one as GovernAI maps that collected evidence locally. The official authority link is shown separately and is never labelled as fetched unless the backend actually requested it.</p>
                   </div>
-                  <div className="master-progress"><i><b style={{ width: running ? `${Math.min(98, (completedControls / Math.max(1, totalControls)) * 100)}%` : "100%" }} /></i><span>{running ? "Evaluating controls…" : "Evaluation and reporting complete"}</span></div>
+                  {currentData && (
+                    <section className="current-step-card" aria-live="polite" aria-atomic="true">
+                      <div className="current-step-heading">
+                        <div>
+                          <p className="eyebrow">Now running · step {String(currentData.sequence ?? events.length)}</p>
+                          <h3>{String(currentData.standard ?? currentEvent?.name.replaceAll("_", " "))}</h3>
+                        </div>
+                        <span className={`trace-state ${String(currentData.status ?? "running")}`}>
+                          {currentData.status ? statusLabel(currentData.status as ControlStatus) : "Running"}
+                        </span>
+                      </div>
+                      <div className="current-step-grid">
+                        <div>
+                          <span>Action</span>
+                          <strong>{String(currentData.control ?? currentData.controlId ?? "Workflow checkpoint")}</strong>
+                          <p>{String(currentData.message ?? "The backend is advancing to the next validation step.")}</p>
+                        </div>
+                        <div>
+                          <span>Data comes from</span>
+                          <strong>{evidenceSourceLabel(currentData.sourceType)}</strong>
+                          <code>{currentEndpoint}</code>
+                        </div>
+                        <div>
+                          <span>Official authority</span>
+                          {currentData.officialReferenceUrl ? (
+                            <>
+                              <a href={String(currentData.officialReferenceUrl)} target="_blank" rel="noreferrer">
+                                {String(currentData.officialReferenceTitle ?? currentData.officialAuthority)}
+                              </a>
+                              <p>{String(currentData.officialAuthority ?? "")}</p>
+                            </>
+                          ) : (
+                            <strong>Not part of this target request</strong>
+                          )}
+                          <small>Official page fetched in this run: <b>{currentData.officialPageFetched === true ? "Yes" : "No"}</b></small>
+                        </div>
+                        <div>
+                          <span>Validation method</span>
+                          <strong>{String(currentData.validationMethod ?? "Wait for the target response, then apply the bounded validation rule shown when this check completes.")}</strong>
+                        </div>
+                        <div>
+                          <span>Step duration</span>
+                          <strong>{Number(currentData.durationMs ?? currentData.latencyMs ?? 0).toLocaleString()} ms</strong>
+                          <p>{eventTime(currentData.occurredAt)}</p>
+                        </div>
+                        <div>
+                          <span>Runtime owner</span>
+                          <strong>{String(currentData.module ?? "Assessment workflow")}</strong>
+                          <p>{String(currentData.functionName ?? "event handler")} · {String(currentData.executionStage ?? "execution")}</p>
+                        </div>
+                      </div>
+                    </section>
+                  )}
+                  <div className="master-progress"><i><b style={{ width: `${progressPercentage}%` }} /></i><span>{running ? `${progressPercentage}% · ${pendingExecutionSteps} steps pending` : "Evaluation and reporting complete"}</span></div>
                   <div className="event-log" aria-live="polite">
                     {events.slice(-400).reverse().map((item, index) => {
                       const requestMeta = [
@@ -747,7 +881,10 @@ export function AssessmentWorkspace() {
                           : "",
                         item.data.latencyMs !== undefined
                           ? `${String(item.data.latencyMs)} ms`
+                          : item.data.durationMs !== undefined
+                            ? `${String(item.data.durationMs)} ms`
                           : "",
+                        item.data.executionStage ? String(item.data.executionStage) : "",
                         eventTime(item.data.occurredAt),
                       ].filter(Boolean);
                       const control = String(item.data.control ?? item.data.controlId ?? "Workflow checkpoint");
@@ -757,11 +894,13 @@ export function AssessmentWorkspace() {
                           <span className={`event-dot ${String(item.data.status ?? item.name)}`} />
                           <div className="event-copy">
                             <span className="event-heading">
+                              <b className="event-sequence">#{String(item.data.sequence ?? events.length - index)}</b>
                               <strong>{String(item.data.standard ?? item.name.replaceAll("_", " "))}</strong>
                               <i>{evidenceSourceLabel(item.data.sourceType)}</i>
                             </span>
                             <p><b>{control}</b>{message && message !== control ? ` — ${message}` : ""}</p>
                             {requestMeta.length > 0 && <small>{requestMeta.join(" · ")}</small>}
+                            {Boolean(item.data.validationMethod) && <small><b>Validated by:</b> {String(item.data.validationMethod)}</small>}
                           </div>
                           <em>{item.data.status ? statusLabel(item.data.status as ControlStatus) : "Done"}</em>
                         </div>
@@ -769,6 +908,32 @@ export function AssessmentWorkspace() {
                     })}
                     {events.length === 0 && <p className="empty-state">Preparing validation and loading selected control packs…</p>}
                   </div>
+                  <section className="source-lineage" aria-labelledby="source-lineage-title">
+                    <div className="source-lineage-heading">
+                      <div>
+                        <p className="eyebrow">Authority source register</p>
+                        <h3 id="source-lineage-title">Official references for the selected standards</h3>
+                      </div>
+                      <span>Reference links · not fetched in this run</span>
+                    </div>
+                    <div className="source-lineage-list">
+                      {selectedDefinitions.map((standard) => (
+                        <article key={standard.id}>
+                          <div>
+                            <strong>{standard.shortName}</strong>
+                            <p>{standard.officialReference.authority}</p>
+                          </div>
+                          <a href={standard.officialReference.url} target="_blank" rel="noreferrer">
+                            {standard.officialReference.title} ↗
+                          </a>
+                          <span className={standard.officialReference.status}>
+                            {officialReferenceStatusLabel(standard.officialReference.status)}
+                          </span>
+                          <small>{standard.officialReference.note}</small>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
                   {result && (
                     <div className="live-result-stack">
                       <div className="execution-disclosure">
@@ -790,6 +955,19 @@ export function AssessmentWorkspace() {
                           </div>
                         )}
                       </div>
+                      <section className="final-execution-summary" aria-labelledby="final-summary-title">
+                        <div>
+                          <p className="eyebrow">Final execution summary</p>
+                          <h3 id="final-summary-title">{result.liveEvidence.execution.summary.completedSteps} of {result.liveEvidence.execution.summary.totalSteps} steps completed</h3>
+                          <p>Started {new Date(result.liveEvidence.execution.summary.startedAt).toLocaleString()} · completed {new Date(result.liveEvidence.execution.summary.completedAt).toLocaleString()}</p>
+                        </div>
+                        <dl>
+                          <div><dt>Duration</dt><dd>{(result.liveEvidence.execution.summary.durationMs / 1000).toFixed(1)}s</dd></div>
+                          <div><dt>Warnings</dt><dd>{result.liveEvidence.execution.summary.warningSteps}</dd></div>
+                          <div><dt>Failures</dt><dd>{result.liveEvidence.execution.summary.failedSteps}</dd></div>
+                          <div><dt>Reports</dt><dd>{result.reports.length}</dd></div>
+                        </dl>
+                      </section>
                       <div className="live-evidence-card">
                         <div><span>Observed target</span><strong>{result.liveEvidence.target}</strong></div>
                         <div><span>Chat endpoint</span><strong>{result.liveEvidence.chatEndpoint}</strong></div>
@@ -828,6 +1006,8 @@ export function AssessmentWorkspace() {
                                   {probe.requestId ? ` · Request ${probe.requestId}` : ""}
                                   {probe.sourceCount !== undefined ? ` · ${probe.sourceCount} retrieval sources` : ""}
                                 </small>
+                                {probe.validationMethod && <small><b>Validation:</b> {probe.validationMethod}</small>}
+                                <small><b>Official page fetched:</b> No — this request went to the assessed target.</small>
                               </div>
                               <StatusBadge status={probe.status} />
                             </article>
@@ -860,6 +1040,14 @@ export function AssessmentWorkspace() {
                     <div><span>Pass threshold</span><strong>{report.passThreshold}</strong></div>
                     <div><span>Coverage</span><strong>{report.assessedControls}/{report.totalControls} assessed</strong></div>
                   </div>
+                  <div className="report-authority">
+                    <div>
+                      <span>Official authority reference</span>
+                      <a href={report.officialReference.url} target="_blank" rel="noreferrer">{report.officialReference.title} ↗</a>
+                      <p>{report.officialReference.authority} · {report.officialReference.note}</p>
+                    </div>
+                    <strong>Reference recorded · official page not fetched during this assessment</strong>
+                  </div>
                   <div className="control-table-wrap">
                     <table className="control-table">
                       <thead><tr><th>Control</th><th>Pillars</th><th>Status</th><th>Confidence</th><th>Evidence / remediation</th></tr></thead>
@@ -869,7 +1057,16 @@ export function AssessmentWorkspace() {
                           <td><div className="pillar-tags">{control.pillars.map((pillar) => <em key={pillar}>{pillarLabels[pillar]}</em>)}</div></td>
                           <td><StatusBadge status={control.status} /></td>
                           <td>{Math.round(control.confidence * 100)}%</td>
-                          <td><span>{control.evidence}</span>{control.status !== "pass" && control.status !== "not_assessed" && <small>{control.remediation}</small>}</td>
+                          <td>
+                            <span>{control.evidence}</span>
+                            {control.sourceCitation && (
+                              <small className="control-citation">
+                                Source mapping: <a href={control.sourceCitation.url} target="_blank" rel="noreferrer">{control.sourceCitation.section} ↗</a>
+                                {" "}· {control.sourceCitation.note}
+                              </small>
+                            )}
+                            {control.status !== "pass" && control.status !== "not_assessed" && <small>{control.remediation}</small>}
+                          </td>
                         </tr>
                       ))}</tbody>
                     </table>

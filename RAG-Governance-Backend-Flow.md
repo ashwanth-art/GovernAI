@@ -4,6 +4,8 @@
 > Prepared by: AI Governance Assessment Engine Design Team
 > Date: July 2026
 
+> **Implementation note:** This file began as a target-architecture proposal and includes Python/FastAPI/YAML examples that are not present in the deployed TypeScript application. For the implementation-accurate startup, API, database, assessment, logging, source-mapping, testing, and deployment description, use [`TECHNICAL_DOCUMENTATION.md`](./TECHNICAL_DOCUMENTATION.md).
+
 ---
 
 ## 1. Architecture Overview
@@ -583,6 +585,30 @@ function useAssessmentStream(assessmentId: string) {
 }
 ```
 
+### Source lineage shown during execution
+
+The production UI separates three facts that must not be conflated:
+
+1. **Observed target evidence** — an actual request to the assessed chatbot, target-host adapter, or supplied CI/CD URL. The trace records the method, endpoint, HTTP result, latency, request sequence, and the exact validation rule.
+2. **Local control mapping** — the GovernAI backend applies its versioned built-in control pack to evidence already collected from the target. These mappings are paced in the SSE workflow so the UI visibly advances one control at a time.
+3. **Official authority reference** — every supported standard records an authority, title, HTTPS reference, lifecycle status, and note. This link proves where the framework can be checked, but it is labelled **reference only — not fetched in this run** unless a future evidence collector actually requests that page.
+
+Each `standard_start`, `control_result`, and `standard_complete` event includes:
+
+```json
+{
+  "sequence": 24,
+  "sourceType": "control_mapping",
+  "officialAuthority": "U.S. Department of Health and Human Services",
+  "officialReferenceTitle": "HIPAA Security Rule",
+  "officialReferenceUrl": "https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html",
+  "officialPageFetched": false,
+  "validationMethod": "Apply the selected control-pack rule to the live evidence available at this tier."
+}
+```
+
+The final report repeats the official authority reference and the access disclosure. Licensed ISO, IEC, and AICPA sources are identified as official previews rather than implying that proprietary standards text was copied or fetched. Superseded selections, including SR 11-7 and OMB M-24-10, link to their current replacement guidance and display that lifecycle warning.
+
 ---
 
 ## 12. Deployment
@@ -638,5 +664,4 @@ No code changes are needed to the evaluation engine itself. The system is entire
 | How do results stay comparable? | Every control also rolls up to 5 governance pillars (Trust, Security, Governance, Compliance, Data Protection) |
 | How to add new standards? | Add a YAML control pack + report template - it plugs into the same pillar system automatically |
 | What determines depth? | The access tier (1/2/3) limits which controls can be tested |
-| Is anything hardcoded? | No - fully data-driven via YAML packs |
-
+| Is anything hardcoded? | Yes. The deployed implementation generates framework checks from twelve reusable TypeScript templates in `lib/catalog.ts`; YAML control packs are a recommended future architecture. |
