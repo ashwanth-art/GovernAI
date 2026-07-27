@@ -129,8 +129,13 @@ test("client supports unlimited standard selection and printable reports", async
   assert.match(bundle, /createObjectURL/);
   assert.match(bundle, /OWASP LLM security appendix/);
   assert.match(bundle, /standards selected/);
+  assert.match(bundle, /Why control mapping is fast/);
+  assert.match(bundle, /What ran, where it ran, and what returned/);
+  assert.match(bundle, /Official standards pages fetched: No/);
+  assert.match(bundle, /Target-host adapters \+ supplied CI\/CD URL/);
   assert.doesNotMatch(bundle, /document\.write/);
   assert.doesNotMatch(bundle, /maximum of 3|between 1 and 3|of 3 selected/i);
+  assert.doesNotMatch(bundle, /No answer is precomputed/);
 });
 
 test("catalog exposes all industries, standards, and tier-specific fields", async () => {
@@ -189,6 +194,18 @@ test("evaluation generates exactly one native report per selected standard plus 
   assert.equal(result.liveEvidence.chatEndpoint, "https://target.test/v1/web-chat");
   assert.equal(result.liveEvidence.probes.length, 8);
   assert.equal(result.liveEvidence.probes.filter((probe) => probe.status === "pass").length, 8);
+  assert.equal(result.liveEvidence.execution.runner, "GovernAI assessment backend");
+  assert.equal(result.liveEvidence.execution.officialStandardsPagesFetched, false);
+  assert.ok(result.liveEvidence.probes.every((probe) => probe.endpoint && probe.method && probe.sourceType));
+  assert.equal(
+    result.liveEvidence.probes.find((probe) => probe.id === "monitoring-evidence").endpoint,
+    "https://target.test/api/monitoring/summary",
+  );
+  assert.equal(
+    result.liveEvidence.probes.find((probe) => probe.id === "audit-config-evidence").endpoint,
+    "https://target.test/api/audit/config",
+  );
+  assert.equal(result.liveEvidence.probes.find((probe) => probe.id === "cicd-evidence").method, "HEAD");
   assert.equal(result.owasp.length, 8);
   assert.ok(result.crossInsights);
   assert.deepEqual(Object.keys(result.pillarScores).sort(), [
@@ -264,6 +281,10 @@ test("SSE workflow emits start, control, standard completion, OWASP, and final-r
   assert.match(stream, /event: standard_complete/);
   assert.match(stream, /event: owasp_complete/);
   assert.match(stream, /event: assessment_complete/);
+  assert.match(stream, /"occurredAt":/);
+  assert.match(stream, /"sourceType":"target_adapter"/);
+  assert.match(stream, /"endpoint":"https:\/\/target\.test\/api\/monitoring\/summary"/);
+  assert.match(stream, /"sourceType":"control_mapping"/);
   assert.match(stream, /"standardId":"hipaa"/);
   assert.doesNotMatch(stream, /iso42001/);
 });

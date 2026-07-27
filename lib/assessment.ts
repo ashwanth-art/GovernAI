@@ -73,6 +73,7 @@ export const credentialFields: Record<AccessTier, CredentialField[]> = {
       label: "Infrastructure provider",
       type: "text",
       placeholder: "Render, AWS, Azure, or GCP",
+      help: "Context label only. Tier 2 reads the target application's /api/audit/config adapter; it does not sign in to the provider console.",
     },
     {
       key: "cloudApiKey",
@@ -86,6 +87,7 @@ export const credentialFields: Record<AccessTier, CredentialField[]> = {
       label: "Monitoring provider",
       type: "text",
       placeholder: "Application monitoring or observability service",
+      help: "Context label only. Tier 2 reads the target application's /api/monitoring/summary adapter.",
     },
     {
       key: "monitoringApiKey",
@@ -99,6 +101,7 @@ export const credentialFields: Record<AccessTier, CredentialField[]> = {
       label: "CI/CD pipeline URL",
       type: "url",
       placeholder: "https://github.com/org/repo/actions",
+      help: "Reachability check only. Workflow jobs and logs are not read without a dedicated provider integration.",
     },
   ],
   3: [
@@ -127,6 +130,7 @@ export const credentialFields: Record<AccessTier, CredentialField[]> = {
       label: "Infrastructure provider",
       type: "text",
       placeholder: "Render, AWS, Azure, or GCP",
+      help: "Context label; protected configuration evidence is read from the target application's audit adapter.",
     },
     {
       key: "cloudApiKey",
@@ -139,6 +143,7 @@ export const credentialFields: Record<AccessTier, CredentialField[]> = {
       label: "Monitoring provider",
       type: "text",
       placeholder: "Application monitoring or observability service",
+      help: "Context label; monitoring evidence is read from the target application's monitoring adapter.",
     },
     {
       key: "monitoringApiKey",
@@ -151,6 +156,7 @@ export const credentialFields: Record<AccessTier, CredentialField[]> = {
       label: "CI/CD pipeline URL",
       type: "url",
       placeholder: "https://github.com/org/repo/actions",
+      help: "Reachability check only; source and staging fields below provide the additional Tier 3 evidence.",
     },
     {
       key: "repoUrl",
@@ -395,7 +401,12 @@ function addProbe(
     control: probe.label,
     status: probe.status,
     message: probe.summary,
+    sourceType: probe.sourceType,
+    endpoint: probe.endpoint,
+    method: probe.method,
     latencyMs: probe.latencyMs,
+    httpStatus: probe.httpStatus,
+    requestId: probe.requestId,
   });
 }
 
@@ -411,6 +422,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     control: "Validate target and discover endpoints",
     status: "running",
     message: endpoints.target.origin,
+    sourceType: "target_service",
+    endpoint: endpoints.healthEndpoint.toString(),
+    method: "GET",
   });
   const healthResponse = await fetchJson(endpoints.healthEndpoint);
   const dependencies =
@@ -430,6 +444,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     summary: health.ok
       ? `Live health check passed; ${Object.keys(dependencies).length} dependencies reported.`
       : healthResponse.error ?? "Health endpoint did not report healthy.",
+    sourceType: "target_service",
+    endpoint: endpoints.healthEndpoint.toString(),
+    method: "GET",
     latencyMs: health.latencyMs,
     httpStatus: health.status,
   });
@@ -439,6 +456,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     control: "Grounded knowledge retrieval",
     status: "running",
     message: "Sending a normal domain question to the live chatbot.",
+    sourceType: "chatbot_probe",
+    endpoint: endpoints.chatEndpoint.toString(),
+    method: "POST",
   });
   const normal = await runChatProbe(
     endpoints.chatEndpoint,
@@ -474,6 +494,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     requestId: grounding.requestId,
     sourceCount: grounding.sourceCount,
     bestSourceScore: grounding.bestScore,
+    sourceType: "chatbot_probe",
+    endpoint: endpoints.chatEndpoint.toString(),
+    method: "POST",
   });
 
   emit("phase_start", {
@@ -487,6 +510,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     control: "Prompt-injection resistance",
     status: "running",
     message: "Sending a bounded instruction-extraction prompt.",
+    sourceType: "chatbot_probe",
+    endpoint: endpoints.chatEndpoint.toString(),
+    method: "POST",
   });
   const injectionResponse = await runChatProbe(
     endpoints.chatEndpoint,
@@ -499,6 +525,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     control: "Sensitive-information disclosure",
     status: "running",
     message: "Checking whether the chatbot exposes credential-shaped data.",
+    sourceType: "chatbot_probe",
+    endpoint: endpoints.chatEndpoint.toString(),
+    method: "POST",
   });
   const leakageResponse = await runChatProbe(
     endpoints.chatEndpoint,
@@ -511,6 +540,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     control: "Out-of-scope hallucination control",
     status: "running",
     message: "Testing an unsupported real-time question.",
+    sourceType: "chatbot_probe",
+    endpoint: endpoints.chatEndpoint.toString(),
+    method: "POST",
   });
   const outOfScopeResponse = await runChatProbe(
     endpoints.chatEndpoint,
@@ -545,6 +577,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     latencyMs: injection.latencyMs,
     httpStatus: injectionResponse.status,
     requestId: injection.requestId,
+    sourceType: "chatbot_probe",
+    endpoint: endpoints.chatEndpoint.toString(),
+    method: "POST",
   });
 
   const leakageAnswer = leakageResponse.payload.answer ?? "";
@@ -568,6 +603,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     latencyMs: leakage.latencyMs,
     httpStatus: leakageResponse.status,
     requestId: leakage.requestId,
+    sourceType: "chatbot_probe",
+    endpoint: endpoints.chatEndpoint.toString(),
+    method: "POST",
   });
 
   const outSources = Array.isArray(outOfScopeResponse.payload.sources)
@@ -595,6 +633,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
     latencyMs: outOfScope.latencyMs,
     httpStatus: outOfScopeResponse.status,
     requestId: outOfScope.requestId,
+    sourceType: "chatbot_probe",
+    endpoint: endpoints.chatEndpoint.toString(),
+    method: "POST",
   });
 
   let monitoring = { checked: false, ok: false, status: 0, latencyMs: 0 };
@@ -605,7 +646,35 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
       standard: "Tier 2",
       control: "Infrastructure evidence",
       status: "running",
-      message: "Checking protected monitoring, audit configuration, and CI/CD endpoints.",
+      message: "Checking protected monitoring, audit configuration, and CI/CD endpoints in parallel.",
+      sourceType: "parallel_live_requests",
+    });
+    emit("probe_start", {
+      standard: "Tier 2 monitoring",
+      control: "Read protected monitoring summary",
+      status: "running",
+      message: `Declared provider: ${input.credentials.monitoringProvider}.`,
+      sourceType: "target_adapter",
+      endpoint: endpoints.monitoringEndpoint.toString(),
+      method: "GET",
+    });
+    emit("probe_start", {
+      standard: "Tier 2 audit",
+      control: "Read protected audit configuration",
+      status: "running",
+      message: `Declared infrastructure provider: ${input.credentials.cloudProvider}.`,
+      sourceType: "target_adapter",
+      endpoint: endpoints.auditEndpoint.toString(),
+      method: "GET",
+    });
+    emit("probe_start", {
+      standard: "Tier 2 CI/CD",
+      control: "Check the supplied pipeline URL",
+      status: "running",
+      message: "Reachability only; workflow jobs and logs are not read.",
+      sourceType: "provided_url",
+      endpoint: new URL(input.credentials.cicdUrl).toString(),
+      method: "HEAD",
     });
     const [monitoringResponse, auditResponse, cicdResponse] = await Promise.all([
       fetchJson(endpoints.monitoringEndpoint, {
@@ -643,6 +712,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
         : `Monitoring evidence unavailable (HTTP ${monitoring.status || "network error"}).`,
       latencyMs: monitoring.latencyMs,
       httpStatus: monitoring.status,
+      sourceType: "target_adapter",
+      endpoint: endpoints.monitoringEndpoint.toString(),
+      method: "GET",
     });
     addProbe(probes, emit, {
       id: "audit-config-evidence",
@@ -653,6 +725,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
         : `Audit configuration unavailable (HTTP ${audit.status || "network error"}).`,
       latencyMs: audit.latencyMs,
       httpStatus: audit.status,
+      sourceType: "target_adapter",
+      endpoint: endpoints.auditEndpoint.toString(),
+      method: "GET",
     });
     addProbe(probes, emit, {
       id: "cicd-evidence",
@@ -663,6 +738,9 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
         : `CI/CD endpoint was unreachable (HTTP ${cicd.status || "network error"}).`,
       latencyMs: cicd.latencyMs,
       httpStatus: cicd.status,
+      sourceType: "provided_url",
+      endpoint: new URL(input.credentials.cicdUrl).toString(),
+      method: "HEAD",
     });
   }
 
@@ -1075,6 +1153,8 @@ export async function runAssessment(
       control: "Map live evidence to native controls",
       status: "running",
       total: definition.controls.length,
+      sourceType: "control_catalog",
+      message: "Applying the built-in GovernAI control mapping to evidence already collected from the target.",
     });
     const report = buildStandardReport(definition, input, signals);
     reports.push(report);
@@ -1087,6 +1167,8 @@ export async function runAssessment(
         status: control.status,
         score: control.score,
         pillars: control.pillars,
+        sourceType: "control_mapping",
+        message: control.evidence,
       });
     }
     emit("standard_complete", {
@@ -1095,6 +1177,8 @@ export async function runAssessment(
       control: "Native report generated",
       status: "pass",
       score: report.score,
+      sourceType: "report_generation",
+      message: `${report.assessedControls} of ${report.totalControls} controls assessed.`,
     });
   }
   const owasp = buildOwaspResults(signals);
@@ -1109,6 +1193,8 @@ export async function runAssessment(
     status: owaspStatus,
     total: owasp.length,
     findings: owasp.filter((control) => control.status === "fail").length,
+    sourceType: "control_mapping",
+    message: "Mapped the bounded live chatbot probes to the built-in OWASP LLM control set.",
   });
   const pillarScores = buildPillarScores(reports, owasp);
   const durationMs = Date.now() - new Date(signals.startedAt).getTime();
@@ -1122,6 +1208,14 @@ export async function runAssessment(
       startedAt: signals.startedAt,
       durationMs,
       probes: signals.probes,
+      execution: {
+        runner: "GovernAI assessment backend",
+        controlCatalog: "GovernAI built-in control mappings",
+        officialStandardsPagesFetched: false,
+        tier2RequestsParallel: input.tier >= 2,
+        infrastructureProvider: input.credentials.cloudProvider?.trim() || undefined,
+        monitoringProvider: input.credentials.monitoringProvider?.trim() || undefined,
+      },
     },
     scope: {
       organization: input.organization.trim(),

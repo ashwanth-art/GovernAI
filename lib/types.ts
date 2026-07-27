@@ -11,6 +11,12 @@ export type AccessTier = 1 | 2 | 3;
 
 export type StandardKind = "Mandatory" | "Certifiable" | "Methodological";
 
+export type EvidenceSourceType =
+  | "target_service"
+  | "chatbot_probe"
+  | "target_adapter"
+  | "provided_url";
+
 export interface Control {
   id: string;
   name: string;
@@ -103,7 +109,18 @@ export interface AssessmentResult {
       requestId?: string;
       sourceCount?: number;
       bestSourceScore?: number;
+      sourceType: EvidenceSourceType;
+      endpoint: string;
+      method: "GET" | "POST" | "HEAD";
     }>;
+    execution: {
+      runner: string;
+      controlCatalog: string;
+      officialStandardsPagesFetched: false;
+      tier2RequestsParallel: boolean;
+      infrastructureProvider?: string;
+      monitoringProvider?: string;
+    };
   };
   scope: {
     organization: string;

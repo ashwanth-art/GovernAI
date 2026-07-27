@@ -81,6 +81,44 @@ function statusLabel(status: ControlStatus) {
     : status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+function evidenceSourceLabel(source: unknown) {
+  switch (String(source ?? "")) {
+    case "target_service":
+      return "Target API";
+    case "chatbot_probe":
+      return "Live chatbot";
+    case "target_adapter":
+      return "Target adapter";
+    case "provided_url":
+      return "Provided URL";
+    case "control_catalog":
+      return "Built-in catalog";
+    case "control_mapping":
+      return "Local mapping";
+    case "report_generation":
+      return "Local report";
+    case "parallel_live_requests":
+      return "Parallel calls";
+    default:
+      return "Workflow";
+  }
+}
+
+function targetAdapterEndpoint(baseUrl: string, path: string) {
+  try {
+    return new URL(path, new URL(baseUrl).origin).toString();
+  } catch {
+    return `Target host${path}`;
+  }
+}
+
+function eventTime(value: unknown) {
+  const date = new Date(String(value ?? ""));
+  return Number.isNaN(date.getTime())
+    ? ""
+    : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
 function StatusBadge({ status }: { status: ControlStatus }) {
   return <span className={`status status-${status}`}>{statusLabel(status)}</span>;
 }
@@ -163,9 +201,10 @@ function createReportHtml(result: AssessmentResult, report?: StandardReport) {
     </head><body><h1>GovernAI RAG Compliance Assessment</h1>
     <p><strong>${escapeReportText(result.scope.organization)}</strong> · ${escapeReportText(result.scope.systemName)}<br/>Assessment ${escapeReportText(result.assessmentId)} · Tier ${result.scope.tier} · ${escapeReportText(new Date(result.generatedAt).toLocaleString())}</p>
     <section><h2>Live endpoint evidence</h2>
-    <p><strong>Target:</strong> ${escapeReportText(result.liveEvidence.target)}<br/><strong>Chat API:</strong> ${escapeReportText(result.liveEvidence.chatEndpoint)}<br/><strong>Duration:</strong> ${result.liveEvidence.durationMs} ms</p>
-    <table><thead><tr><th>Live check</th><th>Status</th><th>Summary</th><th>HTTP / latency</th></tr></thead>
-    <tbody>${result.liveEvidence.probes.map((probe) => `<tr><td>${escapeReportText(probe.label)}</td><td>${escapeReportText(statusLabel(probe.status))}</td><td>${escapeReportText(probe.summary)}</td><td>${probe.httpStatus ?? "n/a"} / ${probe.latencyMs ?? "n/a"} ms</td></tr>`).join("")}</tbody></table>
+    <p><strong>Executed by:</strong> ${escapeReportText(result.liveEvidence.execution.runner)}<br/><strong>Target:</strong> ${escapeReportText(result.liveEvidence.target)}<br/><strong>Chat API:</strong> ${escapeReportText(result.liveEvidence.chatEndpoint)}<br/><strong>Duration:</strong> ${result.liveEvidence.durationMs} ms</p>
+    <p><strong>Control source:</strong> ${escapeReportText(result.liveEvidence.execution.controlCatalog)}. Official standards or regulator pages were not fetched during this assessment.</p>
+    <table><thead><tr><th>Live check</th><th>Status</th><th>Observed request</th><th>Summary</th><th>HTTP / latency</th></tr></thead>
+    <tbody>${result.liveEvidence.probes.map((probe) => `<tr><td>${escapeReportText(probe.label)}</td><td>${escapeReportText(statusLabel(probe.status))}</td><td>${escapeReportText(evidenceSourceLabel(probe.sourceType))}<br/>${escapeReportText(probe.method)} ${escapeReportText(probe.endpoint)}</td><td>${escapeReportText(probe.summary)}</td><td>${probe.httpStatus ?? "n/a"} / ${probe.latencyMs ?? "n/a"} ms</td></tr>`).join("")}</tbody></table>
     </section>
     ${reportsHtml}${owaspHtml}<script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250))</script></body></html>`;
 }
@@ -299,7 +338,7 @@ export function AssessmentWorkspace() {
             setErrors([message]);
           } else {
             setEvents((current) => [
-              ...current.slice(-119),
+              ...current.slice(-399),
               { name: parsed.name, data: parsed.data as Record<string, unknown> },
             ]);
           }
@@ -573,6 +612,46 @@ export function AssessmentWorkspace() {
                       </label>
                     ))}
                   </div>
+                  <section className="evidence-explainer" aria-labelledby="evidence-explainer-title">
+                    <div className="evidence-explainer-heading">
+                      <div>
+                        <p className="eyebrow">Before you launch</p>
+                        <h3 id="evidence-explainer-title">What GovernAI actually checks</h3>
+                      </div>
+                      <span>Executed server-to-server</span>
+                    </div>
+                    <div className="evidence-route-grid">
+                      <article>
+                        <strong>Live chatbot</strong>
+                        <p>Health, grounded retrieval, prompt injection, sensitive disclosure, and out-of-scope behavior.</p>
+                        <code>{targetAdapterEndpoint(input.credentials.chatbotEndpoint, "/v1/web-chat")}</code>
+                      </article>
+                      {input.tier >= 2 && (
+                        <>
+                          <article>
+                            <strong>Audit/config adapter</strong>
+                            <p>The supplied Bearer token is sent to your target application—not directly to {input.credentials.cloudProvider || "the infrastructure provider"}.</p>
+                            <code>{targetAdapterEndpoint(input.credentials.chatbotEndpoint, "/api/audit/config")}</code>
+                          </article>
+                          <article>
+                            <strong>Monitoring adapter</strong>
+                            <p>The supplied Bearer token is sent to your target application—not directly to {input.credentials.monitoringProvider || "the monitoring provider"}.</p>
+                            <code>{targetAdapterEndpoint(input.credentials.chatbotEndpoint, "/api/monitoring/summary")}</code>
+                          </article>
+                          <article>
+                            <strong>CI/CD reachability</strong>
+                            <p>A HEAD request checks whether the supplied page responds. Workflow runs, jobs, and logs are not inspected.</p>
+                            <code>{input.credentials.cicdUrl || "Add a CI/CD pipeline URL"}</code>
+                          </article>
+                        </>
+                      )}
+                      <article className="catalog-route">
+                        <strong>Compliance control source</strong>
+                        <p>Selected controls come from GovernAI&apos;s built-in mappings. Official ISO, regulator, or standards websites are not fetched during a run.</p>
+                        <code>Built-in catalog · local evidence mapping</code>
+                      </article>
+                    </div>
+                  </section>
                 </div>
               )}
 
@@ -600,7 +679,7 @@ export function AssessmentWorkspace() {
                     <span aria-hidden="true">✓</span>
                     <div>
                       <strong>Selection governs live execution</strong>
-                      <p>Tier 1 sends bounded requests to the public chatbot. Tier 2 additionally reads protected monitoring, audit configuration, and CI/CD evidence using the credentials supplied above.</p>
+                      <p>Tier 1 sends bounded requests to the chatbot. Tier 2 also calls the target-host monitoring and audit adapters, plus a CI/CD reachability check. Selected framework controls are then mapped locally; official standards pages are not contacted.</p>
                     </div>
                   </div>
                 </div>
@@ -633,7 +712,7 @@ export function AssessmentWorkspace() {
               </div>
               <div className="scope-banner">
                 <span>◆</span>
-                <p><strong>Live endpoint evaluation</strong> Only {selectedDefinitions.map((item) => item.shortName).join(", ")} are mapped from the observed target responses. No answer is precomputed.</p>
+                <p><strong>Live evidence + local control mapping</strong> GovernAI collects target responses now, then maps them to {selectedDefinitions.map((item) => item.shortName).join(", ")} using its built-in catalog. Official standards pages are not queried.</p>
                 {result && <em>{result.assessmentId}</em>}
               </div>
               <div className="result-tabs" role="tablist" aria-label="Assessment results">
@@ -652,19 +731,65 @@ export function AssessmentWorkspace() {
                     <div><span>{selectedDefinitions.length}</span><p>standard engines</p></div>
                     <div><span>{result?.liveEvidence.probes.length ?? events.filter((item) => item.name === "probe_complete").length}</span><p>live checks completed</p></div>
                   </div>
+                  <div className="execution-note">
+                    <strong>Why control mapping is fast</strong>
+                    <p>“Live checks” are real network requests. “Controls assessed” are local mappings of that collected evidence, so many controls can complete within seconds without pretending that each one is a separate provider or official-website call.</p>
+                  </div>
                   <div className="master-progress"><i><b style={{ width: running ? `${Math.min(98, (completedControls / Math.max(1, totalControls)) * 100)}%` : "100%" }} /></i><span>{running ? "Evaluating controls…" : "Evaluation and reporting complete"}</span></div>
                   <div className="event-log" aria-live="polite">
-                    {events.slice(-18).reverse().map((item, index) => (
-                      <div className="event-row" key={`${item.name}-${index}`}>
-                        <span className={`event-dot ${String(item.data.status ?? item.name)}`} />
-                        <div><strong>{String(item.data.standard ?? item.name.replaceAll("_", " "))}</strong><p>{String(item.data.message ?? item.data.control ?? item.data.controlId ?? "Workflow checkpoint complete")}</p></div>
-                        <em>{item.data.status ? statusLabel(item.data.status as ControlStatus) : "Done"}</em>
-                      </div>
-                    ))}
+                    {events.slice(-400).reverse().map((item, index) => {
+                      const requestMeta = [
+                        item.data.method && item.data.endpoint
+                          ? `${String(item.data.method)} ${String(item.data.endpoint)}`
+                          : "",
+                        item.data.httpStatus !== undefined
+                          ? `HTTP ${String(item.data.httpStatus || "network error")}`
+                          : "",
+                        item.data.latencyMs !== undefined
+                          ? `${String(item.data.latencyMs)} ms`
+                          : "",
+                        eventTime(item.data.occurredAt),
+                      ].filter(Boolean);
+                      const control = String(item.data.control ?? item.data.controlId ?? "Workflow checkpoint");
+                      const message = String(item.data.message ?? "");
+                      return (
+                        <div className="event-row" key={String(item.data.sequence ?? `${item.name}-${index}`)}>
+                          <span className={`event-dot ${String(item.data.status ?? item.name)}`} />
+                          <div className="event-copy">
+                            <span className="event-heading">
+                              <strong>{String(item.data.standard ?? item.name.replaceAll("_", " "))}</strong>
+                              <i>{evidenceSourceLabel(item.data.sourceType)}</i>
+                            </span>
+                            <p><b>{control}</b>{message && message !== control ? ` — ${message}` : ""}</p>
+                            {requestMeta.length > 0 && <small>{requestMeta.join(" · ")}</small>}
+                          </div>
+                          <em>{item.data.status ? statusLabel(item.data.status as ControlStatus) : "Done"}</em>
+                        </div>
+                      );
+                    })}
                     {events.length === 0 && <p className="empty-state">Preparing validation and loading selected control packs…</p>}
                   </div>
                   {result && (
                     <div className="live-result-stack">
+                      <div className="execution-disclosure">
+                        <div>
+                          <span>Executed by</span>
+                          <strong>{result.liveEvidence.execution.runner}</strong>
+                          <p>Network calls originate from the GovernAI assessment service.</p>
+                        </div>
+                        <div>
+                          <span>Control source</span>
+                          <strong>{result.liveEvidence.execution.controlCatalog}</strong>
+                          <p>Official standards pages fetched: No</p>
+                        </div>
+                        {result.scope.tier >= 2 && (
+                          <div>
+                            <span>Tier 2 connection model</span>
+                            <strong>Target-host adapters + supplied CI/CD URL</strong>
+                            <p>Audit, monitoring, and CI/CD checks run in parallel.</p>
+                          </div>
+                        )}
+                      </div>
                       <div className="live-evidence-card">
                         <div><span>Observed target</span><strong>{result.liveEvidence.target}</strong></div>
                         <div><span>Chat endpoint</span><strong>{result.liveEvidence.chatEndpoint}</strong></div>
@@ -679,6 +804,36 @@ export function AssessmentWorkspace() {
                           </strong>
                         </div>
                       </div>
+                      <section className="probe-details" aria-labelledby="probe-details-title">
+                        <div className="probe-details-heading">
+                          <div>
+                            <p className="eyebrow">Request-by-request evidence</p>
+                            <h3 id="probe-details-title">What ran, where it ran, and what returned</h3>
+                          </div>
+                          <span>{result.liveEvidence.probes.length} live checks</span>
+                        </div>
+                        <div className="probe-detail-list">
+                          {result.liveEvidence.probes.map((probe, index) => (
+                            <article key={probe.id}>
+                              <div className="probe-sequence">{String(index + 1).padStart(2, "0")}</div>
+                              <div className="probe-copy">
+                                <div className="probe-title">
+                                  <strong>{probe.label}</strong>
+                                  <span>{evidenceSourceLabel(probe.sourceType)}</span>
+                                </div>
+                                <p>{probe.summary}</p>
+                                <code>{probe.method} {probe.endpoint}</code>
+                                <small>
+                                  HTTP {probe.httpStatus || "network error"} · {probe.latencyMs ?? 0} ms
+                                  {probe.requestId ? ` · Request ${probe.requestId}` : ""}
+                                  {probe.sourceCount !== undefined ? ` · ${probe.sourceCount} retrieval sources` : ""}
+                                </small>
+                              </div>
+                              <StatusBadge status={probe.status} />
+                            </article>
+                          ))}
+                        </div>
+                      </section>
                       <div className="pillar-grid">
                         {(Object.entries(result.pillarScores) as Array<[Pillar, number]>).map(([pillar, score]) => (
                           <div key={pillar}><span>{pillarLabels[pillar]}</span><strong>{score}%</strong><i><b style={{ width: `${score}%` }} /></i></div>

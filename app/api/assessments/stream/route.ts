@@ -19,9 +19,15 @@ export async function POST(request: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      let sequence = 0;
       try {
         const result = await runAssessment(input, (name, data) => {
-          controller.enqueue(event(name, data));
+          sequence += 1;
+          controller.enqueue(event(name, {
+            ...data,
+            sequence,
+            occurredAt: new Date().toISOString(),
+          }));
         });
         controller.enqueue(event("assessment_complete", result));
       } catch (error) {
