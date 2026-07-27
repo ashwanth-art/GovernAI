@@ -118,7 +118,7 @@ test("server-renders the complete assessment workspace", async () => {
   assert.doesNotMatch(html, /react-loading-skeleton/);
 });
 
-test("report export uses printable Blob content and includes the OWASP appendix", async () => {
+test("client supports unlimited standard selection and printable reports", async () => {
   const assetsDirectory = new URL("../dist/client/assets/", import.meta.url);
   const assets = await readdir(assetsDirectory);
   const workspaceAsset = assets.find(
@@ -128,7 +128,9 @@ test("report export uses printable Blob content and includes the OWASP appendix"
   const bundle = await readFile(new URL(workspaceAsset, assetsDirectory), "utf8");
   assert.match(bundle, /createObjectURL/);
   assert.match(bundle, /OWASP LLM security appendix/);
+  assert.match(bundle, /standards selected/);
   assert.doesNotMatch(bundle, /document\.write/);
+  assert.doesNotMatch(bundle, /maximum of 3|between 1 and 3|of 3 selected/i);
 });
 
 test("catalog exposes all industries, standards, and tier-specific fields", async () => {
@@ -167,7 +169,7 @@ test("backend rejects invalid scope, selection count, non-RAG architecture, and 
   assert.equal(response.status, 422);
   const body = await response.json();
   assert.ok(body.errors.some((error) => error.includes("Organization")));
-  assert.ok(body.errors.some((error) => error.includes("between 1 and 3")));
+  assert.ok(body.errors.some((error) => error.includes("at least one")));
   assert.ok(body.errors.some((error) => error.includes("RAG system")));
   assert.ok(body.errors.some((error) => error.includes("Tier 3")));
   assert.ok(body.errors.some((error) => error.includes("HTTPS")));
@@ -206,6 +208,19 @@ test("evaluation generates exactly one native report per selected standard plus 
     result.reports[0].controls.filter((control) => control.status === "not_assessed").length,
     2,
   );
+});
+
+test("evaluation accepts more than three selected standards", async () => {
+  const selectedStandardIds = ["hipaa", "iso42001", "nist_ai_rmf", "soc2", "eu_ai_act"];
+  const response = await request("/api/assessments", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ ...baseInput, standardIds: selectedStandardIds }),
+  });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.deepEqual(result.reports.map((report) => report.standardId), selectedStandardIds);
+  assert.equal(result.reports.length, selectedStandardIds.length);
 });
 
 test("single-standard assessment omits cross-standard report and respects Tier 1 coverage", async () => {

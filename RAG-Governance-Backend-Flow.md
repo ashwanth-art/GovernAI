@@ -39,7 +39,7 @@ Underneath these standard-specific structures, every individual control is also 
 **Step 1: Selection Screen (what the user sees)**
 - Select industry from a dropdown (10 industries supported)
 - The system immediately recommends the 2-3 most relevant standards for that industry, pre-checked
-- User can accept the recommendation or adjust (pick 1-3 standards total)
+- User can accept the recommendation or adjust it, selecting any number of supported standards (at least one)
 - Select access tier (Tier 1/2/3) and provide the matching credentials
 
 **Step 2: Validate + Load**
@@ -58,7 +58,7 @@ Underneath these standard-specific structures, every individual control is also 
 - One report generated per selected standard, in that standard's native format
 - A Cross-Standard Insights report is added automatically when 2+ standards are selected
 - A 5-Pillar Radar Summary rolls everything up for an at-a-glance comparable view
-- If the user picked 3 standards, 3 reports are generated - no unused frameworks, no missing ones, nothing evaluated that wasn't selected
+- If the user picked any number of standards, the same number of reports is generated - no unused frameworks, no missing ones, nothing evaluated that wasn't selected
 
 ---
 
@@ -637,7 +637,6 @@ No code changes are needed to the evaluation engine itself. The system is entire
 | How to add new standards? | Add a YAML control pack + report template - it plugs into the same pillar system automatically |
 | What determines depth? | The access tier (1/2/3) limits which controls can be tested |
 | Is anything hardcoded? | No - fully data-driven via YAML packs |
-
 
 
 

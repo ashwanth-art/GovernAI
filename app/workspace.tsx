@@ -214,10 +214,6 @@ export function AssessmentWorkspace() {
 
   function toggleStandard(standardId: string) {
     const selected = input.standardIds.includes(standardId);
-    if (!selected && input.standardIds.length === 3) {
-      setErrors(["A maximum of 3 standards can be selected. Remove one before adding another."]);
-      return;
-    }
     patchInput({
       standardIds: selected
         ? input.standardIds.filter((id) => id !== standardId)
@@ -237,8 +233,8 @@ export function AssessmentWorkspace() {
       }
       if (!input.architecture.embeddingModel.trim()) nextErrors.push("Enter the embedding model.");
     }
-    if (index === 1 && (input.standardIds.length < 1 || input.standardIds.length > 3)) {
-      nextErrors.push("Select between 1 and 3 standards.");
+    if (index === 1 && input.standardIds.length < 1) {
+      nextErrors.push("Select at least one standard.");
     }
     if (index === 2) {
       credentialFields[input.tier].forEach((field) => {
@@ -475,7 +471,7 @@ export function AssessmentWorkspace() {
               {step === 1 && (
                 <div className="standards-layout">
                   <div className="selection-summary">
-                    <div><span>{input.standardIds.length}</span><p>of 3 selected</p></div>
+                    <div><span>{input.standardIds.length}</span><p>standards selected</p></div>
                     <p>One native report is generated for every selected standard.</p>
                   </div>
                   <label className="search-field">

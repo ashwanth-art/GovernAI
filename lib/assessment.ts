@@ -193,8 +193,8 @@ export function validateAssessmentInput(input: AssessmentInput): string[] {
   if (!input.systemName?.trim()) errors.push("AI system name is required.");
   if (!industryById.has(input.industryId)) errors.push("Select a supported industry.");
   if (![1, 2, 3].includes(input.tier)) errors.push("Select Tier 1, Tier 2, or Tier 3.");
-  if (!Array.isArray(input.standardIds) || input.standardIds.length < 1 || input.standardIds.length > 3) {
-    errors.push("Select between 1 and 3 compliance standards.");
+  if (!Array.isArray(input.standardIds) || input.standardIds.length < 1) {
+    errors.push("Select at least one compliance standard.");
   }
   if (new Set(input.standardIds).size !== input.standardIds.length) {
     errors.push("Duplicate standards are not allowed.");
