@@ -653,6 +653,8 @@ export function AssessmentWorkspace() {
                           <span>Tier {result.scope.tier} evidence</span>
                           <strong>
                             {result.liveEvidence.probes.filter((probe) => probe.status === "pass").length} passed ·{" "}
+                            {result.liveEvidence.probes.filter((probe) => probe.status === "partial").length} partial ·{" "}
+                            {result.liveEvidence.probes.filter((probe) => probe.status === "fail").length} failed ·{" "}
                             {result.liveEvidence.probes.filter((probe) => probe.status === "not_assessed").length} not assessed
                           </strong>
                         </div>
