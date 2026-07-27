@@ -115,40 +115,59 @@ function parseEventBlock(block: string) {
   return { name, data: data ? JSON.parse(data) : null };
 }
 
+function escapeReportText(value: unknown) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function createReportHtml(result: AssessmentResult, report?: StandardReport) {
   const selected = report ? [report] : result.reports;
+  const controlRows = (controls: StandardReport["controls"]) =>
+    controls
+      .map(
+        (control) =>
+          `<tr><td>${escapeReportText(control.id)} — ${escapeReportText(control.name)}</td><td>${escapeReportText(statusLabel(control.status))}</td><td>${escapeReportText(control.evidence)}</td><td>${control.status === "pass" ? "—" : escapeReportText(control.remediation)}</td></tr>`,
+      )
+      .join("");
   const reportsHtml = selected
     .map(
       (item) => `
       <section>
-        <h2>${item.shortName} — ${item.name}</h2>
-        <p><strong>Version:</strong> ${item.version}</p>
+        <h2>${escapeReportText(item.shortName)} — ${escapeReportText(item.name)}</h2>
+        <p><strong>Version:</strong> ${escapeReportText(item.version)}</p>
         <p><strong>Assessment result:</strong> ${item.score}% · ${item.readiness}</p>
-        <p><strong>Native scoring:</strong> ${item.scoringMethod}</p>
-        <p><strong>Pass threshold:</strong> ${item.passThreshold}</p>
+        <p><strong>Native scoring:</strong> ${escapeReportText(item.scoringMethod)}</p>
+        <p><strong>Pass threshold:</strong> ${escapeReportText(item.passThreshold)}</p>
         <h3>Report structure</h3>
-        <ol>${item.nativeSections.map((section) => `<li>${section}</li>`).join("")}</ol>
+        <ol>${item.nativeSections.map((section) => `<li>${escapeReportText(section)}</li>`).join("")}</ol>
         <h3>Control evidence</h3>
         <table><thead><tr><th>Control</th><th>Status</th><th>Evidence</th><th>Remediation</th></tr></thead>
-        <tbody>${item.controls
-          .map(
-            (control) =>
-              `<tr><td>${control.id} — ${control.name}</td><td>${statusLabel(control.status)}</td><td>${control.evidence}</td><td>${control.status === "pass" ? "—" : control.remediation}</td></tr>`,
-          )
-          .join("")}</tbody></table>
+        <tbody>${controlRows(item.controls)}</tbody></table>
       </section>`,
     )
     .join("");
-  return `<!doctype html><html><head><title>${result.scope.systemName} Governance Report</title>
+  const owaspHtml = report
+    ? ""
+    : `<section>
+        <h2>OWASP LLM security appendix</h2>
+        <p>Bounded live probes and checks mapped to the OWASP LLM control set.</p>
+        <table><thead><tr><th>Control</th><th>Status</th><th>Evidence</th><th>Remediation</th></tr></thead>
+        <tbody>${controlRows(result.owasp)}</tbody></table>
+      </section>`;
+  return `<!doctype html><html><head><meta charset="utf-8"/><title>${escapeReportText(result.scope.systemName)} Governance Report</title>
     <style>body{font-family:Arial,sans-serif;color:#172126;max-width:1000px;margin:40px auto;line-height:1.5}h1{font-size:30px}h2{margin-top:40px;border-bottom:2px solid #1c6255;padding-bottom:8px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #ccd7d3;padding:8px;text-align:left;vertical-align:top}th{background:#edf4f1}@media print{body{margin:16mm}section{break-before:page}section:first-of-type{break-before:auto}}</style>
     </head><body><h1>GovernAI RAG Compliance Assessment</h1>
-    <p><strong>${result.scope.organization}</strong> · ${result.scope.systemName}<br/>Assessment ${result.assessmentId} · Tier ${result.scope.tier} · ${new Date(result.generatedAt).toLocaleString()}</p>
+    <p><strong>${escapeReportText(result.scope.organization)}</strong> · ${escapeReportText(result.scope.systemName)}<br/>Assessment ${escapeReportText(result.assessmentId)} · Tier ${result.scope.tier} · ${escapeReportText(new Date(result.generatedAt).toLocaleString())}</p>
     <section><h2>Live endpoint evidence</h2>
-    <p><strong>Target:</strong> ${result.liveEvidence.target}<br/><strong>Chat API:</strong> ${result.liveEvidence.chatEndpoint}<br/><strong>Duration:</strong> ${result.liveEvidence.durationMs} ms</p>
+    <p><strong>Target:</strong> ${escapeReportText(result.liveEvidence.target)}<br/><strong>Chat API:</strong> ${escapeReportText(result.liveEvidence.chatEndpoint)}<br/><strong>Duration:</strong> ${result.liveEvidence.durationMs} ms</p>
     <table><thead><tr><th>Live check</th><th>Status</th><th>Summary</th><th>HTTP / latency</th></tr></thead>
-    <tbody>${result.liveEvidence.probes.map((probe) => `<tr><td>${probe.label}</td><td>${statusLabel(probe.status)}</td><td>${probe.summary}</td><td>${probe.httpStatus ?? "n/a"} / ${probe.latencyMs ?? "n/a"} ms</td></tr>`).join("")}</tbody></table>
+    <tbody>${result.liveEvidence.probes.map((probe) => `<tr><td>${escapeReportText(probe.label)}</td><td>${escapeReportText(statusLabel(probe.status))}</td><td>${escapeReportText(probe.summary)}</td><td>${probe.httpStatus ?? "n/a"} / ${probe.latencyMs ?? "n/a"} ms</td></tr>`).join("")}</tbody></table>
     </section>
-    ${reportsHtml}<script>window.onload=()=>window.print()</script></body></html>`;
+    ${reportsHtml}${owaspHtml}<script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250))</script></body></html>`;
 }
 
 export function AssessmentWorkspace() {
@@ -300,13 +319,18 @@ export function AssessmentWorkspace() {
 
   function printReport(report?: StandardReport) {
     if (!result) return;
-    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    const blob = new Blob([createReportHtml(result, report)], {
+      type: "text/html;charset=utf-8",
+    });
+    const href = URL.createObjectURL(blob);
+    const printWindow = window.open(href, "_blank");
     if (!printWindow) {
+      URL.revokeObjectURL(href);
       setErrors(["Pop-ups are blocked. Allow pop-ups to print or save this report as PDF."]);
       return;
     }
-    printWindow.document.write(createReportHtml(result, report));
-    printWindow.document.close();
+    printWindow.opener = null;
+    window.setTimeout(() => URL.revokeObjectURL(href), 60_000);
   }
 
   function downloadJson() {

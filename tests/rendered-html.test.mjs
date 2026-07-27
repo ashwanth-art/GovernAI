@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function worker() {
@@ -115,6 +116,19 @@ test("server-renders the complete assessment workspace", async () => {
   assert.doesNotMatch(html, /Anthropic|Claude/);
   assert.doesNotMatch(html, /codex-preview/);
   assert.doesNotMatch(html, /react-loading-skeleton/);
+});
+
+test("report export uses printable Blob content and includes the OWASP appendix", async () => {
+  const assetsDirectory = new URL("../dist/client/assets/", import.meta.url);
+  const assets = await readdir(assetsDirectory);
+  const workspaceAsset = assets.find(
+    (name) => name.startsWith("workspace-") && name.endsWith(".js"),
+  );
+  assert.ok(workspaceAsset, "Expected the client workspace bundle.");
+  const bundle = await readFile(new URL(workspaceAsset, assetsDirectory), "utf8");
+  assert.match(bundle, /createObjectURL/);
+  assert.match(bundle, /OWASP LLM security appendix/);
+  assert.doesNotMatch(bundle, /document\.write/);
 });
 
 test("catalog exposes all industries, standards, and tier-specific fields", async () => {
