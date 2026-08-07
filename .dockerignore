@@ -20,6 +20,14 @@ dist
 .next
 node_modules
 
+# next/font downloads Geist into .vinext/fonts and writes a style.css holding
+# absolute src: url() paths. On the build host those resolve, so the bundler
+# rewrites them into dist/client/assets/_vinext_fonts/. Copied into the image the
+# paths point at a directory that does not exist, nothing rewrites them, and the
+# deployed CSS ships the build machine's home directory — every font 404s and the
+# page silently falls back to system faces. The container must fetch its own.
+.vinext
+
 # Docs, design assets and generated artefacts that nothing at runtime reads.
 # Scoped to the repo root with a leading slash — a blanket *.png would also drop
 # public/og.png, which the build copies into dist/client.
