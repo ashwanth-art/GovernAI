@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="750" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="750" fill="#ffffff"/>
+  <text x="600" y="24" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">Tier Comparison  What Each Tier Does Differently at Every Step</text>
+
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- Header row -->
+  <rect x="30" y="50" width="180" height="35" rx="6" fill="#f1f5f9"/>
+  <text x="120" y="73" text-anchor="middle" font-size="12" font-weight="bold" fill="#475569">STEP</text>
+
+  <rect x="220" y="50" width="300" height="35" rx="6" fill="#DBEAFE"/>
+  <text x="370" y="73" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e40af">TIER 1 (Black-Box)</text>
+
+  <rect x="530" y="50" width="320" height="35" rx="6" fill="#D1FAE5"/>
+  <text x="690" y="73" text-anchor="middle" font-size="12" font-weight="bold" fill="#065f46">TIER 2 (Gray-Box)</text>
+
+  <rect x="860" y="50" width="310" height="35" rx="6" fill="#EDE9FE"/>
+  <text x="1015" y="73" text-anchor="middle" font-size="12" font-weight="bold" fill="#5b21b6">TIER 3 (White-Box)</text>
+
+  <!-- Row 1: Discovery -->
+  <rect x="30" y="95" width="180" height="90" rx="6" fill="#ECFDF5" stroke="#059669" stroke-width="1.5"/>
+  <text x="120" y="120" text-anchor="middle" font-size="11" font-weight="bold" fill="#059669">DISCOVERY</text>
+  <text x="120" y="138" text-anchor="middle" font-size="9" fill="#64748b">What model?</text>
+  <text x="120" y="152" text-anchor="middle" font-size="9" fill="#64748b">What vector DB?</text>
+  <text x="120" y="166" text-anchor="middle" font-size="9" fill="#64748b">What tools?</text>
+
+  <rect x="220" y="95" width="300" height="90" rx="6" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="235" y="115" font-size="9.5" fill="#1e293b">" LLMmap: 8 behavioral queries</text>
+  <text x="235" y="132" font-size="9.5" fill="#1e293b">" Citation patterns  guess DB</text>
+  <text x="235" y="149" font-size="9.5" fill="#1e293b">" Function-call prompting  tools</text>
+  <text x="235" y="170" font-size="9" fill="#dc2626">Confidence: MEDIUM (60-95%)</text>
+
+  <rect x="530" y="95" width="320" height="90" rx="6" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="545" y="115" font-size="9.5" fill="#1e293b">" Cisco AIBOM: scan source code repo</text>
+  <text x="545" y="132" font-size="9.5" fill="#1e293b">" k8s-aibom: read K8s pod configs</text>
+  <text x="545" y="149" font-size="9.5" fill="#1e293b">" Cloud APIs: read deployment settings</text>
+  <text x="545" y="170" font-size="9" fill="#059669">Confidence: HIGH (deterministic)</text>
+
+  <rect x="860" y="95" width="310" height="90" rx="6" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="875" y="115" font-size="9.5" fill="#1e293b">" All of Tier 2, PLUS:</text>
+  <text x="875" y="132" font-size="9.5" fill="#1e293b">" Read system prompt from config</text>
+  <text x="875" y="149" font-size="9.5" fill="#1e293b">" Inspect data pipeline sourceembed</text>
+  <text x="875" y="170" font-size="9" fill="#7c3aed">Confidence: VERIFIED (100%)</text>
+
+  <!-- Row 2: Compliance -->
+  <rect x="30" y="195" width="180" height="90" rx="6" fill="#F5F3FF" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="120" y="220" text-anchor="middle" font-size="11" font-weight="bold" fill="#7c3aed">COMPLIANCE</text>
+  <text x="120" y="238" text-anchor="middle" font-size="9" fill="#64748b">NIST, EU AI Act</text>
+  <text x="120" y="252" text-anchor="middle" font-size="9" fill="#64748b">ISO 42001</text>
+  <text x="120" y="266" text-anchor="middle" font-size="9" fill="#64748b">34 controls total</text>
+
+  <rect x="220" y="195" width="300" height="90" rx="6" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="235" y="215" font-size="9.5" fill="#1e293b">" Test accuracy (hallucination benchmark)</text>
+  <text x="235" y="232" font-size="9.5" fill="#1e293b">" Check response headers for traces</text>
+  <text x="235" y="249" font-size="9.5" fill="#1e293b">" Self-attestation questionnaire</text>
+  <text x="235" y="266" font-size="9" fill="#dc2626">Can test: ~8/34 controls (24%)</text>
+
+  <rect x="530" y="195" width="320" height="90" rx="6" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="545" y="215" font-size="9.5" fill="#1e293b">" Query Datadog/Grafana  audit logs exist</text>
+  <text x="545" y="232" font-size="9.5" fill="#1e293b">" Query GitHub Actions  policy gates</text>
+  <text x="545" y="249" font-size="9.5" fill="#1e293b">" Query PagerDuty  incident runbooks</text>
+  <text x="545" y="266" font-size="9" fill="#059669">Can test: ~27/34 controls (79%)</text>
+
+  <rect x="860" y="195" width="310" height="90" rx="6" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="875" y="215" font-size="9.5" fill="#1e293b">" All of Tier 2, PLUS:</text>
+  <text x="875" y="232" font-size="9.5" fill="#1e293b">" Verify data lineage end-to-end</text>
+  <text x="875" y="249" font-size="9.5" fill="#1e293b">" Inspect training data provenance</text>
+  <text x="875" y="266" font-size="9" fill="#7c3aed">Can test: ~33/34 controls (97%)</text>
+
+  <!-- Row 3: Security -->
+  <rect x="30" y="295" width="180" height="90" rx="6" fill="#FEF2F2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="120" y="320" text-anchor="middle" font-size="11" font-weight="bold" fill="#dc2626">SECURITY</text>
+  <text x="120" y="338" text-anchor="middle" font-size="9" fill="#64748b">OWASP LLM Top 10</text>
+  <text x="120" y="352" text-anchor="middle" font-size="9" fill="#64748b">RAG-specific attacks</text>
+  <text x="120" y="366" text-anchor="middle" font-size="9" fill="#64748b">10 categories</text>
+
+  <rect x="220" y="295" width="300" height="90" rx="6" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="235" y="315" font-size="9.5" fill="#1e293b">" Prompt injection (direct + indirect)</text>
+  <text x="235" y="332" font-size="9.5" fill="#1e293b">" Data leakage + system prompt extraction</text>
+  <text x="235" y="349" font-size="9.5" fill="#1e293b">" Output manipulation (XSS/SQLi)</text>
+  <text x="235" y="366" font-size="9" fill="#d97706">Can test: 7/10 categories (70%)</text>
+
+  <rect x="530" y="295" width="320" height="90" rx="6" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="545" y="315" font-size="9.5" fill="#1e293b">" All of Tier 1, PLUS:</text>
+  <text x="545" y="332" font-size="9.5" fill="#1e293b">" rag-poison-detector on vector DB</text>
+  <text x="545" y="349" font-size="9.5" fill="#1e293b">" HubScan for hubness attacks</text>
+  <text x="545" y="366" font-size="9" fill="#059669">Can test: 9/10 categories (90%)</text>
+
+  <rect x="860" y="295" width="310" height="90" rx="6" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="875" y="315" font-size="9.5" fill="#1e293b">" All of Tier 2, PLUS:</text>
+  <text x="875" y="332" font-size="9.5" fill="#1e293b">" Inject poison docs in staging</text>
+  <text x="875" y="349" font-size="9.5" fill="#1e293b">" Cross-tenant with 2 credentials</text>
+  <text x="875" y="366" font-size="9" fill="#7c3aed">Can test: 10/10 categories (100%)</text>
+
+  <!-- Row 4: Risk -->
+  <rect x="30" y="395" width="180" height="90" rx="6" fill="#FFFBEB" stroke="#d97706" stroke-width="1.5"/>
+  <text x="120" y="420" text-anchor="middle" font-size="11" font-weight="bold" fill="#d97706">RISK METRICS</text>
+  <text x="120" y="438" text-anchor="middle" font-size="9" fill="#64748b">Hallucination, Fairness</text>
+  <text x="120" y="452" text-anchor="middle" font-size="9" fill="#64748b">Temporal, Attribution</text>
+  <text x="120" y="466" text-anchor="middle" font-size="9" fill="#64748b">5 metrics total</text>
+
+  <rect x="220" y="395" width="300" height="90" rx="6" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="235" y="415" font-size="9.5" fill="#1e293b">" ContextCheck (self-consistency)</text>
+  <text x="235" y="432" font-size="9.5" fill="#1e293b">" NLI against RAG's own citations</text>
+  <text x="235" y="449" font-size="9.5" fill="#1e293b">" Fairness: demographic variants</text>
+  <text x="235" y="466" font-size="9" fill="#059669">Can measure: 5/5 metrics (100%)</text>
+
+  <rect x="530" y="395" width="320" height="90" rx="6" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="545" y="415" font-size="9.5" fill="#1e293b">" Same as Tier 1, PLUS:</text>
+  <text x="545" y="432" font-size="9.5" fill="#1e293b">" Client validation corpus  exact FA</text>
+  <text x="545" y="449" font-size="9.5" fill="#1e293b">" Higher confidence (verified sources)</text>
+  <text x="545" y="466" font-size="9" fill="#059669">Can measure: 5/5 metrics (higher conf)</text>
+
+  <rect x="860" y="395" width="310" height="90" rx="6" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="875" y="415" font-size="9.5" fill="#1e293b">" All of Tier 2, PLUS:</text>
+  <text x="875" y="432" font-size="9.5" fill="#1e293b">" White-box bias via activations</text>
+  <text x="875" y="449" font-size="9.5" fill="#1e293b">" Full knowledge base comparison</text>
+  <text x="875" y="466" font-size="9" fill="#7c3aed">Can measure: 5/5 (deepest analysis)</text>
+
+  <!-- Row 5: Output -->
+  <rect x="30" y="495" width="180" height="75" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="120" y="520" text-anchor="middle" font-size="11" font-weight="bold" fill="#475569">FINAL OUTPUT</text>
+  <text x="120" y="538" text-anchor="middle" font-size="9" fill="#64748b">Grade + Report</text>
+  <text x="120" y="552" text-anchor="middle" font-size="9" fill="#64748b">+ Evidence</text>
+
+  <rect x="220" y="495" width="300" height="75" rx="6" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="235" y="515" font-size="9.5" fill="#1e293b">" Grade with "40% controls assessed"</text>
+  <text x="235" y="532" font-size="9.5" fill="#1e293b">" Security findings (high confidence)</text>
+  <text x="235" y="549" font-size="9.5" fill="#1e293b">" Many "NOT ASSESSED" markers</text>
+
+  <rect x="530" y="495" width="320" height="75" rx="6" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="545" y="515" font-size="9.5" fill="#1e293b">" Grade with "80% controls assessed"</text>
+  <text x="545" y="532" font-size="9.5" fill="#1e293b">" Full compliance + security report</text>
+  <text x="545" y="549" font-size="9.5" fill="#1e293b">" Audit-ready evidence pack</text>
+
+  <rect x="860" y="495" width="310" height="75" rx="6" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="875" y="515" font-size="9.5" fill="#1e293b">" Grade with "95% controls assessed"</text>
+  <text x="875" y="532" font-size="9.5" fill="#1e293b">" Regulatory certification-ready</text>
+  <text x="875" y="549" font-size="9.5" fill="#1e293b">" Submit directly to auditors</text>
+
+  <!-- Cost row -->
+  <rect x="30" y="585" width="1140" height="40" rx="8" fill="#0f172a"/>
+  <text x="120" y="610" text-anchor="middle" font-size="11" fill="#94a3b8" font-weight="bold">COST</text>
+  <text x="370" y="610" text-anchor="middle" font-size="11" fill="#6ee7b7">$20-40  200-400 requests  5 min</text>
+  <text x="690" y="610" text-anchor="middle" font-size="11" fill="#6ee7b7">$40-75  300-600 requests  10 min</text>
+  <text x="1015" y="610" text-anchor="middle" font-size="11" fill="#6ee7b7">$60-120  400-800 requests  15 min</text>
+
+  <!-- Input needed row -->
+  <rect x="30" y="640" width="1140" height="95" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="600" y="665" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">What the Frontend Input Form Shows Per Tier</text>
+  <text x="370" y="688" text-anchor="middle" font-size="10" fill="#2563EB">Tier 1: URL + API Key + Org + Risk Tier</text>
+  <text x="370" y="704" text-anchor="middle" font-size="9" fill="#64748b">(4 fields, takes 30 seconds to fill)</text>
+  <text x="690" y="688" text-anchor="middle" font-size="10" fill="#059669">Tier 2: +GitHub token +Cloud creds +Observability key</text>
+  <text x="690" y="704" text-anchor="middle" font-size="9" fill="#64748b">(7-8 fields, one-time setup ~10 min)</text>
+  <text x="1015" y="688" text-anchor="middle" font-size="10" fill="#7c3aed">Tier 3: +Staging URL +2nd tenant creds +Model path</text>
+  <text x="1015" y="704" text-anchor="middle" font-size="9" fill="#64748b">(10-12 fields, requires DevOps coordination)</text>
+</svg>

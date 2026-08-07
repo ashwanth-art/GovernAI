@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 600" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1100" height="600" fill="#ffffff"/>
+  <text x="550" y="24" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">Agent Pipeline  From Client Input to Final Report</text>
+  <text x="550" y="44" text-anchor="middle" font-size="11" fill="#64748b">Fully automated, every step produces visible output on the frontend dashboard</text>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- Step 1: Input -->
+  <rect x="30" y="70" width="180" height="100" rx="12" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <text x="120" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">STEP 1</text>
+  <text x="120" y="115" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">Client Input</text>
+  <text x="120" y="135" text-anchor="middle" font-size="10" fill="#64748b">API endpoint</text>
+  <text x="120" y="150" text-anchor="middle" font-size="10" fill="#64748b">Credentials + Tier</text>
+  <text x="120" y="165" text-anchor="middle" font-size="10" fill="#64748b">via Frontend Form</text>
+
+  <!-- Arrow 1�2 -->
+  <line x1="210" y1="120" x2="255" y2="120" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Step 2: Discovery -->
+  <rect x="262" y="70" width="180" height="100" rx="12" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <text x="352" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#059669">STEP 2</text>
+  <text x="352" y="115" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">Discovery</text>
+  <text x="352" y="135" text-anchor="middle" font-size="10" fill="#64748b">LLMmap fingerprint</text>
+  <text x="352" y="150" text-anchor="middle" font-size="10" fill="#64748b">AI-BOM scan</text>
+  <text x="352" y="165" text-anchor="middle" font-size="10" fill="#64748b">Architecture map</text>
+
+  <!-- Arrow 2�3 (splits) -->
+  <line x1="442" y1="120" x2="500" y2="120" stroke="#64748b" stroke-width="2"/>
+  <line x1="500" y1="120" x2="500" y2="80" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="500" y1="120" x2="500" y2="160" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="500" y1="80" x2="530" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="500" y1="120" x2="530" y2="120" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="500" y1="160" x2="530" y2="160" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Step 3a: Compliance -->
+  <rect x="537" y="55" width="170" height="52" rx="10" fill="#F5F3FF" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="622" y="76" text-anchor="middle" font-size="11" font-weight="bold" fill="#7c3aed">STEP 3a</text>
+  <text x="622" y="94" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Compliance</text>
+
+  <!-- Step 3b: Security -->
+  <rect x="537" y="112" width="170" height="52" rx="10" fill="#FEF2F2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="622" y="133" text-anchor="middle" font-size="11" font-weight="bold" fill="#dc2626">STEP 3b</text>
+  <text x="622" y="151" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Security</text>
+
+  <!-- Step 3c: Risk -->
+  <rect x="537" y="169" width="170" height="52" rx="10" fill="#FFFBEB" stroke="#d97706" stroke-width="1.5"/>
+  <text x="622" y="190" text-anchor="middle" font-size="11" font-weight="bold" fill="#d97706">STEP 3c</text>
+  <text x="622" y="208" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Risk</text>
+
+  <!-- Arrow 3�4 (merges) -->
+  <line x1="707" y1="80" x2="740" y2="120" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="707" y1="138" x2="740" y2="120" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="707" y1="195" x2="740" y2="120" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="740" y1="120" x2="770" y2="120" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Step 4: Aggregation -->
+  <rect x="777" y="70" width="140" height="100" rx="12" fill="#FEF3C7" stroke="#d97706" stroke-width="2"/>
+  <text x="847" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#d97706">STEP 4</text>
+  <text x="847" y="115" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">Aggregate</text>
+  <text x="847" y="135" text-anchor="middle" font-size="10" fill="#64748b">Weighted scoring</text>
+  <text x="847" y="150" text-anchor="middle" font-size="10" fill="#64748b">Confidence levels</text>
+  <text x="847" y="165" text-anchor="middle" font-size="10" fill="#64748b">Grade assignment</text>
+
+  <!-- Arrow 4�5 -->
+  <line x1="917" y1="120" x2="945" y2="120" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Step 5: Report -->
+  <rect x="952" y="70" width="130" height="100" rx="12" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <text x="1017" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#059669">STEP 5</text>
+  <text x="1017" y="115" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">Report</text>
+  <text x="1017" y="135" text-anchor="middle" font-size="10" fill="#64748b">Dashboard view</text>
+  <text x="1017" y="150" text-anchor="middle" font-size="10" fill="#64748b">JSON evidence</text>
+  <text x="1017" y="165" text-anchor="middle" font-size="10" fill="#64748b">PDF export</text>
+
+  <!-- Frontend section below -->
+  <rect x="30" y="220" width="1050" height="370" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="46" y="208" width="300" height="26" rx="6" fill="#e2e8f0"/>
+  <text x="196" y="226" text-anchor="middle" font-size="13" font-weight="bold" fill="#475569">FRONTEND DASHBOARD (Next.js on Vercel)</text>
+
+  <!-- Frontend panels -->
+  <rect x="50" y="250" width="200" height="150" rx="10" fill="#ffffff" stroke="#2563EB" stroke-width="1.5"/>
+  <text x="150" y="275" text-anchor="middle" font-size="12" font-weight="bold" fill="#2563EB">Input Panel</text>
+  <text x="150" y="300" text-anchor="middle" font-size="10" fill="#64748b">Endpoint URL field</text>
+  <text x="150" y="318" text-anchor="middle" font-size="10" fill="#64748b">API key (masked)</text>
+  <text x="150" y="336" text-anchor="middle" font-size="10" fill="#64748b">Risk tier selector</text>
+  <text x="150" y="354" text-anchor="middle" font-size="10" fill="#64748b">Access tier picker</text>
+  <text x="150" y="372" text-anchor="middle" font-size="10" fill="#64748b">Infrastructure connectors</text>
+  <rect x="80" y="380" width="140" height="30" rx="6" fill="#2563EB"/>
+  <text x="150" y="400" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">Start Assessment</text>
+
+  <rect x="270" y="250" width="260" height="150" rx="10" fill="#ffffff" stroke="#059669" stroke-width="1.5"/>
+  <text x="400" y="275" text-anchor="middle" font-size="12" font-weight="bold" fill="#059669">Live Progress Panel</text>
+  <text x="400" y="300" text-anchor="middle" font-size="10" fill="#64748b">Step-by-step status (real-time)</text>
+  <text x="400" y="318" text-anchor="middle" font-size="10" fill="#64748b">Current step output logs</text>
+  <text x="400" y="336" text-anchor="middle" font-size="10" fill="#64748b">Per-step scores as they compute</text>
+  <text x="400" y="354" text-anchor="middle" font-size="10" fill="#64748b">Progress bar (% complete)</text>
+  <text x="400" y="372" text-anchor="middle" font-size="10" fill="#64748b">Expandable step details</text>
+
+  <rect x="550" y="250" width="250" height="150" rx="10" fill="#ffffff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="675" y="275" text-anchor="middle" font-size="12" font-weight="bold" fill="#7c3aed">Scores Panel</text>
+  <text x="675" y="300" text-anchor="middle" font-size="10" fill="#64748b">Overall governance grade (A-F)</text>
+  <text x="675" y="318" text-anchor="middle" font-size="10" fill="#64748b">5-pillar radar chart</text>
+  <text x="675" y="336" text-anchor="middle" font-size="10" fill="#64748b">Per-framework compliance %</text>
+  <text x="675" y="354" text-anchor="middle" font-size="10" fill="#64748b">Confidence indicators</text>
+  <text x="675" y="372" text-anchor="middle" font-size="10" fill="#64748b">Trend over time</text>
+
+  <rect x="820" y="250" width="240" height="150" rx="10" fill="#ffffff" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="940" y="275" text-anchor="middle" font-size="12" font-weight="bold" fill="#dc2626">Report Panel</text>
+  <text x="940" y="300" text-anchor="middle" font-size="10" fill="#64748b">Prioritized findings list</text>
+  <text x="940" y="318" text-anchor="middle" font-size="10" fill="#64748b">Remediation roadmap</text>
+  <text x="940" y="336" text-anchor="middle" font-size="10" fill="#64748b">Evidence viewer</text>
+  <text x="940" y="354" text-anchor="middle" font-size="10" fill="#64748b">Framework drill-down</text>
+  <text x="940" y="372" text-anchor="middle" font-size="10" fill="#64748b">Export: PDF / JSON</text>
+
+  <!-- Tech stack labels -->
+  <rect x="50" y="430" width="1010" height="50" rx="8" fill="#0f172a"/>
+  <text x="555" y="452" text-anchor="middle" font-size="11" fill="#94a3b8">Next.js 14 � TypeScript � Tailwind CSS � shadcn/ui � Server-Sent Events (real-time) � Vercel Deployment</text>
+  <text x="555" y="470" text-anchor="middle" font-size="11" fill="#94a3b8">Backend: Python FastAPI � LangGraph orchestrator � PostgreSQL (Neon) � Vercel Serverless Functions</text>
+
+  <!-- API connection arrows -->
+  <rect x="50" y="500" width="240" height="75" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="170" y="525" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Vercel Frontend</text>
+  <text x="170" y="545" text-anchor="middle" font-size="10" fill="#64748b">Next.js SSR + Client components</text>
+  <text x="170" y="560" text-anchor="middle" font-size="10" fill="#64748b">Deployed on Vercel Edge</text>
+
+  <line x1="290" y1="537" x2="410" y2="537" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="350" y="530" text-anchor="middle" font-size="9" fill="#64748b">SSE stream</text>
+
+  <rect x="420" y="500" width="240" height="75" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="540" y="525" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">API Backend</text>
+  <text x="540" y="545" text-anchor="middle" font-size="10" fill="#64748b">FastAPI + LangGraph Agent</text>
+  <text x="540" y="560" text-anchor="middle" font-size="10" fill="#64748b">Vercel Serverless or Railway</text>
+
+  <line x1="660" y1="537" x2="780" y2="537" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="720" y="530" text-anchor="middle" font-size="9" fill="#64748b">evaluate</text>
+
+  <rect x="790" y="500" width="240" height="75" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="910" y="525" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Client's RAG Chatbot</text>
+  <text x="910" y="545" text-anchor="middle" font-size="10" fill="#64748b">Target system under evaluation</text>
+  <text x="910" y="560" text-anchor="middle" font-size="10" fill="#64748b">Any endpoint, any provider</text>
+</svg>

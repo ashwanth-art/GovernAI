@@ -1,160 +1,74 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LiveRun, type RunEvent } from "@/components/live";
+import { CHAPTERS, Report } from "@/components/report";
+import {
+  receiptFor,
+  Step,
+  STEP_TITLE,
+  trackFor,
+  type PreflightState,
+  type ScopeResult,
+  type StepId,
+} from "@/components/steps";
+import { defaultApplicabilityProfile, validateApplicability } from "@/lib/applicability";
 import { credentialFields } from "@/lib/assessment";
-import { industries, standardById, standards, tierCoverageLabel } from "@/lib/catalog";
-import type {
-  AccessTier,
-  AssessmentInput,
-  AssessmentResult,
-  ControlStatus,
-  Pillar,
-  StandardReport,
-} from "@/lib/types";
+import { estimate } from "@/lib/metrics";
+import { accessSignalsFromCredentials } from "@/lib/plan";
+import { createReportHtml } from "@/lib/report-html";
+import type { AssessmentInput, AssessmentResult, CheckPlan } from "@/lib/types";
 
-const steps = [
-  { number: "01", title: "Define scope", description: "System and RAG architecture" },
-  { number: "02", title: "Select standards", description: "Choose exactly what runs" },
-  { number: "03", title: "Set access tier", description: "Match evidence depth" },
-  { number: "04", title: "Review & evaluate", description: "Validate and launch" },
-];
-
-const pillarLabels: Record<Pillar, string> = {
-  trust: "Trust",
-  security: "Security",
-  governance: "Governance",
-  compliance: "Compliance",
-  data_protection: "Data Protection",
+/**
+ * Every connection field for all three tiers, pre-filled against the throwaway test
+ * assistant so a first run is one pass through the track rather than fourteen paste
+ * operations. Each value is editable on the connection step and nothing here is
+ * authoritative — the form is the input.
+ *
+ * The three keys are the target's own placeholder service keys, and they only ever
+ * reach the endpoints the connection step names. Replace this block with blanks
+ * before pointing the app at anything real — a key that lives in source is a key
+ * that leaks with the source.
+ */
+const DEMO_CREDENTIALS: Record<string, string> = {
+  chatbotEndpoint: "https://chat-bot-22j5.onrender.com/",
+  tenantId: "aci-infotech",
+  chatbotApiKey: "aci-chatbot-local-2026-change-before-deploy",
+  cloudProvider: "Render",
+  cloudApiKey: "aci-audit-local-2026-change-before-deploy",
+  monitoringProvider: "Prometheus",
+  monitoringApiKey: "aci-monitor-local-2026-change-before-deploy",
+  cicdUrl: "https://github.com/ashwanth-art/chat_bot/actions",
+  repoUrl: "https://github.com/ashwanth-art/chat_bot",
+  stagingUrl: "https://chat-bot-22j5.onrender.com/",
+  modelRegistryUrl: "https://platform.openai.com/docs/models",
+  evidenceManifestUrl: "https://chat-bot-22j5.onrender.com/api/evidence/manifest",
+  // The manifest sits behind the audit key rather than a credential of its own.
+  evidenceManifestToken: "aci-audit-local-2026-change-before-deploy",
 };
 
-const tierDetails: Array<{
-  tier: AccessTier;
-  title: string;
-  coverage: string;
-  subtitle: string;
-  features: string[];
-}> = [
-  {
-    tier: 1,
-    title: "Black-box",
-    coverage: "55–60%",
-    subtitle: "API-only evaluation",
-    features: ["Adversarial probes", "Leakage and injection tests", "Groundedness checks"],
-  },
-  {
-    tier: 2,
-    title: "Gray-box",
-    coverage: "80–85%",
-    subtitle: "API + infrastructure",
-    features: ["Everything in Tier 1", "Cloud and logging checks", "CI/CD and encryption review"],
-  },
-  {
-    tier: 3,
-    title: "White-box",
-    coverage: "100%",
-    subtitle: "Source + staging",
-    features: ["Everything in Tier 2", "Source and dependency review", "Corpus and model-card audit"],
-  },
-];
-
-const emptyInput: AssessmentInput = {
+const startingInput: AssessmentInput = {
   organization: "ACI Infotech",
   systemName: "ACI Knowledge Assistant",
   industryId: "finance",
   standardIds: ["mas_ai", "soc2", "iso42001"],
   tier: 1,
-  credentials: {
-    chatbotEndpoint: "https://chat-bot-22j5.onrender.com/",
-    tenantId: "aci-infotech",
+  applicability: {
+    ...defaultApplicabilityProfile,
+    hipaaRole: "not_regulated",
+    euTerritorialScope: "out_of_scope",
+    euRole: "provider",
+    euRiskClass: "limited_or_minimal",
+    directHumanInteraction: true,
   },
+  credentials: { ...DEMO_CREDENTIALS },
   architecture: {
     modelProvider: "OpenAI",
-    modelName: "Service-managed OpenAI model",
-    vectorDatabase: "MongoDB",
-    embeddingModel: "Service-managed embeddings",
+    modelName: "gpt-5.6-sol",
+    vectorDatabase: "MongoDB Atlas Vector Search",
+    embeddingModel: "text-embedding-3-small",
   },
 };
-
-function statusLabel(status: ControlStatus) {
-  return status === "not_assessed"
-    ? "Not assessed"
-    : status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-function evidenceSourceLabel(source: unknown) {
-  switch (String(source ?? "")) {
-    case "target_service":
-      return "Target API";
-    case "chatbot_probe":
-      return "Live chatbot";
-    case "target_adapter":
-      return "Target adapter";
-    case "provided_url":
-      return "Provided URL";
-    case "control_catalog":
-      return "Built-in catalog";
-    case "control_mapping":
-      return "Local mapping";
-    case "report_generation":
-      return "Local report";
-    case "parallel_live_requests":
-      return "Parallel calls";
-    default:
-      return "Workflow";
-  }
-}
-
-function targetAdapterEndpoint(baseUrl: string, path: string) {
-  try {
-    return new URL(path, new URL(baseUrl).origin).toString();
-  } catch {
-    return `Target host${path}`;
-  }
-}
-
-function eventTime(value: unknown) {
-  const date = new Date(String(value ?? ""));
-  return Number.isNaN(date.getTime())
-    ? ""
-    : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-}
-
-function officialReferenceStatusLabel(status: string) {
-  switch (status) {
-    case "under_revision":
-      return "Under revision";
-    case "superseded":
-      return "Superseded — use current link";
-    case "licensed_preview":
-      return "Official licensed preview";
-    default:
-      return "Current official reference";
-  }
-}
-
-function StatusBadge({ status }: { status: ControlStatus }) {
-  return <span className={`status status-${status}`}>{statusLabel(status)}</span>;
-}
-
-function loadLiveTargetInput(): AssessmentInput {
-  return {
-    organization: "ACI Infotech",
-    systemName: "ACI Knowledge Assistant",
-    industryId: "finance",
-    standardIds: ["mas_ai", "soc2", "iso42001"],
-    tier: 1,
-    credentials: {
-      chatbotEndpoint: "https://chat-bot-22j5.onrender.com/",
-      tenantId: "aci-infotech",
-    },
-    architecture: {
-      modelProvider: "OpenAI",
-      modelName: "Service-managed OpenAI model",
-      vectorDatabase: "MongoDB",
-      embeddingModel: "Service-managed embeddings",
-    },
-  };
-}
 
 function parseEventBlock(block: string) {
   let name = "message";
@@ -166,175 +80,292 @@ function parseEventBlock(block: string) {
   return { name, data: data ? JSON.parse(data) : null };
 }
 
-function escapeReportText(value: unknown) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+/**
+ * How many events the browser keeps.
+ *
+ * There has to be a cap, but a plain ring buffer evicts the structural events the
+ * screens are built from — a run emits one event per control, so past a few hundred
+ * selected controls the buffer silently dropped `assessment_start` and the run
+ * screen lost its stage rail on a run that was working perfectly. The cap is
+ * selective instead: structural events are never evicted, and the rolling window
+ * applies only to the repetitive ones.
+ */
+const EVENT_WINDOW = 900;
+
+const PINNED_EVENTS = new Set([
+  "assessment_start",
+  "stage_start",
+  "pillar_progress",
+  "posture_update",
+  "execution_summary",
+  "assessment_error",
+]);
+
+function appendEvent(current: RunEvent[], next: RunEvent): RunEvent[] {
+  const appended = [...current, next];
+  if (appended.length <= EVENT_WINDOW) return appended;
+  let toDrop = appended.length - EVENT_WINDOW;
+  const kept: RunEvent[] = [];
+  for (const event of appended) {
+    if (toDrop > 0 && !PINNED_EVENTS.has(event.name)) {
+      toDrop -= 1;
+      continue;
+    }
+    kept.push(event);
+  }
+  return kept;
 }
 
-function createReportHtml(result: AssessmentResult, report?: StandardReport) {
-  const selected = report ? [report] : result.reports;
-  const controlRows = (controls: StandardReport["controls"]) =>
-    controls
-      .map(
-        (control) =>
-          `<tr><td>${escapeReportText(control.id)} — ${escapeReportText(control.name)}</td><td>${escapeReportText(statusLabel(control.status))}</td><td>${escapeReportText(control.evidence)}${control.sourceCitation ? `<br/><strong>Official mapping:</strong> ${escapeReportText(control.sourceCitation.section)} — ${escapeReportText(control.sourceCitation.url)}` : ""}</td><td>${control.status === "pass" ? "—" : escapeReportText(control.remediation)}</td></tr>`,
-      )
-      .join("");
-  const reportsHtml = selected
-    .map(
-      (item) => `
-      <section>
-        <h2>${escapeReportText(item.shortName)} — ${escapeReportText(item.name)}</h2>
-        <p><strong>Version:</strong> ${escapeReportText(item.version)}</p>
-        <p><strong>Assessment result:</strong> ${item.score}% · ${item.readiness}</p>
-        <p><strong>Native scoring:</strong> ${escapeReportText(item.scoringMethod)}</p>
-        <p><strong>Pass threshold:</strong> ${escapeReportText(item.passThreshold)}</p>
-        <p><strong>Official authority reference:</strong> ${escapeReportText(item.officialReference.authority)} — <a href="${escapeReportText(item.officialReference.url)}">${escapeReportText(item.officialReference.title)}</a><br/><strong>Assessment access:</strong> Reference link recorded; official page not fetched during this run.</p>
-        <h3>Report structure</h3>
-        <ol>${item.nativeSections.map((section) => `<li>${escapeReportText(section)}</li>`).join("")}</ol>
-        <h3>Control evidence</h3>
-        <table><thead><tr><th>Control</th><th>Status</th><th>Evidence</th><th>Remediation</th></tr></thead>
-        <tbody>${controlRows(item.controls)}</tbody></table>
-      </section>`,
-    )
-    .join("");
-  const owaspHtml = report
-    ? ""
-    : `<section>
-        <h2>OWASP LLM security appendix</h2>
-        <p>Bounded live probes and checks mapped to the OWASP LLM control set.</p>
-        <table><thead><tr><th>Control</th><th>Status</th><th>Evidence</th><th>Remediation</th></tr></thead>
-        <tbody>${controlRows(result.owasp)}</tbody></table>
-      </section>`;
-  return `<!doctype html><html><head><meta charset="utf-8"/><title>${escapeReportText(result.scope.systemName)} Governance Report</title>
-    <style>body{font-family:Arial,sans-serif;color:#172126;max-width:1000px;margin:40px auto;line-height:1.5}h1{font-size:30px}h2{margin-top:40px;border-bottom:2px solid #1c6255;padding-bottom:8px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #ccd7d3;padding:8px;text-align:left;vertical-align:top}th{background:#edf4f1}@media print{body{margin:16mm}section{break-before:page}section:first-of-type{break-before:auto}}</style>
-    </head><body><h1>GovernAI RAG Compliance Assessment</h1>
-    <p><strong>${escapeReportText(result.scope.organization)}</strong> · ${escapeReportText(result.scope.systemName)}<br/>Assessment ${escapeReportText(result.assessmentId)} · Tier ${result.scope.tier} · ${escapeReportText(new Date(result.generatedAt).toLocaleString())}</p>
-    <section><h2>Live endpoint evidence</h2>
-    <p><strong>Executed by:</strong> ${escapeReportText(result.liveEvidence.execution.runner)}<br/><strong>Target:</strong> ${escapeReportText(result.liveEvidence.target)}<br/><strong>Chat API:</strong> ${escapeReportText(result.liveEvidence.chatEndpoint)}<br/><strong>Duration:</strong> ${result.liveEvidence.durationMs} ms</p>
-    <p><strong>Control source:</strong> ${escapeReportText(result.liveEvidence.execution.controlCatalog)}. Official standards or regulator pages were not fetched during this assessment.</p>
-    <table><thead><tr><th>Live check</th><th>Status</th><th>Observed request</th><th>Summary</th><th>HTTP / latency</th></tr></thead>
-    <tbody>${result.liveEvidence.probes.map((probe) => `<tr><td>${escapeReportText(probe.label)}</td><td>${escapeReportText(statusLabel(probe.status))}</td><td>${escapeReportText(evidenceSourceLabel(probe.sourceType))}<br/>${escapeReportText(probe.method)} ${escapeReportText(probe.endpoint)}</td><td>${escapeReportText(probe.summary)}</td><td>${probe.httpStatus ?? "n/a"} / ${probe.latencyMs ?? "n/a"} ms</td></tr>`).join("")}</tbody></table>
-    </section>
-    ${reportsHtml}${owaspHtml}<script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250))</script></body></html>`;
-}
+type Phase = "setup" | "run" | "report";
 
 export function AssessmentWorkspace() {
-  const [step, setStep] = useState(0);
-  const [input, setInput] = useState<AssessmentInput>(emptyInput);
-  const [standardSearch, setStandardSearch] = useState("");
+  const [phase, setPhase] = useState<Phase>("setup");
+  const [at, setAt] = useState(0);
+  const [reached, setReached] = useState(0);
+  const [dir, setDir] = useState<"fwd" | "back">("fwd");
+  const [input, setInput] = useState<AssessmentInput>(startingInput);
   const [errors, setErrors] = useState<string[]>([]);
   const [result, setResult] = useState<AssessmentResult | null>(null);
+  const [events, setEvents] = useState<RunEvent[]>([]);
   const [running, setRunning] = useState(false);
-  const [lastRunFailed, setLastRunFailed] = useState(false);
-  const [events, setEvents] = useState<Array<{ name: string; data: Record<string, unknown> }>>([]);
-  const [activeTab, setActiveTab] = useState("progress");
+  const [failed, setFailed] = useState(false);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [scope, setScope] = useState<ScopeResult | null>(null);
+  const [plan, setPlan] = useState<CheckPlan | null>(null);
+  const [preflight, setPreflight] = useState<PreflightState | null>(null);
+  const [preflightLoading, setPreflightLoading] = useState(false);
+  const [chapter, setChapter] = useState<string>(CHAPTERS[0].id);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const trailRef = useRef<HTMLDivElement>(null);
+  /* Held so a run can be stopped. A stream the reader has abandoned still holds a
+     connection open and still issues the requests it was going to issue — a stop
+     button that only hides the screen is not a stop button. */
+  const abortRef = useRef<AbortController | null>(null);
 
-  const industry = industries.find((item) => item.id === input.industryId)!;
-  const visibleStandards = useMemo(() => {
-    const query = standardSearch.trim().toLowerCase();
-    const recommended = new Set(industry.recommendations.map((item) => item.standardId));
-    return standards
-      .filter(
-        (item) =>
-          !query ||
-          item.shortName.toLowerCase().includes(query) ||
-          item.name.toLowerCase().includes(query) ||
-          item.jurisdiction.toLowerCase().includes(query),
-      )
-      .sort((a, b) => Number(recommended.has(b.id)) - Number(recommended.has(a.id)));
-  }, [industry, standardSearch]);
+  const track = useMemo(() => trackFor(input), [input]);
+  const step: StepId = track[Math.min(at, track.length - 1)] ?? "system";
 
-  const selectedDefinitions = input.standardIds
-    .map((id) => standardById.get(id))
-    .filter(Boolean) as NonNullable<ReturnType<typeof standardById.get>>[];
+  /* ---- the form, kept across reloads ------------------------------------ */
 
-  function patchInput(patch: Partial<AssessmentInput>) {
-    setInput((current) => ({ ...current, ...patch }));
-    setErrors([]);
-  }
-
-  function chooseIndustry(industryId: string) {
-    const nextIndustry = industries.find((item) => item.id === industryId)!;
-    patchInput({
-      industryId,
-      standardIds: nextIndustry.recommendations.map((item) => item.standardId),
-    });
-  }
-
-  function toggleStandard(standardId: string) {
-    const selected = input.standardIds.includes(standardId);
-    patchInput({
-      standardIds: selected
-        ? input.standardIds.filter((id) => id !== standardId)
-        : [...input.standardIds, standardId],
-    });
-  }
-
-  function validateStep(index: number) {
-    const nextErrors: string[] = [];
-    if (index === 0) {
-      if (!input.organization.trim()) nextErrors.push("Enter the organization name.");
-      if (!input.systemName.trim()) nextErrors.push("Enter the AI system name.");
-      if (!input.architecture.modelProvider.trim()) nextErrors.push("Enter the model provider.");
-      if (!input.architecture.modelName.trim()) nextErrors.push("Enter the model name.");
-      if (!input.architecture.vectorDatabase.trim()) {
-        nextErrors.push("Enter the vector database to confirm this is a RAG system.");
+  useEffect(() => {
+    /* Fired from a task rather than the effect body: sessionStorage is client-only,
+       so this cannot run during the server render, and a synchronous setState here
+       would cascade. */
+    const task = window.setTimeout(() => {
+      try {
+        const saved = window.sessionStorage.getItem("governai.setup");
+        if (!saved) return;
+        const parsed = JSON.parse(saved) as Partial<AssessmentInput>;
+        setInput((current) => ({
+          ...current,
+          ...parsed,
+          // Never restored from storage, by design.
+          credentials: current.credentials,
+        }));
+      } catch {
+        /* A corrupt or unavailable store is not worth surfacing — the defaults are fine. */
       }
-      if (!input.architecture.embeddingModel.trim()) nextErrors.push("Enter the embedding model.");
+    }, 0);
+    return () => window.clearTimeout(task);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const persisted: Partial<AssessmentInput> = { ...input };
+      delete persisted.credentials;
+      window.sessionStorage.setItem("governai.setup", JSON.stringify(persisted));
+    } catch {
+      /* Private browsing and full quotas both land here. Nothing depends on it. */
     }
-    if (index === 1 && input.standardIds.length < 1) {
-      nextErrors.push("Select at least one standard.");
+  }, [input]);
+
+  /* ---- editing ---------------------------------------------------------- */
+
+  const patch = useCallback((next: Partial<AssessmentInput>) => {
+    setInput((current) => ({ ...current, ...next }));
+    setErrors([]);
+    setScope(null);
+    setPlan(null);
+    /* Changing the depth changes which locations a run reads, so a pre-flight taken
+       against the old depth is no longer about the run that would happen. */
+    if (next.tier !== undefined) setPreflight(null);
+  }, []);
+
+  const patchCredential = useCallback((key: string, value: string) => {
+    setInput((current) => ({ ...current, credentials: { ...current.credentials, [key]: value } }));
+    setErrors([]);
+    setPlan(null);
+    setPreflight(null);
+  }, []);
+
+  /* ---- scope and plan, rebuilt whenever an answer invalidates them ------- */
+
+  const resolveScope = useCallback(async (body: AssessmentInput) => {
+    try {
+      const response = await fetch("/api/scope", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          standardIds: body.standardIds,
+          tier: body.tier,
+          applicability: body.applicability,
+        }),
+      });
+      if (!response.ok) return;
+      setScope((await response.json()) as ScopeResult);
+    } catch {
+      /* A failed re-scope leaves the consequence line saying it is working, which is
+         better than replacing a real figure with a stale one. */
     }
-    if (index === 2) {
-      credentialFields[input.tier].forEach((field) => {
+  }, []);
+
+  const buildPlan = useCallback(async (body: AssessmentInput) => {
+    try {
+      const response = await fetch("/api/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          standardIds: body.standardIds,
+          tier: body.tier,
+          applicability: body.applicability,
+          access: accessSignalsFromCredentials(body.credentials),
+        }),
+      });
+      if (!response.ok) return;
+      setPlan((await response.json()) as CheckPlan);
+    } catch {
+      /* As above. */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!input.standardIds.length) return;
+    if (scope && plan) return;
+    const task = window.setTimeout(() => {
+      if (!scope) void resolveScope(input);
+      if (!plan) void buildPlan(input);
+    }, 60);
+    return () => window.clearTimeout(task);
+  }, [input, scope, plan, resolveScope, buildPlan]);
+
+  const runPreflight = useCallback(async () => {
+    setPreflightLoading(true);
+    try {
+      const response = await fetch("/api/preflight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: input.tier, credentials: input.credentials }),
+      });
+      if (!response.ok) {
+        const body = (await response.json()) as { errors?: string[] };
+        setErrors(body.errors ?? ["The connection check could not be completed."]);
+        return;
+      }
+      setPreflight((await response.json()) as PreflightState);
+    } catch (error) {
+      setErrors([
+        error instanceof Error ? error.message : "The connection check could not be completed.",
+      ]);
+    } finally {
+      setPreflightLoading(false);
+    }
+  }, [input.credentials, input.tier]);
+
+  /* ---- what stops a step from being left -------------------------------- */
+
+  const blocked = useMemo(() => {
+    if (step === "system") {
+      if (!input.systemName.trim()) return "Give the system a name.";
+      if (!input.organization.trim()) return "Name the organization.";
+      const stack = input.architecture;
+      if (!stack.modelProvider.trim() || !stack.modelName.trim()) {
+        return "The model provider and model are part of the stack — fill both in.";
+      }
+      if (!stack.vectorDatabase.trim() || !stack.embeddingModel.trim()) {
+        return "The vector database and embedding model are required: the engine only assesses RAG systems.";
+      }
+      return null;
+    }
+    if (step === "packs") {
+      return input.standardIds.length ? null : "Select at least one pack.";
+    }
+    if (step === "connect") {
+      for (const field of credentialFields[input.tier]) {
         const value = input.credentials[field.key]?.trim();
-        if (field.required !== false && !value) {
-          nextErrors.push(`${field.label} is required for Tier ${input.tier}.`);
-        }
+        if (field.required !== false && !value) return `${field.label} is required at this depth.`;
         if (field.type === "url" && value) {
           try {
-            if (new URL(value).protocol !== "https:") nextErrors.push(`${field.label} must use HTTPS.`);
+            const url = new URL(value);
+            const local =
+              url.protocol === "http:" && ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+            if (url.protocol !== "https:" && !local) return `${field.label} must use HTTPS.`;
           } catch {
-            nextErrors.push(`${field.label} must be a valid URL.`);
+            return `${field.label} must be a valid URL.`;
           }
         }
-      });
+      }
+      return null;
     }
-    setErrors([...new Set(nextErrors)]);
-    return nextErrors.length === 0;
-  }
+    if (step === "ready") {
+      const issues = validateApplicability(input);
+      return issues.length ? issues[0] : null;
+    }
+    return null;
+  }, [step, input]);
 
-  function nextStep() {
-    if (validateStep(step)) setStep((current) => Math.min(current + 1, 3));
-  }
+  /* ---- moving along the track ------------------------------------------- */
 
-  async function runEvaluation() {
-    if (!validateStep(2)) {
-      setStep(2);
+  const goTo = useCallback(
+    (index: number) => {
+      const next = Math.max(0, Math.min(index, track.length - 1));
+      setDir(next >= at ? "fwd" : "back");
+      setAt(next);
+      setReached((current) => Math.max(current, next));
+      setErrors([]);
+      if (stageRef.current) stageRef.current.scrollTop = 0;
+    },
+    [at, track.length],
+  );
+
+  const next = useCallback(() => {
+    if (blocked) {
+      setErrors([blocked]);
       return;
     }
+    goTo(at + 1);
+  }, [blocked, goTo, at]);
+
+  const back = useCallback(() => goTo(at - 1), [goTo, at]);
+
+  const cancelRun = useCallback(() => abortRef.current?.abort(), []);
+
+  const start = useCallback(async () => {
+    const issues = validateApplicability(input);
+    if (issues.length) {
+      setErrors(issues);
+      return;
+    }
+    const controller = new AbortController();
+    abortRef.current = controller;
     setRunning(true);
+    setFailed(false);
     setResult(null);
     setEvents([]);
-    setActiveTab("progress");
     setErrors([]);
-    setLastRunFailed(false);
+    setStartedAt(Date.now());
+    setPhase("run");
     try {
       const response = await fetch("/api/assessments/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
+        signal: controller.signal,
       });
       if (!response.ok) {
         const body = (await response.json()) as { errors?: string[] };
-        throw new Error(body.errors?.join("\n") || "Assessment could not be started.");
+        throw new Error(body.errors?.join("\n") || "The assessment could not be started.");
       }
-      if (!response.body) throw new Error("Live assessment stream was unavailable.");
+      if (!response.body) throw new Error("The assessment stream was unavailable.");
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -347,42 +378,99 @@ export function AssessmentWorkspace() {
           const parsed = parseEventBlock(block);
           if (parsed.name === "assessment_complete") {
             setResult(parsed.data as AssessmentResult);
-            setLastRunFailed(false);
-          } else if (parsed.name === "assessment_error") {
+            setFailed(false);
+            return;
+          }
+          if (parsed.name === "assessment_error") {
             const failure = parsed.data as {
               message?: string;
               details?: string;
               errorCode?: string;
             };
-            const message = String(failure.details ?? failure.message ?? "Assessment failed.");
-            setEvents((current) => [
-              ...current.slice(-399),
-              { name: parsed.name, data: parsed.data as Record<string, unknown> },
-            ]);
-            setLastRunFailed(true);
-            setErrors([`${failure.errorCode ?? "ASSESSMENT_FAILED"}: ${message}`]);
-          } else {
-            setEvents((current) => [
-              ...current.slice(-399),
-              { name: parsed.name, data: parsed.data as Record<string, unknown> },
+            setFailed(true);
+            setErrors([
+              `${failure.errorCode ?? "ASSESSMENT_FAILED"}: ${failure.details ?? failure.message ?? "The assessment failed."}`,
             ]);
           }
+          setEvents((current) =>
+            appendEvent(current, {
+              name: parsed.name,
+              data: (parsed.data ?? {}) as Record<string, unknown>,
+            }),
+          );
         });
         if (done) break;
       }
+      /* The run screen is not torn down when the stream closes. Routing away on the
+         closing event replaced it in the same frame the rules finished resolving, so
+         a reader watched the slow network stage and missed the stage that produced
+         every verdict. It settles in place and offers the report as a choice. */
     } catch (error) {
-      setLastRunFailed(true);
-      setErrors([error instanceof Error ? error.message : "Assessment failed."]);
+      /* A run the reader stopped is not a run that failed. */
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setErrors(["The run was stopped. Nothing was scored — a partial run produces no result."]);
+        setFailed(true);
+      } else {
+        setFailed(true);
+        setErrors([error instanceof Error ? error.message : "The assessment failed."]);
+      }
     } finally {
+      abortRef.current = null;
       setRunning(false);
     }
-  }
+  }, [input]);
 
-  function printReport(report?: StandardReport) {
+  const toReport = useCallback(() => {
+    setPhase("report");
+    setChapter(CHAPTERS[0].id);
+    if (stageRef.current) stageRef.current.scrollTop = 0;
+  }, []);
+
+  const toSetup = useCallback(() => {
+    setPhase("setup");
+    setDir("back");
+    if (stageRef.current) stageRef.current.scrollTop = 0;
+  }, []);
+
+  /* The trail grows to the right and overflows once there are four or five
+     receipts, which would clip the one just added — the only one the reader is
+     looking for confirmation of. Keep the tail in view. */
+  useEffect(() => {
+    const node = trailRef.current;
+    if (node) node.scrollLeft = node.scrollWidth;
+  }, [at]);
+
+  /* ---- keyboard: the whole track is operable without the mouse ---------- */
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      const typing = target?.tagName === "TEXTAREA";
+      if (event.key === "Enter" && !typing) {
+        if (phase === "setup") {
+          event.preventDefault();
+          if (step === "ready") void start();
+          else next();
+        } else if (phase === "run" && result && !running) {
+          event.preventDefault();
+          toReport();
+        }
+      }
+      if (event.key === "Escape" && phase === "setup" && at > 0) {
+        event.preventDefault();
+        back();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phase, step, at, result, running, next, back, start, toReport]);
+
+  /* ---- exports ---------------------------------------------------------- */
+
+  const printReport = useCallback(() => {
     if (!result) return;
-    const blob = new Blob([createReportHtml(result, report)], {
-      type: "text/html;charset=utf-8",
-    });
+    const blob = new Blob([createReportHtml(result)], { type: "text/html;charset=utf-8" });
     const href = URL.createObjectURL(blob);
     const printWindow = window.open(href, "_blank");
     if (!printWindow) {
@@ -392,739 +480,201 @@ export function AssessmentWorkspace() {
     }
     printWindow.opener = null;
     window.setTimeout(() => URL.revokeObjectURL(href), 60_000);
-  }
+  }, [result]);
 
-  function downloadJson() {
+  const exportJson = useCallback(() => {
     if (!result) return;
     const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
     const href = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = href;
-    anchor.download = `${result.assessmentId}-evidence-package.json`;
-    anchor.click();
-    URL.revokeObjectURL(href);
-  }
+    const link = document.createElement("a");
+    link.href = href;
+    link.download = `${result.assessmentId}.json`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(href), 60_000);
+  }, [result]);
 
-  const completedControls = events.filter((item) => item.name === "control_result").length;
-  const totalControls = selectedDefinitions.reduce((sum, item) => sum + item.controls.length, 0);
-  const assessedControls =
-    result?.reports.reduce((sum, report) => sum + report.assessedControls, 0) ?? completedControls;
-  const currentEvent = events.length > 0 ? events[events.length - 1] : null;
-  const currentData = currentEvent?.data;
-  const currentEndpoint =
-    currentData?.method && currentData?.endpoint
-      ? `${String(currentData.method)} ${String(currentData.endpoint)}`
-      : currentData?.sourceType === "control_mapping" || currentData?.sourceType === "control_catalog"
-        ? "GovernAI assessment backend / built-in control catalog"
-        : "GovernAI assessment workflow";
-  const runtimeProgress = currentData?.progress as
-    | {
-        totalSteps?: number;
-        completedSteps?: number;
-        pendingSteps?: number;
-        percentage?: number;
-      }
-    | undefined;
-  const executionSummary = result?.liveEvidence.execution.summary;
-  const progressPercentage = executionSummary
-    ? 100
-    : Number(runtimeProgress?.percentage ?? 0);
-  const completedExecutionSteps = executionSummary?.completedSteps
-    ?? Number(runtimeProgress?.completedSteps ?? 0);
-  const pendingExecutionSteps = executionSummary
-    ? 0
-    : Number(runtimeProgress?.pendingSteps ?? 0);
-  const firstEventData = events[0]?.data;
-  const executionStartedAt = String(
-    executionSummary?.startedAt
-      ?? firstEventData?.startedAt
-      ?? firstEventData?.occurredAt
-      ?? "",
-  );
-  const latestEventAt = String(currentData?.occurredAt ?? "");
-  const liveElapsedMs =
-    executionStartedAt && latestEventAt
-      ? Math.max(0, new Date(latestEventAt).getTime() - new Date(executionStartedAt).getTime())
-      : 0;
-  const executionDurationMs = executionSummary?.durationMs ?? liveElapsedMs;
+  /* ---- the rail --------------------------------------------------------- */
+
+  const railFill =
+    phase === "report"
+      ? 100
+      : phase === "run"
+        ? 100
+        : Math.round(((at + (blocked ? 0 : 1)) / track.length) * 100);
+
+  const railNote =
+    phase === "report" && result
+      ? `${result.analysis.posture.assessed}/${result.analysis.posture.applicable} assessed · ${result.analysis.posture.openFindings} open`
+      : phase === "run"
+        ? running
+          ? "running"
+          : result
+            ? "settled"
+            : "stopped"
+        : plan
+          ? `${plan.runnableChecks} rules · ${plan.boundedRequests} requests · ${estimate(plan.estimatedSeconds)}`
+          : "planning…";
+
+  const receipts =
+    phase === "setup"
+      ? track
+          .slice(0, at)
+          .map((id) => ({ id, r: receiptFor(id, input, scope) }))
+          .filter((entry): entry is { id: StepId; r: { em: string; s: string } } => entry.r !== null)
+      : [];
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
-        <a className="brand" href="#" aria-label="GovernAI home">
-          <span className="brand-mark" aria-hidden="true">G</span>
-          <span>Govern<span>AI</span></span>
-        </a>
-        <div className="topbar-meta">
-          <span className="system-status"><i /> Live assessment engine</span>
-          <span className="divider" />
-          <span>Standard-driven RAG assurance</span>
-        </div>
-      </header>
+    <div className="app">
+      <header className="rail">
+        <div className="rail-fill" style={{ width: `${railFill}%` }} />
+        <span className="mark">
+          <i>G</i>
+          <b>
+            Govern<span>AI</span>
+          </b>
+        </span>
 
-      <div className="workspace">
-        <aside className="rail">
-          <div className="rail-intro">
-            <p className="eyebrow">New assessment</p>
-            <h1>Evaluate only what matters.</h1>
-            <p>Choose your obligations. GovernAI loads exactly those control packs—nothing unrequested.</p>
-          </div>
-          <nav className="steps" aria-label="Assessment steps">
-            {steps.map((item, index) => (
+        {phase === "setup" ? (
+          <nav className="dots" aria-label="Setup steps">
+            {track.map((id, index) => (
               <button
-                className={`step ${index === step ? "active" : ""} ${index < step ? "complete" : ""}`}
-                key={item.number}
+                key={id}
                 type="button"
-                onClick={() => {
-                  if (index <= step || validateStep(step)) setStep(index);
-                }}
-              >
-                <span className="step-number">{index < step ? "✓" : item.number}</span>
-                <span><strong>{item.title}</strong><small>{item.description}</small></span>
-              </button>
+                title={`${index + 1}. ${STEP_TITLE[id]}`}
+                aria-label={STEP_TITLE[id]}
+                aria-current={index === at ? "step" : undefined}
+                className={index === at ? "now" : index < at || index <= reached ? "done" : ""}
+                disabled={index > reached}
+                onClick={() => goTo(index)}
+              />
             ))}
           </nav>
-          <div className="assurance-note">
-            <span aria-hidden="true">◆</span>
-            <div><strong>Evidence remains scoped</strong><p>Credentials are used only for the active request and never appear in reports.</p></div>
-          </div>
-        </aside>
+        ) : null}
 
-        <section className="main-panel">
-          {!result && (
-            <>
-              <div className="panel-heading">
-                <div>
-                  <p className="eyebrow">Step {step + 1} of 4</p>
-                  <h2>{steps[step].title}</h2>
-                  <p>
-                    {step === 0 && "Identify the system and confirm its retrieval-augmented architecture."}
-                    {step === 1 && "Recommendations follow your industry; you stay in control of the final scope."}
-                    {step === 2 && "Higher tiers unlock deeper evidence without changing which standards run."}
-                    {step === 3 && "Confirm the exact scope before launching parallel standard engines."}
-                  </p>
-                </div>
-                <button className="text-button" type="button" onClick={() => setInput(loadLiveTargetInput())}>
-                  Load ACI live target
-                </button>
-              </div>
+        {phase === "report" ? (
+          <nav className="dots" aria-label="Report chapters">
+            {CHAPTERS.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                title={`${entry.n}. ${entry.label}`}
+                aria-label={entry.label}
+                aria-current={entry.id === chapter ? "true" : undefined}
+                className={entry.id === chapter ? "now" : "done"}
+                onClick={() =>
+                  document.getElementById(entry.id)?.scrollIntoView({ behavior: "smooth" })
+                }
+              />
+            ))}
+          </nav>
+        ) : null}
 
-              {errors.length > 0 && (
-                <div className="error-box" role="alert">
-                  <strong>Check the required information</strong>
-                  <ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul>
-                  {lastRunFailed && (
-                    <button className="button secondary retry-button" type="button" onClick={runEvaluation} disabled={running}>
-                      Retry assessment
-                    </button>
-                  )}
-                </div>
-              )}
+        <span className="rail-spacer" />
+        <span className="rail-note">
+          {phase !== "setup" ? <b>{input.systemName || "Unnamed system"}</b> : null}{" "}
+          {phase !== "setup" ? "· " : ""}
+          {railNote}
+        </span>
+      </header>
 
-              {step === 0 && (
-                <div className="form-stack">
-                  <div className="field-grid two">
-                    <label className="field">
-                      <span>Organization <b>*</b></span>
-                      <input
-                        value={input.organization}
-                        onChange={(event) => patchInput({ organization: event.target.value })}
-                        placeholder="e.g. Northstar Health"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>AI system name <b>*</b></span>
-                      <input
-                        value={input.systemName}
-                        onChange={(event) => patchInput({ systemName: event.target.value })}
-                        placeholder="e.g. Clinical Knowledge Assistant"
-                      />
-                    </label>
-                  </div>
-                  <label className="field">
-                    <span>Industry <b>*</b></span>
-                    <select value={input.industryId} onChange={(event) => chooseIndustry(event.target.value)}>
-                      {industries.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                    </select>
-                    <small>{industry.description}</small>
-                  </label>
-                  <div className="section-label">
-                    <span>RAG architecture</span>
-                    <em>Required to distinguish RAG from a plain LLM wrapper</em>
-                  </div>
-                  <div className="field-grid two">
-                    {[
-                      ["modelProvider", "Model provider", "OpenAI"],
-                      ["modelName", "OpenAI model", "gpt-4.1"],
-                      ["vectorDatabase", "Vector database", "Pinecone, Weaviate, pgvector…"],
-                      ["embeddingModel", "Embedding model", "Embedding model identifier"],
-                    ].map(([key, label, placeholder]) => (
-                      <label className="field" key={key}>
-                        <span>{label} <b>*</b></span>
-                        <input
-                          value={input.architecture[key as keyof AssessmentInput["architecture"]]}
-                          onChange={(event) =>
-                            patchInput({
-                              architecture: { ...input.architecture, [key]: event.target.value },
-                            })
-                          }
-                          placeholder={placeholder}
-                        />
-                      </label>
+      {receipts.length ? (
+        <div className="trail" ref={trailRef}>
+          {receipts.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              className="receipt"
+              title={`Back to: ${STEP_TITLE[entry.id]}`}
+              onClick={() => goTo(track.indexOf(entry.id))}
+            >
+              <em>{entry.r.em}</em>
+              <s>{entry.r.s}</s>
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="stage" ref={stageRef}>
+        {phase === "setup" ? (
+          <div className={`step ${dir}`} key={step}>
+            <Step
+              id={step}
+              n={at + 1}
+              of={track.length}
+              input={input}
+              patch={patch}
+              patchCredential={patchCredential}
+              scope={scope}
+              plan={plan}
+              preflight={preflight}
+              preflightLoading={preflightLoading}
+              onPreflight={runPreflight}
+            />
+            <div className="step-col" style={{ marginTop: 0 }}>
+              {errors.length ? (
+                <div className="because warn" style={{ marginTop: 22 }}>
+                  <i>▲</i>
+                  <span>
+                    {errors.map((message) => (
+                      <span key={message} style={{ display: "block" }}>
+                        {message}
+                      </span>
                     ))}
-                  </div>
+                  </span>
                 </div>
-              )}
-
-              {step === 1 && (
-                <div className="standards-layout">
-                  <div className="selection-summary">
-                    <div><span>{input.standardIds.length}</span><p>standards selected</p></div>
-                    <p>One native report is generated for every selected standard.</p>
-                  </div>
-                  <label className="search-field">
-                    <span aria-hidden="true">⌕</span>
-                    <input
-                      aria-label="Search standards"
-                      placeholder="Search all standards or jurisdictions"
-                      value={standardSearch}
-                      onChange={(event) => setStandardSearch(event.target.value)}
-                    />
-                  </label>
-                  <div className="standards-grid">
-                    {visibleStandards.map((standard) => {
-                      const recommendation = industry.recommendations.find(
-                        (item) => item.standardId === standard.id,
-                      );
-                      const selected = input.standardIds.includes(standard.id);
-                      return (
-                        <button
-                          className={`standard-card ${selected ? "selected" : ""}`}
-                          key={standard.id}
-                          type="button"
-                          aria-pressed={selected}
-                          onClick={() => toggleStandard(standard.id)}
-                        >
-                          <span className="check" aria-hidden="true">{selected ? "✓" : ""}</span>
-                          <span className="standard-body">
-                            <span className="card-topline">
-                              <strong>{standard.shortName}</strong>
-                              <em className={`kind kind-${standard.kind.toLowerCase()}`}>{standard.kind}</em>
-                            </span>
-                            <span className="standard-name">{standard.name}</span>
-                            <span className="standard-meta">{standard.jurisdiction} · {standard.controls.length} controls</span>
-                            {recommendation && <span className="recommendation">Recommended · {recommendation.reason}</span>}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="form-stack">
-                  <div className="tier-grid">
-                    {tierDetails.map((tier) => (
-                      <button
-                        className={`tier-card ${input.tier === tier.tier ? "selected" : ""}`}
-                        key={tier.tier}
-                        type="button"
-                        aria-pressed={input.tier === tier.tier}
-                        onClick={() =>
-                          patchInput({
-                            tier: tier.tier,
-                            credentials: {
-                              chatbotEndpoint: input.credentials.chatbotEndpoint ?? "",
-                              tenantId: input.credentials.tenantId ?? "",
-                              chatbotApiKey: input.credentials.chatbotApiKey ?? "",
-                            },
-                          })
-                        }
-                      >
-                        <span className="tier-top"><strong>Tier {tier.tier}</strong><em>{tier.coverage}</em></span>
-                        <b>{tier.title}</b>
-                        <p>{tier.subtitle}</p>
-                        <ul>{tier.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="coverage-strip">
-                    {selectedDefinitions.map((standard) => (
-                      <div key={standard.id}>
-                        <span>{standard.shortName}</span>
-                        <strong>{tierCoverageLabel(standard, input.tier)} controls</strong>
-                        <i><b style={{ width: `${(standard.coverage[input.tier] / standard.controls.length) * 100}%` }} /></i>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="section-label">
-                    <span>Tier {input.tier} access</span>
-                    <em>Required fields are marked; optional credentials may be left blank</em>
-                  </div>
-                  <div className="field-grid two">
-                    {credentialFields[input.tier].map((field) => (
-                      <label className="field" key={field.key}>
-                        <span>{field.label} {field.required !== false && <b>*</b>}</span>
-                        <input
-                          type={field.type}
-                          value={input.credentials[field.key] ?? ""}
-                          placeholder={field.placeholder}
-                          autoComplete="off"
-                          onChange={(event) =>
-                            patchInput({
-                              credentials: { ...input.credentials, [field.key]: event.target.value },
-                            })
-                          }
-                        />
-                        {field.help && <small>{field.help}</small>}
-                      </label>
-                    ))}
-                  </div>
-                  <section className="evidence-explainer" aria-labelledby="evidence-explainer-title">
-                    <div className="evidence-explainer-heading">
-                      <div>
-                        <p className="eyebrow">Before you launch</p>
-                        <h3 id="evidence-explainer-title">What GovernAI actually checks</h3>
-                      </div>
-                      <span>Executed server-to-server</span>
-                    </div>
-                    <div className="evidence-route-grid">
-                      <article>
-                        <strong>Live chatbot</strong>
-                        <p>Health, grounded retrieval, prompt injection, sensitive disclosure, and out-of-scope behavior.</p>
-                        <code>{targetAdapterEndpoint(input.credentials.chatbotEndpoint, "/v1/web-chat")}</code>
-                      </article>
-                      {input.tier >= 2 && (
-                        <>
-                          <article>
-                            <strong>Audit/config adapter</strong>
-                            <p>The supplied Bearer token is sent to your target application—not directly to {input.credentials.cloudProvider || "the infrastructure provider"}.</p>
-                            <code>{targetAdapterEndpoint(input.credentials.chatbotEndpoint, "/api/audit/config")}</code>
-                          </article>
-                          <article>
-                            <strong>Monitoring adapter</strong>
-                            <p>The supplied Bearer token is sent to your target application—not directly to {input.credentials.monitoringProvider || "the monitoring provider"}.</p>
-                            <code>{targetAdapterEndpoint(input.credentials.chatbotEndpoint, "/api/monitoring/summary")}</code>
-                          </article>
-                          <article>
-                            <strong>CI/CD reachability</strong>
-                            <p>A HEAD request checks whether the supplied page responds. Workflow runs, jobs, and logs are not inspected.</p>
-                            <code>{input.credentials.cicdUrl || "Add a CI/CD pipeline URL"}</code>
-                          </article>
-                          {input.tier >= 3 && (
-                            <article>
-                              <strong>Tier 3 access preflight</strong>
-                              <p>HEAD requests check the source repository, staging, and model registry URLs. Source, runtime, model-card, and artifact inspection are not yet implemented, so document controls remain not assessed.</p>
-                              <code>3 reachability checks · no content download</code>
-                            </article>
-                          )}
-                        </>
-                      )}
-                      <article className="catalog-route">
-                        <strong>Compliance control source</strong>
-                        <p>Selected controls come from GovernAI&apos;s built-in mappings. Official ISO, regulator, or standards websites are not fetched during a run.</p>
-                        <code>Built-in catalog · local evidence mapping</code>
-                      </article>
-                    </div>
-                  </section>
-                </div>
-              )}
-
-              {step === 3 && (
-                <div className="review-layout">
-                  <div className="review-card">
-                    <div className="review-title"><span>01</span><div><strong>Assessment scope</strong><p>{input.organization} · {input.systemName}</p></div></div>
-                    <dl>
-                      <div><dt>Industry</dt><dd>{industry.name}</dd></div>
-                      <div><dt>Architecture</dt><dd>{input.architecture.modelName} + {input.architecture.vectorDatabase}</dd></div>
-                      <div><dt>Access</dt><dd>Tier {input.tier} · {tierDetails[input.tier - 1].title}</dd></div>
-                      <div><dt>Live target</dt><dd>{input.credentials.chatbotEndpoint}</dd></div>
-                    </dl>
-                  </div>
-                  <div className="review-card">
-                    <div className="review-title"><span>02</span><div><strong>Exact evaluation scope</strong><p>{input.standardIds.length} standard engines run in parallel</p></div></div>
-                    <div className="review-standards">
-                      {selectedDefinitions.map((standard) => (
-                        <div key={standard.id}><span>{standard.shortName}</span><strong>{tierCoverageLabel(standard, input.tier)}</strong></div>
-                      ))}
-                      <div className="owasp-row"><span>OWASP LLM Top 10</span><strong>Always included</strong></div>
-                    </div>
-                  </div>
-                  <div className="scope-promise">
-                    <span aria-hidden="true">✓</span>
-                    <div>
-                      <strong>Selection governs live execution</strong>
-                      <p>Tier 1 sends bounded requests to the chatbot. Tier 2 also calls the target-host monitoring and audit adapters, plus a CI/CD reachability check. Selected framework controls are then mapped locally; official standards pages are not contacted.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="panel-footer">
-                <button className="button secondary" type="button" disabled={step === 0} onClick={() => setStep(step - 1)}>
-                  Back
-                </button>
-                {step < 3 ? (
-                  <button className="button primary" type="button" onClick={nextStep}>Continue <span>→</span></button>
+              ) : null}
+              <div className="actions">
+                {at > 0 ? (
+                  <button className="btn quiet" type="button" onClick={back}>
+                    ← Back
+                  </button>
+                ) : null}
+                <span className="gap" />
+                {step === "ready" ? (
+                  <button
+                    className="btn primary go"
+                    type="button"
+                    onClick={() => void start()}
+                    disabled={!plan}
+                  >
+                    Start the run <kbd>↵</kbd>
+                  </button>
                 ) : (
-                  <button className="button primary launch" type="button" onClick={runEvaluation} disabled={running}>
-                    {running ? "Evaluation running…" : "Launch assessment"} <span>◆</span>
+                  <button className="btn primary" type="button" onClick={next}>
+                    Continue <kbd>↵</kbd>
                   </button>
                 )}
               </div>
-            </>
-          )}
-
-          {(running || result) && (
-            <div className="results-shell">
-              <div className="result-header">
-                <div>
-                  <p className="eyebrow">{running ? "Assessment in progress" : "Assessment complete"}</p>
-                  <h2>{input.systemName}</h2>
-                  <p>{input.organization} · Tier {input.tier} · {selectedDefinitions.length} standards</p>
-                </div>
-                <div className={`completion-mark ${running ? "spinning" : ""}`}>{running ? "◌" : "✓"}</div>
-              </div>
-              <div className="scope-banner">
-                <span>◆</span>
-                <p><strong>Live evidence + local control mapping</strong> GovernAI collects target responses now, then maps them to {selectedDefinitions.map((item) => item.shortName).join(", ")} using its built-in catalog. Official standards pages are not queried.</p>
-                {result && <em>{result.assessmentId}</em>}
-              </div>
-              <div className="result-tabs" role="tablist" aria-label="Assessment results">
-                <button className={activeTab === "progress" ? "active" : ""} onClick={() => setActiveTab("progress")} role="tab">Live progress</button>
-                {result?.reports.map((report) => (
-                  <button key={report.standardId} className={activeTab === report.standardId ? "active" : ""} onClick={() => setActiveTab(report.standardId)} role="tab">{report.shortName}</button>
-                ))}
-                {result?.crossInsights && <button className={activeTab === "insights" ? "active" : ""} onClick={() => setActiveTab("insights")} role="tab">Cross insights</button>}
-                {result && <button className={activeTab === "download" ? "active" : ""} onClick={() => setActiveTab("download")} role="tab">Export</button>}
-              </div>
-
-              {activeTab === "progress" && (
-                <div className="progress-panel">
-                  <div className="progress-overview runtime-overview">
-                    <div><span>{progressPercentage}%</span><p>overall completed</p></div>
-                    <div><span>{completedExecutionSteps}</span><p>completed steps</p></div>
-                    <div><span>{pendingExecutionSteps}</span><p>pending steps</p></div>
-                    <div><span>{result?.liveEvidence.probes.length ?? events.filter((item) => item.name === "probe_complete").length}</span><p>live checks completed</p></div>
-                    <div><span className="metric-time">{executionStartedAt ? eventTime(executionStartedAt) : "—"}</span><p>start time</p></div>
-                    <div><span className="metric-time">{(executionDurationMs / 1000).toFixed(1)}s</span><p>elapsed time</p></div>
-                    <div><span className="metric-time">{assessedControls}/{totalControls}</span><p>controls mapped</p></div>
-                    <div><span>{selectedDefinitions.length}</span><p>assessment engines</p></div>
-                  </div>
-                  <div className="execution-note">
-                    <strong>How to read this trace</strong>
-                    <p>Live checks are real network requests. Controls are paced and shown one by one as GovernAI maps that collected evidence locally. The official authority link is shown separately and is never labelled as fetched unless the backend actually requested it.</p>
-                  </div>
-                  {currentData && (
-                    <section className="current-step-card" aria-live="polite" aria-atomic="true">
-                      <div className="current-step-heading">
-                        <div>
-                          <p className="eyebrow">Now running · step {String(currentData.sequence ?? events.length)}</p>
-                          <h3>{String(currentData.standard ?? currentEvent?.name.replaceAll("_", " "))}</h3>
-                        </div>
-                        <span className={`trace-state ${String(currentData.status ?? "running")}`}>
-                          {currentData.status ? statusLabel(currentData.status as ControlStatus) : "Running"}
-                        </span>
-                      </div>
-                      <div className="current-step-grid">
-                        <div>
-                          <span>Action</span>
-                          <strong>{String(currentData.control ?? currentData.controlId ?? "Workflow checkpoint")}</strong>
-                          <p>{String(currentData.message ?? "The backend is advancing to the next validation step.")}</p>
-                        </div>
-                        <div>
-                          <span>Data comes from</span>
-                          <strong>{evidenceSourceLabel(currentData.sourceType)}</strong>
-                          <code>{currentEndpoint}</code>
-                        </div>
-                        <div>
-                          <span>Official authority</span>
-                          {currentData.officialReferenceUrl ? (
-                            <>
-                              <a href={String(currentData.officialReferenceUrl)} target="_blank" rel="noreferrer">
-                                {String(currentData.officialReferenceTitle ?? currentData.officialAuthority)}
-                              </a>
-                              <p>{String(currentData.officialAuthority ?? "")}</p>
-                            </>
-                          ) : (
-                            <strong>Not part of this target request</strong>
-                          )}
-                          <small>Official page fetched in this run: <b>{currentData.officialPageFetched === true ? "Yes" : "No"}</b></small>
-                        </div>
-                        <div>
-                          <span>Validation method</span>
-                          <strong>{String(currentData.validationMethod ?? "Wait for the target response, then apply the bounded validation rule shown when this check completes.")}</strong>
-                        </div>
-                        <div>
-                          <span>Step duration</span>
-                          <strong>{Number(currentData.durationMs ?? currentData.latencyMs ?? 0).toLocaleString()} ms</strong>
-                          <p>{eventTime(currentData.occurredAt)}</p>
-                        </div>
-                        <div>
-                          <span>Runtime owner</span>
-                          <strong>{String(currentData.module ?? "Assessment workflow")}</strong>
-                          <p>{String(currentData.functionName ?? "event handler")} · {String(currentData.executionStage ?? "execution")}</p>
-                        </div>
-                      </div>
-                    </section>
-                  )}
-                  <div className="master-progress"><i><b style={{ width: `${progressPercentage}%` }} /></i><span>{running ? `${progressPercentage}% · ${pendingExecutionSteps} steps pending` : "Evaluation and reporting complete"}</span></div>
-                  <div className="event-log" aria-live="polite">
-                    {events.slice(-400).reverse().map((item, index) => {
-                      const requestMeta = [
-                        item.data.method && item.data.endpoint
-                          ? `${String(item.data.method)} ${String(item.data.endpoint)}`
-                          : "",
-                        item.data.httpStatus !== undefined
-                          ? `HTTP ${String(item.data.httpStatus || "network error")}`
-                          : "",
-                        item.data.latencyMs !== undefined
-                          ? `${String(item.data.latencyMs)} ms`
-                          : item.data.durationMs !== undefined
-                            ? `${String(item.data.durationMs)} ms`
-                          : "",
-                        item.data.executionStage ? String(item.data.executionStage) : "",
-                        eventTime(item.data.occurredAt),
-                      ].filter(Boolean);
-                      const control = String(item.data.control ?? item.data.controlId ?? "Workflow checkpoint");
-                      const message = String(item.data.message ?? "");
-                      return (
-                        <div className="event-row" key={String(item.data.sequence ?? `${item.name}-${index}`)}>
-                          <span className={`event-dot ${String(item.data.status ?? item.name)}`} />
-                          <div className="event-copy">
-                            <span className="event-heading">
-                              <b className="event-sequence">#{String(item.data.sequence ?? events.length - index)}</b>
-                              <strong>{String(item.data.standard ?? item.name.replaceAll("_", " "))}</strong>
-                              <i>{evidenceSourceLabel(item.data.sourceType)}</i>
-                            </span>
-                            <p><b>{control}</b>{message && message !== control ? ` — ${message}` : ""}</p>
-                            {requestMeta.length > 0 && <small>{requestMeta.join(" · ")}</small>}
-                            {Boolean(item.data.validationMethod) && <small><b>Validated by:</b> {String(item.data.validationMethod)}</small>}
-                          </div>
-                          <em>{item.data.status ? statusLabel(item.data.status as ControlStatus) : "Done"}</em>
-                        </div>
-                      );
-                    })}
-                    {events.length === 0 && <p className="empty-state">Preparing validation and loading selected control packs…</p>}
-                  </div>
-                  <section className="source-lineage" aria-labelledby="source-lineage-title">
-                    <div className="source-lineage-heading">
-                      <div>
-                        <p className="eyebrow">Authority source register</p>
-                        <h3 id="source-lineage-title">Official references for the selected standards</h3>
-                      </div>
-                      <span>Reference links · not fetched in this run</span>
-                    </div>
-                    <div className="source-lineage-list">
-                      {selectedDefinitions.map((standard) => (
-                        <article key={standard.id}>
-                          <div>
-                            <strong>{standard.shortName}</strong>
-                            <p>{standard.officialReference.authority}</p>
-                          </div>
-                          <a href={standard.officialReference.url} target="_blank" rel="noreferrer">
-                            {standard.officialReference.title} ↗
-                          </a>
-                          <span className={standard.officialReference.status}>
-                            {officialReferenceStatusLabel(standard.officialReference.status)}
-                          </span>
-                          <small>{standard.officialReference.note}</small>
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-                  {result && (
-                    <div className="live-result-stack">
-                      <div className="execution-disclosure">
-                        <div>
-                          <span>Executed by</span>
-                          <strong>{result.liveEvidence.execution.runner}</strong>
-                          <p>Network calls originate from the GovernAI assessment service.</p>
-                        </div>
-                        <div>
-                          <span>Control source</span>
-                          <strong>{result.liveEvidence.execution.controlCatalog}</strong>
-                          <p>Official standards pages fetched: No</p>
-                        </div>
-                        {result.scope.tier >= 2 && (
-                          <div>
-                            <span>Tier 2 connection model</span>
-                            <strong>Target-host adapters + supplied CI/CD URL</strong>
-                            <p>Audit, monitoring, and CI/CD checks run in parallel.</p>
-                          </div>
-                        )}
-                      </div>
-                      <section className="final-execution-summary" aria-labelledby="final-summary-title">
-                        <div>
-                          <p className="eyebrow">Final execution summary</p>
-                          <h3 id="final-summary-title">{result.liveEvidence.execution.summary.completedSteps} of {result.liveEvidence.execution.summary.totalSteps} steps completed</h3>
-                          <p>Started {new Date(result.liveEvidence.execution.summary.startedAt).toLocaleString()} · completed {new Date(result.liveEvidence.execution.summary.completedAt).toLocaleString()}</p>
-                        </div>
-                        <dl>
-                          <div><dt>Duration</dt><dd>{(result.liveEvidence.execution.summary.durationMs / 1000).toFixed(1)}s</dd></div>
-                          <div><dt>Warnings</dt><dd>{result.liveEvidence.execution.summary.warningSteps}</dd></div>
-                          <div><dt>Failures</dt><dd>{result.liveEvidence.execution.summary.failedSteps}</dd></div>
-                          <div><dt>Reports</dt><dd>{result.reports.length}</dd></div>
-                        </dl>
-                      </section>
-                      <div className="live-evidence-card">
-                        <div><span>Observed target</span><strong>{result.liveEvidence.target}</strong></div>
-                        <div><span>Chat endpoint</span><strong>{result.liveEvidence.chatEndpoint}</strong></div>
-                        <div><span>Live duration</span><strong>{(result.liveEvidence.durationMs / 1000).toFixed(1)} seconds</strong></div>
-                        <div>
-                          <span>Tier {result.scope.tier} evidence</span>
-                          <strong>
-                            {result.liveEvidence.probes.filter((probe) => probe.status === "pass").length} passed ·{" "}
-                            {result.liveEvidence.probes.filter((probe) => probe.status === "partial").length} partial ·{" "}
-                            {result.liveEvidence.probes.filter((probe) => probe.status === "fail").length} failed ·{" "}
-                            {result.liveEvidence.probes.filter((probe) => probe.status === "not_assessed").length} not assessed
-                          </strong>
-                        </div>
-                      </div>
-                      <section className="probe-details" aria-labelledby="probe-details-title">
-                        <div className="probe-details-heading">
-                          <div>
-                            <p className="eyebrow">Request-by-request evidence</p>
-                            <h3 id="probe-details-title">What ran, where it ran, and what returned</h3>
-                          </div>
-                          <span>{result.liveEvidence.probes.length} live checks</span>
-                        </div>
-                        <div className="probe-detail-list">
-                          {result.liveEvidence.probes.map((probe, index) => (
-                            <article key={probe.id}>
-                              <div className="probe-sequence">{String(index + 1).padStart(2, "0")}</div>
-                              <div className="probe-copy">
-                                <div className="probe-title">
-                                  <strong>{probe.label}</strong>
-                                  <span>{evidenceSourceLabel(probe.sourceType)}</span>
-                                </div>
-                                <p>{probe.summary}</p>
-                                <code>{probe.method} {probe.endpoint}</code>
-                                <small>
-                                  HTTP {probe.httpStatus || "network error"} · {probe.latencyMs ?? 0} ms
-                                  {probe.requestId ? ` · Request ${probe.requestId}` : ""}
-                                  {probe.sourceCount !== undefined ? ` · ${probe.sourceCount} retrieval sources` : ""}
-                                </small>
-                                {probe.validationMethod && <small><b>Validation:</b> {probe.validationMethod}</small>}
-                                <small><b>Official page fetched:</b> No — this request went to the assessed target.</small>
-                              </div>
-                              <StatusBadge status={probe.status} />
-                            </article>
-                          ))}
-                        </div>
-                      </section>
-                      <div className="pillar-grid">
-                        {(Object.entries(result.pillarScores) as Array<[Pillar, number]>).map(([pillar, score]) => (
-                          <div key={pillar}><span>{pillarLabels[pillar]}</span><strong>{score}%</strong><i><b style={{ width: `${score}%` }} /></i></div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {result?.reports.map((report) => activeTab === report.standardId && (
-                <div className="report-panel" key={report.standardId}>
-                  <div className="report-score">
-                    <div className="score-ring" style={{ "--score": report.score } as React.CSSProperties}><strong>{report.score}</strong><span>/100</span></div>
-                    <div><p className="eyebrow">{report.version}</p><h3>{report.name}</h3><p>{report.summary}</p><span className={`readiness ${report.readiness.toLowerCase().replaceAll(" ", "-")}`}>{report.readiness}</span></div>
-                    <button className="button secondary" onClick={() => printReport(report)}>Print / Save PDF</button>
-                  </div>
-                  <div className="native-structure">
-                    <p className="eyebrow">Native report structure</p>
-                    <ol>{report.nativeSections.map((section) => <li key={section}>{section}</li>)}</ol>
-                  </div>
-                  <div className="report-meta">
-                    <div><span>Scoring method</span><strong>{report.scoringMethod}</strong></div>
-                    <div><span>Pass threshold</span><strong>{report.passThreshold}</strong></div>
-                    <div><span>Coverage</span><strong>{report.assessedControls}/{report.totalControls} assessed</strong></div>
-                  </div>
-                  <div className="report-authority">
-                    <div>
-                      <span>Official authority reference</span>
-                      <a href={report.officialReference.url} target="_blank" rel="noreferrer">{report.officialReference.title} ↗</a>
-                      <p>{report.officialReference.authority} · {report.officialReference.note}</p>
-                    </div>
-                    <strong>Reference recorded · official page not fetched during this assessment</strong>
-                  </div>
-                  <div className="control-table-wrap">
-                    <table className="control-table">
-                      <thead><tr><th>Control</th><th>Pillars</th><th>Status</th><th>Confidence</th><th>Evidence / remediation</th></tr></thead>
-                      <tbody>{report.controls.map((control) => (
-                        <tr key={control.id}>
-                          <td><strong>{control.id}</strong><span>{control.name}</span></td>
-                          <td><div className="pillar-tags">{control.pillars.map((pillar) => <em key={pillar}>{pillarLabels[pillar]}</em>)}</div></td>
-                          <td><StatusBadge status={control.status} /></td>
-                          <td>{Math.round(control.confidence * 100)}%</td>
-                          <td>
-                            <span>{control.evidence}</span>
-                            {control.sourceCitation && (
-                              <small className="control-citation">
-                                Source mapping: <a href={control.sourceCitation.url} target="_blank" rel="noreferrer">{control.sourceCitation.section} ↗</a>
-                                {" "}· {control.sourceCitation.note}
-                              </small>
-                            )}
-                            {control.status !== "pass" && control.status !== "not_assessed" && <small>{control.remediation}</small>}
-                          </td>
-                        </tr>
-                      ))}</tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
-
-              {result?.crossInsights && activeTab === "insights" && (
-                <div className="insights-panel">
-                  <div className="insights-heading"><div><p className="eyebrow">Fix once, satisfy many</p><h3>Cross-standard insights</h3><p>Shared gaps are detected through common governance-pillar tags.</p></div><strong>{result.crossInsights.effortEstimate}</strong></div>
-                  <div className="insights-grid">
-                    <section><h4>Shared gaps</h4>{result.crossInsights.sharedGaps.length ? result.crossInsights.sharedGaps.map((gap) => (
-                      <article key={gap.title}>
-                        <span className={`priority ${gap.priority.toLowerCase()}`}>{gap.priority}</span>
-                        <div><strong>{gap.title}</strong><p>{gap.standards.join(" + ")}</p><small>Single fix · {gap.singleFix}</small></div>
-                      </article>
-                    )) : <p className="empty-state">No failed controls share a pillar across selected standards.</p>}</section>
-                    <section><h4>Standard-specific gaps</h4>{result.crossInsights.standardSpecificGaps.length ? result.crossInsights.standardSpecificGaps.map((gap) => (
-                      <article key={`${gap.standard}-${gap.control}`}><span className="standard-pill">{gap.standard}</span><div><strong>{gap.control}</strong><p>{pillarLabels[gap.pillar]}</p></div></article>
-                    )) : <p className="empty-state">No standard-specific failed controls were detected.</p>}</section>
-                  </div>
-                  <div className="pillar-grid large">
-                    {(Object.entries(result.pillarScores) as Array<[Pillar, number]>).map(([pillar, score]) => (
-                      <div key={pillar}><span>{pillarLabels[pillar]}</span><strong>{score}%</strong><i><b style={{ width: `${score}%` }} /></i></div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {result && activeTab === "download" && (
-                <div className="export-panel">
-                  <div className="export-intro"><p className="eyebrow">Audit-ready package</p><h3>Export exactly what was assessed.</h3><p>Each document preserves its standard’s native structure, control evidence, confidence, pillar tags, and remediation.</p></div>
-                  <div className="export-grid">
-                    {result.reports.map((report) => (
-                      <button key={report.standardId} onClick={() => printReport(report)}>
-                        <span className="file-icon">PDF</span><span><strong>{report.shortName} report</strong><small>{report.assessedControls}/{report.totalControls} controls · {report.score}%</small></span><em>↗</em>
-                      </button>
-                    ))}
-                    <button onClick={() => printReport()}>
-                      <span className="file-icon combined">ALL</span><span><strong>Combined report package</strong><small>{result.reports.length} native reports + OWASP appendix</small></span><em>↗</em>
-                    </button>
-                    <button onClick={downloadJson}>
-                      <span className="file-icon evidence">JSON</span><span><strong>Machine-readable evidence</strong><small>Complete results for audit workflows</small></span><em>↓</em>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {!running && result && (
-                <div className="results-footer">
-                  <button className="button secondary" onClick={() => { setResult(null); setStep(0); setEvents([]); }}>Start another assessment</button>
-                  <span>Generated {new Date(result.generatedAt).toLocaleString()}</span>
-                </div>
-              )}
             </div>
-          )}
-        </section>
+          </div>
+        ) : null}
+
+        {phase === "run" ? (
+          <LiveRun
+            events={events}
+            running={running}
+            failed={failed && !result}
+            errors={errors}
+            startedAt={startedAt}
+            plan={plan}
+            input={input}
+            hasResult={Boolean(result)}
+            onStop={cancelRun}
+            onSeeReport={toReport}
+            onBack={toSetup}
+          />
+        ) : null}
+
+        {phase === "report" && result ? (
+          <Report
+            result={result}
+            onActiveChapter={setChapter}
+            onPrint={printReport}
+            onExport={exportJson}
+            onRerun={toSetup}
+          />
+        ) : null}
       </div>
-    </main>
+    </div>
   );
 }

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="760" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="760" fill="#ffffff"/>
+  <text x="600" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">Governance Pillars: The Common Layer Under Every Standard</text>
+  <text x="600" y="48" text-anchor="middle" font-size="11" fill="#64748b">Every control from every standard is tagged to one of 5 pillars, built on the 7 trustworthy-AI characteristics (NIST AI RMF)</text>
+
+  <!-- ============ 5 PILLARS ROW ============ -->
+  <g>
+    <rect x="30" y="70" width="222" height="150" rx="12" fill="#ffffff" stroke="#2563eb" stroke-width="2"/>
+    <rect x="30" y="70" width="222" height="34" rx="12" fill="#2563eb"/>
+    <text x="141" y="92" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">TRUST</text>
+    <text x="45" y="118" font-size="8.5" fill="#334155">Explainability &amp; transparency</text>
+    <text x="45" y="136" font-size="8.5" fill="#334155">Human oversight (HITL)</text>
+    <text x="45" y="154" font-size="8.5" fill="#334155">Accuracy &amp; reliability metrics</text>
+    <text x="45" y="172" font-size="8.5" fill="#334155">Fairness &amp; bias monitoring</text>
+    <text x="45" y="196" font-size="7.5" fill="#2563eb" font-weight="bold">Maps to: Valid &amp; Reliable,</text>
+    <text x="45" y="208" font-size="7.5" fill="#2563eb" font-weight="bold">Explainable, Fair</text>
+  </g>
+
+  <g>
+    <rect x="264" y="70" width="222" height="150" rx="12" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+    <rect x="264" y="70" width="222" height="34" rx="12" fill="#dc2626"/>
+    <text x="375" y="92" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">SECURITY</text>
+    <text x="279" y="118" font-size="8.5" fill="#334155">IAM least privilege</text>
+    <text x="279" y="136" font-size="8.5" fill="#334155">Encryption (rest / transit)</text>
+    <text x="279" y="154" font-size="8.5" fill="#334155">Network isolation</text>
+    <text x="279" y="172" font-size="8.5" fill="#334155">Guardrails, injection defence</text>
+    <text x="279" y="196" font-size="7.5" fill="#dc2626" font-weight="bold">Maps to: Secure &amp; Resilient</text>
+  </g>
+
+  <g>
+    <rect x="498" y="70" width="222" height="150" rx="12" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+    <rect x="498" y="70" width="222" height="34" rx="12" fill="#7c3aed"/>
+    <text x="609" y="92" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">GOVERNANCE</text>
+    <text x="513" y="118" font-size="8.5" fill="#334155">Operating model &amp; ownership</text>
+    <text x="513" y="136" font-size="8.5" fill="#334155">AI inventory &amp; model cards</text>
+    <text x="513" y="154" font-size="8.5" fill="#334155">Roles: AI risk owner, DPO</text>
+    <text x="513" y="172" font-size="8.5" fill="#334155">Release &amp; version control</text>
+    <text x="513" y="196" font-size="7.5" fill="#7c3aed" font-weight="bold">Maps to: Accountable &amp; Transparent</text>
+  </g>
+
+  <g>
+    <rect x="732" y="70" width="222" height="150" rx="12" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+    <rect x="732" y="70" width="222" height="34" rx="12" fill="#d97706"/>
+    <text x="843" y="92" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">COMPLIANCE</text>
+    <text x="747" y="118" font-size="8.5" fill="#334155">Regulatory mapping per standard</text>
+    <text x="747" y="136" font-size="8.5" fill="#334155">Impact / risk assessments</text>
+    <text x="747" y="154" font-size="8.5" fill="#334155">Audit trails</text>
+    <text x="747" y="172" font-size="8.5" fill="#334155">Breach-notification runbooks</text>
+    <text x="747" y="196" font-size="7.5" fill="#d97706" font-weight="bold">Maps to: Accountable &amp; Transparent</text>
+  </g>
+
+  <g>
+    <rect x="966" y="70" width="204" height="150" rx="12" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+    <rect x="966" y="70" width="204" height="34" rx="12" fill="#059669"/>
+    <text x="1068" y="92" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">DATA PROTECTION</text>
+    <text x="981" y="118" font-size="8.5" fill="#334155">Minimisation, purpose limits</text>
+    <text x="981" y="136" font-size="8.5" fill="#334155">PII redaction before LLM</text>
+    <text x="981" y="154" font-size="8.5" fill="#334155">Retention &amp; deletion rules</text>
+    <text x="981" y="172" font-size="8.5" fill="#334155">Data-subject rights workflow</text>
+    <text x="981" y="196" font-size="7.5" fill="#059669" font-weight="bold">Maps to: Privacy-Enhanced</text>
+  </g>
+
+  <!-- ============ 7 CHARACTERISTICS FOUNDATION ============ -->
+  <text x="600" y="250" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Built on 7 Trustworthy-AI Characteristics (NIST AI RMF) - the measurable primitives behind every pillar</text>
+
+  <g>
+    <rect x="30" y="270" width="158" height="70" rx="10" fill="#dbeafe"/>
+    <text x="109" y="298" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">Valid &amp;</text>
+    <text x="109" y="313" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">Reliable</text>
+  </g>
+  <g>
+    <rect x="198" y="270" width="158" height="70" rx="10" fill="#d1fae5"/>
+    <text x="277" y="305" text-anchor="middle" font-size="10" font-weight="bold" fill="#047857">Safe</text>
+  </g>
+  <g>
+    <rect x="366" y="270" width="158" height="70" rx="10" fill="#fee2e2"/>
+    <text x="445" y="298" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">Secure &amp;</text>
+    <text x="445" y="313" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">Resilient</text>
+  </g>
+  <g>
+    <rect x="534" y="270" width="158" height="70" rx="10" fill="#ede9fe"/>
+    <text x="613" y="298" text-anchor="middle" font-size="10" font-weight="bold" fill="#6d28d9">Accountable &amp;</text>
+    <text x="613" y="313" text-anchor="middle" font-size="10" font-weight="bold" fill="#6d28d9">Transparent</text>
+  </g>
+  <g>
+    <rect x="702" y="270" width="158" height="70" rx="10" fill="#fef3c7"/>
+    <text x="781" y="298" text-anchor="middle" font-size="10" font-weight="bold" fill="#b45309">Explainable &amp;</text>
+    <text x="781" y="313" text-anchor="middle" font-size="10" font-weight="bold" fill="#b45309">Interpretable</text>
+  </g>
+  <g>
+    <rect x="870" y="270" width="158" height="70" rx="10" fill="#ccfbf1"/>
+    <text x="949" y="298" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f766e">Privacy-</text>
+    <text x="949" y="313" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f766e">Enhanced</text>
+  </g>
+  <g>
+    <rect x="1038" y="270" width="132" height="70" rx="10" fill="#fce7f3"/>
+    <text x="1104" y="298" text-anchor="middle" font-size="10" font-weight="bold" fill="#be185d">Fair - bias</text>
+    <text x="1104" y="313" text-anchor="middle" font-size="10" font-weight="bold" fill="#be185d">is managed</text>
+  </g>
+
+  <!-- ============ EXAMPLE: TAGGED CONTROLS FROM REAL STANDARDS ============ -->
+  <text x="600" y="380" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e293b">Example: How Real Controls From Different Standards Tag to the Same Pillars</text>
+
+  <rect x="30" y="400" width="1140" height="330" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- Table header -->
+  <rect x="50" y="418" width="1100" height="28" rx="4" fill="#1e293b"/>
+  <text x="70" y="437" font-size="9" font-weight="bold" fill="#fff">Standard</text>
+  <text x="220" y="437" font-size="9" font-weight="bold" fill="#fff">Control</text>
+  <text x="560" y="437" font-size="9" font-weight="bold" fill="#fff">Pillar Tag(s)</text>
+  <text x="900" y="437" font-size="9" font-weight="bold" fill="#fff">Trustworthy-AI Characteristic</text>
+
+  <!-- Row 1 -->
+  <rect x="50" y="446" width="1100" height="42" fill="#ffffff"/>
+  <text x="70" y="470" font-size="8.5" fill="#dc2626" font-weight="bold">HIPAA</text>
+  <text x="220" y="470" font-size="8.5" fill="#334155">164.312(a)(2)(iv) Encryption</text>
+  <rect x="560" y="456" width="60" height="18" rx="4" fill="#dc2626"/><text x="590" y="469" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">SECURITY</text>
+  <rect x="628" y="456" width="90" height="18" rx="4" fill="#059669"/><text x="673" y="469" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">DATA PROTECTION</text>
+  <text x="900" y="470" font-size="8.5" fill="#334155">Secure &amp; Resilient</text>
+
+  <!-- Row 2 -->
+  <rect x="50" y="488" width="1100" height="42" fill="#f8fafc"/>
+  <text x="70" y="512" font-size="8.5" fill="#7c3aed" font-weight="bold">ISO 42001</text>
+  <text x="220" y="512" font-size="8.5" fill="#334155">A.6.2.7 Data Security</text>
+  <rect x="560" y="498" width="60" height="18" rx="4" fill="#dc2626"/><text x="590" y="511" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">SECURITY</text>
+  <rect x="628" y="498" width="90" height="18" rx="4" fill="#059669"/><text x="673" y="511" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">DATA PROTECTION</text>
+  <text x="900" y="512" font-size="8.5" fill="#334155">Secure &amp; Resilient</text>
+
+  <!-- shared-gap highlight -->
+  <rect x="55" y="450" width="1090" height="76" rx="6" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="1140" y="414" font-size="7.5" fill="#d97706" font-weight="bold" text-anchor="end">Dashed box = same pillar tag = a shared gap across standards</text>
+
+  <!-- Row 3 -->
+  <rect x="50" y="530" width="1100" height="42" fill="#ffffff"/>
+  <text x="70" y="554" font-size="8.5" fill="#dc2626" font-weight="bold">HIPAA</text>
+  <text x="220" y="554" font-size="8.5" fill="#334155">164.308(a)(1) Risk Analysis</text>
+  <rect x="560" y="540" width="85" height="18" rx="4" fill="#7c3aed"/><text x="602" y="553" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">GOVERNANCE</text>
+  <rect x="653" y="540" width="85" height="18" rx="4" fill="#d97706"/><text x="695" y="553" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">COMPLIANCE</text>
+  <text x="900" y="554" font-size="8.5" fill="#334155">Accountable &amp; Transparent</text>
+
+  <!-- Row 4 -->
+  <rect x="50" y="572" width="1100" height="42" fill="#f8fafc"/>
+  <text x="70" y="596" font-size="8.5" fill="#2563eb" font-weight="bold">NYC LL144</text>
+  <text x="220" y="596" font-size="8.5" fill="#334155">Bias Audit - selection rate by group</text>
+  <rect x="560" y="582" width="55" height="18" rx="4" fill="#2563eb"/><text x="587" y="595" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">TRUST</text>
+  <text x="900" y="596" font-size="8.5" fill="#334155">Fair - bias is managed</text>
+
+  <!-- Row 5 -->
+  <rect x="50" y="614" width="1100" height="42" fill="#ffffff"/>
+  <text x="70" y="638" font-size="8.5" fill="#7c3aed" font-weight="bold">ISO 42001</text>
+  <text x="220" y="638" font-size="8.5" fill="#334155">A.4.3 AI System Risk Assessment</text>
+  <rect x="560" y="624" width="55" height="18" rx="4" fill="#2563eb"/><text x="587" y="637" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">TRUST</text>
+  <rect x="623" y="624" width="85" height="18" rx="4" fill="#7c3aed"/><text x="665" y="637" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">GOVERNANCE</text>
+  <text x="900" y="638" font-size="8.5" fill="#334155">Valid &amp; Reliable</text>
+
+  <!-- Row 6 -->
+  <rect x="50" y="656" width="1100" height="42" fill="#f8fafc"/>
+  <text x="70" y="680" font-size="8.5" fill="#ea580c" font-weight="bold">OWASP LLM01</text>
+  <text x="220" y="680" font-size="8.5" fill="#334155">Prompt Injection Resistance</text>
+  <rect x="560" y="666" width="60" height="18" rx="4" fill="#dc2626"/><text x="590" y="679" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold">SECURITY</text>
+  <text x="900" y="680" font-size="8.5" fill="#334155">Secure &amp; Resilient</text>
+
+  <!-- footer note -->
+  <text x="70" y="715" font-size="8.5" fill="#64748b">Pillar tags let the aggregation step spot when fixing ONE gap (e.g. encryption) simultaneously satisfies controls in TWO different standards.</text>
+</svg>

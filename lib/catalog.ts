@@ -6,6 +6,8 @@ import type {
   StandardDefinition,
   StandardKind,
 } from "./types";
+import { pilotStandardsById } from "./framework-packs";
+import { buildMappedControls, mappedCoverage, mappedStandards } from "./standard-mappings";
 
 const controlTemplates: Array<{
   name: string;
@@ -277,6 +279,55 @@ const officialReferences: Record<string, StandardDefinition["officialReference"]
     url: "https://www.digitaleoverheid.nl/nieuws/iama-aangepast-aan-praktijk-en-regelgeving/",
     status: "current",
     note: "Official government notice for the updated 2026 IAMA aligned with EU AI Act Article 27.",
+  },
+  iso27001: {
+    authority: "International Organization for Standardization",
+    title: "ISO/IEC 27001:2022",
+    url: "https://www.iso.org/standard/27001",
+    status: "licensed_preview",
+    note: "Official ISO catalog and preview; the complete standard and Annex A control text are licensed.",
+  },
+  gdpr: {
+    authority: "EUR-Lex",
+    title: "Regulation (EU) 2016/679 — General Data Protection Regulation",
+    url: "https://eur-lex.europa.eu/eli/reg/2016/679/oj?locale=en",
+    status: "current",
+    note: "Official Journal consolidated text. Territorial scope and controller/processor role are declared by the operator, not determined by GovernAI.",
+  },
+  nis2: {
+    authority: "EUR-Lex",
+    title: "Directive (EU) 2022/2555 — NIS2 Directive",
+    url: "https://eur-lex.europa.eu/eli/dir/2022/2555/oj?locale=en",
+    status: "current",
+    note: "Official Journal text. NIS2 applies through national transposition, so entity classification and thresholds are set by Member State law.",
+  },
+  nerc_cip: {
+    authority: "North American Electric Reliability Corporation",
+    title: "CIP Reliability Standards",
+    url: "https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx",
+    status: "current",
+    note: "Official NERC standards index. Applicability depends on BES Cyber System impact categorization under CIP-002.",
+  },
+  pci_dss: {
+    authority: "PCI Security Standards Council",
+    title: "PCI DSS v4.0.1",
+    url: "https://www.pcisecuritystandards.org/document_library/",
+    status: "current",
+    note: "Official PCI SSC document library. Requirement 9 physical access has no remote evidence path and is out of scope for this assessment.",
+  },
+  gxp_part11: {
+    authority: "U.S. Food and Drug Administration",
+    title: "21 CFR Part 11 — Electronic Records; Electronic Signatures",
+    url: "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-11",
+    status: "current",
+    note: "Official eCFR text. EU GMP Annex 11 and GAMP 5 are cited as the lifecycle companions; GAMP 5 is licensed by ISPE.",
+  },
+  cmmc: {
+    authority: "U.S. Department of Defense — DoD CIO",
+    title: "Cybersecurity Maturity Model Certification (CMMC) Program",
+    url: "https://dodcio.defense.gov/cmmc/",
+    status: "current",
+    note: "Official DoD CMMC program page. Level 2 practices derive from NIST SP 800-171; physical protection has no remote evidence path.",
   },
 };
 
@@ -586,9 +637,9 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "IEC 62443 Security Level Assessment",
     scoringMethod: "Foundational requirement and security-level conformity",
     passThreshold: "Target security level achieved",
-    total: 12,
-    coverage: [6, 10, 12],
-    prefix: "FR",
+    total: 50,
+    coverage: [4, 25, 50],
+    prefix: "SR",
   },
   {
     id: "iso13849",
@@ -665,12 +716,131 @@ const standardSeeds: StandardSeed[] = [
     coverage: [6, 8, 10],
     prefix: "IAMA",
   },
+  {
+    id: "iso27001",
+    shortName: "ISO/IEC 27001",
+    name: "Information Security Management System",
+    version: "ISO/IEC 27001:2022",
+    kind: "Certifiable",
+    jurisdiction: "Global",
+    description: "The certifiable information-security management standard most enterprise buyers already require.",
+    reportFormat: "ISO 27001 Conformity Assessment",
+    scoringMethod: "Conforms / Minor NC / Major NC / Not Assessed",
+    passThreshold: "Zero major non-conformities",
+    total: 50,
+    coverage: [3, 24, 50],
+    prefix: "A",
+  },
+  {
+    id: "gdpr",
+    shortName: "GDPR",
+    name: "General Data Protection Regulation",
+    version: "Regulation (EU) 2016/679",
+    kind: "Mandatory",
+    jurisdiction: "European Union / EEA",
+    description: "Lawfulness, data-subject rights, security of processing, and accountability for personal data.",
+    reportFormat: "GDPR Processing Assessment",
+    scoringMethod: "Article obligation coverage with evidence confidence",
+    passThreshold: "100% required for regulatory compliance",
+    total: 56,
+    coverage: [5, 26, 56],
+    prefix: "Art",
+  },
+  {
+    id: "nis2",
+    shortName: "NIS2",
+    name: "Network and Information Security Directive 2",
+    version: "Directive (EU) 2022/2555",
+    kind: "Mandatory",
+    jurisdiction: "European Union",
+    description: "Cybersecurity risk-management measures and incident reporting for essential and important entities.",
+    reportFormat: "NIS2 Risk-Management Measure Assessment",
+    scoringMethod: "Article 21(2) measure coverage with evidence confidence",
+    passThreshold: "All Article 21(2) measures effective",
+    total: 49,
+    coverage: [4, 25, 49],
+    prefix: "NIS2",
+  },
+  {
+    id: "nerc_cip",
+    shortName: "NERC CIP",
+    name: "Critical Infrastructure Protection Reliability Standards",
+    version: "CIP-002 through CIP-015",
+    kind: "Mandatory",
+    jurisdiction: "United States / Canada",
+    description: "Cyber-security requirements for systems supporting the bulk electric system.",
+    reportFormat: "NERC CIP Compliance Assessment",
+    scoringMethod: "Requirement and part conformity with exceptions",
+    passThreshold: "No open requirement violations",
+    total: 50,
+    coverage: [4, 25, 50],
+    prefix: "CIP",
+  },
+  {
+    id: "pci_dss",
+    shortName: "PCI DSS",
+    name: "Payment Card Industry Data Security Standard",
+    version: "PCI DSS v4.0.1",
+    kind: "Certifiable",
+    jurisdiction: "Global",
+    description: "Protection of cardholder data across networks, storage, access, logging, and testing.",
+    reportFormat: "PCI DSS Readiness Assessment",
+    scoringMethod: "Requirement conformity — In Place / Not in Place / Not Applicable",
+    passThreshold: "All in-scope requirements in place",
+    total: 51,
+    coverage: [4, 25, 51],
+    prefix: "PCI",
+  },
+  {
+    id: "gxp_part11",
+    shortName: "GxP / Part 11",
+    name: "GxP Computerised Systems and Electronic Records",
+    version: "21 CFR Part 11 + EU GMP Annex 11 + GAMP 5 2nd ed.",
+    kind: "Mandatory",
+    jurisdiction: "United States / European Union",
+    description: "Validation, audit trails, and record integrity for AI used in a GxP-regulated process.",
+    reportFormat: "GxP Computerised System Validation Assessment",
+    scoringMethod: "Validated / Gap / Not Assessed per record and lifecycle control",
+    passThreshold: "No open record-integrity or validation gaps",
+    total: 56,
+    coverage: [5, 26, 56],
+    prefix: "GXP",
+  },
+  {
+    id: "cmmc",
+    shortName: "CMMC 2.0",
+    name: "Cybersecurity Maturity Model Certification Level 2",
+    version: "CMMC 2.0 Level 2 (NIST SP 800-171)",
+    kind: "Certifiable",
+    jurisdiction: "United States",
+    description: "Protection of controlled unclassified information across the defense industrial base.",
+    reportFormat: "CMMC Level 2 Readiness Assessment",
+    scoringMethod: "Practice conformity — Met / Not Met / Not Applicable",
+    passThreshold: "All applicable Level 2 practices met",
+    total: 50,
+    coverage: [4, 25, 50],
+    prefix: "CMMC",
+  },
 ];
 
 export const standards: StandardDefinition[] = standardSeeds.map((seed) => {
+  const pilot = pilotStandardsById.get(seed.id);
+  if (pilot) return pilot;
   const { total, coverage, prefix, ...definition } = seed;
   const reference = officialReferences[seed.id];
   const sections = officialSectionLocators[seed.id] ?? [reference.title];
+
+  // Authored standards select from the verification library, so every control
+  // has a real evidence path and the coverage counts are derived from it.
+  if (mappedStandards[seed.id]) {
+    return {
+      ...definition,
+      officialReference: reference,
+      coverage: mappedCoverage(seed.id),
+      controls: buildMappedControls(seed.id, reference),
+    };
+  }
+
   return {
     ...definition,
     officialReference: reference,
@@ -690,6 +860,16 @@ export const standards: StandardDefinition[] = standardSeeds.map((seed) => {
 });
 
 export const industries: IndustryDefinition[] = [
+  {
+    id: "it_services",
+    name: "IT Services / Technology",
+    description: "SaaS platforms, software vendors, IT consulting, and managed service providers.",
+    recommendations: [
+      { standardId: "soc2", reason: "Customer-facing control assurance" },
+      { standardId: "iso27001", reason: "Certifiable information-security baseline" },
+      { standardId: "iso42001", reason: "Certifiable AI management system" },
+    ],
+  },
   {
     id: "healthcare",
     name: "Healthcare",
@@ -788,6 +968,57 @@ export const industries: IndustryDefinition[] = [
       { standardId: "omb_m_24_10", reason: "US federal AI minimum practices" },
       { standardId: "canada_aia", reason: "Automated-decision impact duties" },
       { standardId: "netherlands_iama", reason: "Human-rights impact method" },
+    ],
+  },
+  {
+    id: "energy",
+    name: "Energy / Utilities",
+    description: "Grid operations, generation, metering, field service, and outage management.",
+    recommendations: [
+      { standardId: "nerc_cip", reason: "Bulk electric system cyber requirements" },
+      { standardId: "iec62443", reason: "Industrial control system security" },
+      { standardId: "nis2", reason: "EU essential-entity risk measures" },
+    ],
+  },
+  {
+    id: "telecom",
+    name: "Telecommunications",
+    description: "Network operators, carriers, ISPs, and customer-service platforms.",
+    recommendations: [
+      { standardId: "nis2", reason: "EU essential-entity risk measures" },
+      { standardId: "gdpr", reason: "Subscriber personal-data duties" },
+      { standardId: "iso27001", reason: "Certifiable information-security baseline" },
+    ],
+  },
+  {
+    id: "retail",
+    name: "Retail / E-commerce",
+    description: "Storefronts, marketplaces, payments, personalisation, and customer support.",
+    recommendations: [
+      { standardId: "pci_dss", reason: "Cardholder data protection" },
+      { standardId: "gdpr", reason: "Customer personal-data and profiling duties" },
+      { standardId: "eu_ai_act", reason: "Synthetic-content and interaction transparency" },
+    ],
+  },
+  {
+    id: "pharma",
+    name: "Pharmaceuticals / Life Sciences",
+    description: "Discovery, trials, manufacturing quality, pharmacovigilance, and medical affairs.",
+    recommendations: [
+      { standardId: "gxp_part11", reason: "Validated GxP systems and record integrity" },
+      { standardId: "eu_ai_act", reason: "EU high-risk and product AI obligations" },
+      { standardId: "iso42001", reason: "Certifiable AI management system" },
+    ],
+  },
+  {
+    id: "defense",
+    name: "Defense / Aerospace",
+    description:
+      "Defense primes and their supply chain, aerospace and aviation manufacturers, and mission-support systems.",
+    recommendations: [
+      { standardId: "cmmc", reason: "Controlled unclassified information duties" },
+      { standardId: "nist_ai_rmf", reason: "Methodological AI risk practice" },
+      { standardId: "iec62443", reason: "Production and ground-system OT security" },
     ],
   },
 ];

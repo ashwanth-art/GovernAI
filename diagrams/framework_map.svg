@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="680" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="680" fill="#ffffff"/>
+  <text x="600" y="24" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">Framework Map  What Each Framework Does and Where It Fits</text>
+
+  <!-- COMPLIANCE FRAMEWORKS -->
+  <rect x="30" y="50" width="370" height="290" rx="12" fill="#F5F3FF" stroke="#7c3aed" stroke-width="2"/>
+  <text x="215" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#7c3aed">COMPLIANCE FRAMEWORKS</text>
+
+  <rect x="50" y="90" width="330" height="55" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="65" y="110" font-size="10" font-weight="bold" fill="#7c3aed">NIST AI RMF 1.0 (Govern " Map " Measure " Manage)</text>
+  <text x="65" y="126" font-size="9" fill="#64748b">US framework for AI risk management. Provides 72 sub-categories.</text>
+  <text x="65" y="139" font-size="9" fill="#475569">We use: 12 sub-categories relevant to RAG systems.</text>
+
+  <rect x="50" y="150" width="330" height="55" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="65" y="170" font-size="10" font-weight="bold" fill="#7c3aed">EU AI Act (Article 6, 9, 13, 14, 15)</text>
+  <text x="65" y="186" font-size="9" fill="#64748b">EU regulation. Mandates transparency, accuracy, human oversight.</text>
+  <text x="65" y="199" font-size="9" fill="#475569">We use: 5 articles that apply to RAG chatbots (limited/high risk).</text>
+
+  <rect x="50" y="210" width="330" height="55" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="65" y="230" font-size="10" font-weight="bold" fill="#7c3aed">ISO 42001 (Annex A controls)</text>
+  <text x="65" y="246" font-size="9" fill="#64748b">International standard for AI management systems (AIMS).</text>
+  <text x="65" y="259" font-size="9" fill="#475569">We use: 10 Annex A controls for data governance + quality.</text>
+
+  <rect x="50" y="270" width="330" height="55" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="65" y="290" font-size="10" font-weight="bold" fill="#7c3aed">GAIGI Crosswalk Matrix</text>
+  <text x="65" y="306" font-size="9" fill="#64748b">Maps equivalent controls across NISTEUISO. Avoids duplication.</text>
+  <text x="65" y="319" font-size="9" fill="#475569">We use: As deduplication layer  34 unified controls from 97 raw.</text>
+
+  <!-- SECURITY FRAMEWORKS -->
+  <rect x="415" y="50" width="370" height="290" rx="12" fill="#FEF2F2" stroke="#dc2626" stroke-width="2"/>
+  <text x="600" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#dc2626">SECURITY FRAMEWORKS</text>
+
+  <rect x="435" y="90" width="330" height="55" rx="8" fill="#ffffff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="450" y="110" font-size="10" font-weight="bold" fill="#dc2626">OWASP LLM Top 10 (2025 v2)</text>
+  <text x="450" y="126" font-size="9" fill="#64748b">10 critical LLM vulnerabilities: injection, data leak, insecure output...</text>
+  <text x="450" y="139" font-size="9" fill="#475569">We use: As payload library (all 10 categories with 100+ test vectors).</text>
+
+  <rect x="435" y="150" width="330" height="55" rx="8" fill="#ffffff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="450" y="170" font-size="10" font-weight="bold" fill="#dc2626">OWASP RAG Security Cheat Sheet</text>
+  <text x="450" y="186" font-size="9" fill="#64748b">RAG-specific risks: vector poisoning, context injection, over-retrieval.</text>
+  <text x="450" y="199" font-size="9" fill="#475569">We use: 6 RAG-specific test scenarios beyond generic LLM testing.</text>
+
+  <rect x="435" y="210" width="330" height="55" rx="8" fill="#ffffff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="450" y="230" font-size="10" font-weight="bold" fill="#dc2626">OWASP LLMSVS v2.0 (Verification Standard)</text>
+  <text x="450" y="246" font-size="9" fill="#64748b">Structured checklist for verifying LLM application security controls.</text>
+  <text x="450" y="259" font-size="9" fill="#475569">We use: As scoring rubric  PASS/PARTIAL/FAIL per control.</text>
+
+  <rect x="435" y="270" width="330" height="55" rx="8" fill="#ffffff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="450" y="290" font-size="10" font-weight="bold" fill="#dc2626">Garak (AI Red-Teaming Tool)</text>
+  <text x="450" y="306" font-size="9" fill="#64748b">Open-source LLM security scanner. Generates + runs adversarial probes.</text>
+  <text x="450" y="319" font-size="9" fill="#475569">We use: As execution engine. Runs OWASP payloads against target API.</text>
+
+  <!-- RISK / EVALUATION FRAMEWORKS -->
+  <rect x="800" y="50" width="370" height="290" rx="12" fill="#FFFBEB" stroke="#d97706" stroke-width="2"/>
+  <text x="985" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#d97706">RISK / EVALUATION TOOLS</text>
+
+  <rect x="820" y="90" width="330" height="55" rx="8" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <text x="835" y="110" font-size="10" font-weight="bold" fill="#d97706">ContextCheck (Self-Consistency Method)</text>
+  <text x="835" y="126" font-size="9" fill="#64748b">Detects hallucination without ground truth. Sends same Q 5 times.</text>
+  <text x="835" y="139" font-size="9" fill="#475569">We use: Primary hallucination metric (variability = hallucination).</text>
+
+  <rect x="820" y="150" width="330" height="55" rx="8" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <text x="835" y="170" font-size="10" font-weight="bold" fill="#d97706">DeepEval (LLM Evaluation Framework)</text>
+  <text x="835" y="186" font-size="9" fill="#64748b">Metrics: faithfulness, answer relevancy, contextual recall.</text>
+  <text x="835" y="199" font-size="9" fill="#475569">We use: NLI-based faithfulness scorer  each claim vs citations.</text>
+
+  <rect x="820" y="210" width="330" height="55" rx="8" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <text x="835" y="230" font-size="10" font-weight="bold" fill="#d97706">Fairlearn (Microsoft Fairness Toolkit)</text>
+  <text x="835" y="246" font-size="9" fill="#64748b">Measures demographic parity, equalized odds for AI systems.</text>
+  <text x="835" y="259" font-size="9" fill="#475569">We use: Compare RAG responses across 8 demographic query variants.</text>
+
+  <rect x="820" y="270" width="330" height="55" rx="8" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <text x="835" y="290" font-size="10" font-weight="bold" fill="#d97706">Microsoft SABER (Statistical Extrapolation)</text>
+  <text x="835" y="306" font-size="9" fill="#64748b">Models adversarial risk from small sample using Bayesian inference.</text>
+  <text x="835" y="319" font-size="9" fill="#475569">We use: Estimate risk at 1000 attacks from 100-sample observation.</text>
+
+  <!-- ORCHESTRATION / TOOLING -->
+  <rect x="30" y="360" width="1140" height="300" rx="12" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <text x="600" y="385" text-anchor="middle" font-size="13" font-weight="bold" fill="#2563EB">ORCHESTRATION &amp; TOOLING  How Everything Connects</text>
+
+  <!-- LangGraph -->
+  <rect x="50" y="400" width="320" height="70" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="65" y="422" font-size="11" font-weight="bold" fill="#2563EB">LangGraph (State Machine Engine)</text>
+  <text x="65" y="440" font-size="9" fill="#64748b">Controls step execution order, parallel branching, error recovery.</text>
+  <text x="65" y="454" font-size="9" fill="#475569">Role: ORCHESTRATOR  decides which step runs next, checkpoints state.</text>
+
+  <!-- checkpoint-ai -->
+  <rect x="50" y="480" width="320" height="70" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="65" y="502" font-size="11" font-weight="bold" fill="#2563EB">checkpoint-ai (Compliance Self-Assessment)</text>
+  <text x="65" y="520" font-size="9" fill="#64748b">Auto-generates questionnaire from framework requirements.</text>
+  <text x="65" y="534" font-size="9" fill="#475569">Role: Translates evidence  control pass/fail, flags missing evidence.</text>
+
+  <!-- OPA -->
+  <rect x="50" y="560" width="320" height="70" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="65" y="582" font-size="11" font-weight="bold" fill="#2563EB">Open Policy Agent (OPA)</text>
+  <text x="65" y="600" font-size="9" fill="#64748b">Policy engine. Defines rules in Rego language, evaluates data.</text>
+  <text x="65" y="614" font-size="9" fill="#475569">Role: Evaluates infra configs against compliance rules (policy-as-code).</text>
+
+  <!-- Cisco AI-BOM -->
+  <rect x="410" y="400" width="350" height="70" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="425" y="422" font-size="11" font-weight="bold" fill="#2563EB">Cisco AI-BOM / k8s-aibom (Discovery)</text>
+  <text x="425" y="440" font-size="9" fill="#64748b">Scans repos + K8s deployments  produces AI Bill of Materials.</text>
+  <text x="425" y="454" font-size="9" fill="#475569">Role: Generates architectural map of all AI components (Tier 2+).</text>
+
+  <!-- rag-poison-detector -->
+  <rect x="410" y="480" width="350" height="70" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="425" y="502" font-size="11" font-weight="bold" fill="#2563EB">rag-poison-detector + HubScan</text>
+  <text x="425" y="520" font-size="9" fill="#64748b">Read-only scanner for vector DB. Detects anomalous embeddings.</text>
+  <text x="425" y="534" font-size="9" fill="#475569">Role: Identifies potential data poisoning WITHOUT write access.</text>
+
+  <!-- LLMmap -->
+  <rect x="410" y="560" width="350" height="70" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="425" y="582" font-size="11" font-weight="bold" fill="#2563EB">LLMmap + LLMPrint (Fingerprinting)</text>
+  <text x="425" y="600" font-size="9" fill="#64748b">Behavioral queries to identify model type + version via API only.</text>
+  <text x="425" y="614" font-size="9" fill="#475569">Role: Identifies the LLM model without needing source code (Tier 1).</text>
+
+  <!-- ORION -->
+  <rect x="790" y="400" width="350" height="70" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="805" y="422" font-size="11" font-weight="bold" fill="#2563EB">ORION (NLI-Based Faithfulness)</text>
+  <text x="805" y="440" font-size="9" fill="#64748b">Uses NLI to verify every claim is grounded in retrieved context.</text>
+  <text x="805" y="454" font-size="9" fill="#475569">Role: Measures faithfulness without reference answers (black-box).</text>
+
+  <!-- Sectum AI / RAGLeakLab -->
+  <rect x="790" y="480" width="350" height="70" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="805" y="502" font-size="11" font-weight="bold" fill="#2563EB">Sectum AI / RAGLeakLab</text>
+  <text x="805" y="520" font-size="9" fill="#64748b">Cross-tenant isolation testing using synthetic tenant provisioning.</text>
+  <text x="805" y="534" font-size="9" fill="#475569">Role: Verifies data doesn't leak between tenants (Tier 3 only).</text>
+
+  <!-- FastAPI / SSE -->
+  <rect x="790" y="560" width="350" height="70" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="805" y="582" font-size="11" font-weight="bold" fill="#2563EB">FastAPI + Server-Sent Events (SSE)</text>
+  <text x="805" y="600" font-size="9" fill="#64748b">HTTP API layer exposing assessment endpoints with streaming.</text>
+  <text x="805" y="614" font-size="9" fill="#475569">Role: API server + real-time progress delivery to frontend.</text>
+</svg>

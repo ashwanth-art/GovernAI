@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 500" font-family="Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="1400" height="500" fill="#ffffff"/>
+
+  <!-- card template: x = 30 + i*(252+20), w=252, y=30, h=440 -->
+  <!-- TRUST -->
+  <g>
+    <rect x="30" y="30" width="252" height="440" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <path d="M 30 44 a14,14 0 0 1 14,-14 h 224 a14,14 0 0 1 14,14 v 76 h -252 z" fill="#2563eb"/>
+    <text x="156" y="70" text-anchor="middle" font-size="24" font-weight="bold" fill="#ffffff">TRUST</text>
+    <text x="156" y="96" text-anchor="middle" font-size="13" fill="#dbeafe">Trustworthy &amp; transparent AI</text>
+    <circle cx="52" cy="152" r="4" fill="#2563eb"/><text x="66" y="157" font-size="15" fill="#334155">Explainability &amp; transparency</text>
+    <circle cx="52" cy="224" r="4" fill="#2563eb"/><text x="66" y="229" font-size="15" fill="#334155">Human oversight (HITL)</text>
+    <circle cx="52" cy="296" r="4" fill="#2563eb"/><text x="66" y="301" font-size="15" fill="#334155">Accuracy &amp; reliability metrics</text>
+    <circle cx="52" cy="368" r="4" fill="#2563eb"/><text x="66" y="373" font-size="15" fill="#334155">Fairness &amp; bias monitoring</text>
+  </g>
+
+  <!-- SECURITY -->
+  <g>
+    <rect x="302" y="30" width="252" height="440" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <path d="M 302 44 a14,14 0 0 1 14,-14 h 224 a14,14 0 0 1 14,14 v 76 h -252 z" fill="#dc2626"/>
+    <text x="428" y="70" text-anchor="middle" font-size="24" font-weight="bold" fill="#ffffff">SECURITY</text>
+    <text x="428" y="96" text-anchor="middle" font-size="13" fill="#fee2e2">Secure &amp; resilient by design</text>
+    <circle cx="324" cy="152" r="4" fill="#dc2626"/><text x="338" y="157" font-size="15" fill="#334155">IAM least privilege</text>
+    <circle cx="324" cy="224" r="4" fill="#dc2626"/><text x="338" y="229" font-size="15" fill="#334155">KMS encryption (rest/transit)</text>
+    <circle cx="324" cy="296" r="4" fill="#dc2626"/><text x="338" y="301" font-size="15" fill="#334155">PrivateLink / VPC endpoints</text>
+    <circle cx="324" cy="368" r="4" fill="#dc2626"/><text x="338" y="373" font-size="15" fill="#334155">Guardrails, injection defence</text>
+  </g>
+
+  <!-- GOVERNANCE -->
+  <g>
+    <rect x="574" y="30" width="252" height="440" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <path d="M 574 44 a14,14 0 0 1 14,-14 h 224 a14,14 0 0 1 14,14 v 76 h -252 z" fill="#7c3aed"/>
+    <text x="700" y="70" text-anchor="middle" font-size="24" font-weight="bold" fill="#ffffff">GOVERNANCE</text>
+    <text x="700" y="96" text-anchor="middle" font-size="13" fill="#ede9fe">Accountable operating model</text>
+    <circle cx="596" cy="152" r="4" fill="#7c3aed"/><text x="610" y="157" font-size="15" fill="#334155">NIST AI RMF operating model</text>
+    <circle cx="596" cy="224" r="4" fill="#7c3aed"/><text x="610" y="229" font-size="15" fill="#334155">AI inventory &amp; model cards</text>
+    <circle cx="596" cy="296" r="4" fill="#7c3aed"/><text x="610" y="301" font-size="15" fill="#334155">Roles: AI risk owner, DPO</text>
+    <circle cx="596" cy="368" r="4" fill="#7c3aed"/><text x="610" y="373" font-size="15" fill="#334155">Release &amp; version control</text>
+  </g>
+
+  <!-- COMPLIANCE -->
+  <g>
+    <rect x="846" y="30" width="252" height="440" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <path d="M 846 44 a14,14 0 0 1 14,-14 h 224 a14,14 0 0 1 14,14 v 76 h -252 z" fill="#d97706"/>
+    <text x="972" y="70" text-anchor="middle" font-size="24" font-weight="bold" fill="#ffffff">COMPLIANCE</text>
+    <text x="972" y="96" text-anchor="middle" font-size="13" fill="#fef3c7">Regulatory alignment</text>
+    <circle cx="868" cy="152" r="4" fill="#d97706"/><text x="882" y="157" font-size="15" fill="#334155">GDPR · HIPAA · DPDPA map</text>
+    <circle cx="868" cy="224" r="4" fill="#d97706"/><text x="882" y="229" font-size="15" fill="#334155">DPIA / risk assessments</text>
+    <circle cx="868" cy="296" r="4" fill="#d97706"/><text x="882" y="301" font-size="15" fill="#334155">Audit trails (CloudTrail)</text>
+    <circle cx="868" cy="368" r="4" fill="#d97706"/><text x="882" y="373" font-size="15" fill="#334155">Breach-notification runbooks</text>
+  </g>
+
+  <!-- DATA PROTECTION -->
+  <g>
+    <rect x="1118" y="30" width="252" height="440" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <path d="M 1118 44 a14,14 0 0 1 14,-14 h 224 a14,14 0 0 1 14,14 v 76 h -252 z" fill="#059669"/>
+    <text x="1244" y="63" text-anchor="middle" font-size="22" font-weight="bold" fill="#ffffff">DATA</text>
+    <text x="1244" y="87" text-anchor="middle" font-size="22" font-weight="bold" fill="#ffffff">PROTECTION</text>
+    <text x="1244" y="108" text-anchor="middle" font-size="13" fill="#d1fae5">Privacy-enhanced processing</text>
+    <circle cx="1140" cy="152" r="4" fill="#059669"/><text x="1154" y="157" font-size="15" fill="#334155">Minimisation, purpose limits</text>
+    <circle cx="1140" cy="224" r="4" fill="#059669"/><text x="1154" y="229" font-size="15" fill="#334155">PII redaction before LLM</text>
+    <circle cx="1140" cy="296" r="4" fill="#059669"/><text x="1154" y="301" font-size="15" fill="#334155">Retention &amp; deletion rules</text>
+    <circle cx="1140" cy="368" r="4" fill="#059669"/><text x="1154" y="373" font-size="15" fill="#334155">Data-subject rights workflow</text>
+  </g>
+</svg>

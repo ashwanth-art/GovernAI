@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="Helvetica, Arial, sans-serif">
+  <rect width="960" height="620" fill="#ffffff"/>
+  <text x="480" y="20" text-anchor="middle" font-size="17" font-weight="bold" fill="#1e293b">Open-Source AI Governance &#x2014; Layered Architecture</text>
+  <text x="480" y="38" text-anchor="middle" font-size="12" fill="#64748b">No single tool covers everything. A layered stack maps each concern to the right enforcement point.</text>
+
+  <!-- Layer 4: Continuous Evaluation -->
+  <rect x="20" y="48" width="920" height="122" rx="10" fill="#FFFBEB" stroke="#D97706" stroke-width="2"/>
+  <rect x="30" y="40" width="230" height="20" rx="5" fill="#FEF3C7"/>
+  <text x="145" y="54" text-anchor="middle" font-size="11" font-weight="bold" fill="#B45309">Layer 4 &#x2014; Continuous Evaluation</text>
+  <rect x="35" y="70" width="210" height="80" rx="7" fill="#ffffff" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="140" y="98" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">WandB RAI Toolkit</text>
+  <text x="140" y="114" text-anchor="middle" font-size="10.5" fill="#64748b">red-teaming, policy checks</text>
+  <text x="140" y="128" text-anchor="middle" font-size="10.5" fill="#64748b">evidence reports</text>
+  <rect x="260" y="70" width="210" height="80" rx="7" fill="#ffffff" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="365" y="98" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">IBM AI Fairness 360</text>
+  <text x="365" y="114" text-anchor="middle" font-size="10.5" fill="#64748b">70+ bias metrics</text>
+  <text x="365" y="128" text-anchor="middle" font-size="10.5" fill="#64748b">10+ mitigation algorithms</text>
+  <rect x="485" y="70" width="210" height="80" rx="7" fill="#ffffff" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="590" y="98" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">Microsoft Fairlearn</text>
+  <text x="590" y="114" text-anchor="middle" font-size="10.5" fill="#64748b">fairness dashboard</text>
+  <text x="590" y="128" text-anchor="middle" font-size="10.5" fill="#64748b">mitigation algorithms</text>
+  <rect x="710" y="70" width="210" height="80" rx="7" fill="#ffffff" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="815" y="98" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">IBM AIX360</text>
+  <text x="815" y="114" text-anchor="middle" font-size="10.5" fill="#64748b">explainability: LIME,</text>
+  <text x="815" y="128" text-anchor="middle" font-size="10.5" fill="#64748b">SHAP, contrastive</text>
+
+  <!-- Layer 3: Runtime Guardrails -->
+  <rect x="20" y="182" width="920" height="122" rx="10" fill="#FEF2F2" stroke="#B91C1C" stroke-width="2"/>
+  <rect x="30" y="174" width="220" height="20" rx="5" fill="#FEE2E2"/>
+  <text x="140" y="188" text-anchor="middle" font-size="11" font-weight="bold" fill="#B91C1C">Layer 3 &#x2014; Runtime Guardrails</text>
+  <rect x="35" y="204" width="210" height="80" rx="7" fill="#ffffff" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="140" y="232" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">NeMo Guardrails</text>
+  <text x="140" y="248" text-anchor="middle" font-size="10.5" fill="#64748b">Colang DSL, 6.7k stars</text>
+  <text x="140" y="262" text-anchor="middle" font-size="10.5" fill="#64748b">jailbreak, fact-check</text>
+  <rect x="260" y="204" width="210" height="80" rx="7" fill="#ffffff" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="365" y="232" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">OpenGuardrails</text>
+  <text x="365" y="248" text-anchor="middle" font-size="10.5" fill="#64748b">AI security gateway</text>
+  <text x="365" y="262" text-anchor="middle" font-size="10.5" fill="#64748b">mask-and-restore PII</text>
+  <rect x="485" y="204" width="210" height="80" rx="7" fill="#ffffff" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="590" y="232" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">PolicyAware</text>
+  <text x="590" y="248" text-anchor="middle" font-size="10.5" fill="#64748b">deny-by-default policy</text>
+  <text x="590" y="262" text-anchor="middle" font-size="10.5" fill="#64748b">PII/PHI redaction</text>
+  <rect x="710" y="204" width="210" height="80" rx="7" fill="#ffffff" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="815" y="232" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">ToTra</text>
+  <text x="815" y="248" text-anchor="middle" font-size="10.5" fill="#64748b">18-lang PII blocking</text>
+  <text x="815" y="262" text-anchor="middle" font-size="10.5" fill="#64748b">hash-chained audit</text>
+
+  <!-- Layer 2: Deploy-Time Policy -->
+  <rect x="20" y="316" width="920" height="122" rx="10" fill="#F5F3FF" stroke="#6D28D9" stroke-width="2"/>
+  <rect x="30" y="308" width="220" height="20" rx="5" fill="#EDE9FE"/>
+  <text x="140" y="322" text-anchor="middle" font-size="11" font-weight="bold" fill="#6D28D9">Layer 2 &#x2014; Deploy-Time Policy</text>
+  <rect x="35" y="338" width="280" height="80" rx="7" fill="#ffffff" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="175" y="366" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">OPA NIST AI RMF Bundle</text>
+  <text x="175" y="382" text-anchor="middle" font-size="10.5" fill="#64748b">K8s admission, Terraform,</text>
+  <text x="175" y="396" text-anchor="middle" font-size="10.5" fill="#64748b">12 deploy-time rules</text>
+  <rect x="330" y="338" width="280" height="80" rx="7" fill="#ffffff" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="470" y="366" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">checkpoint-ai (CI/CD)</text>
+  <text x="470" y="382" text-anchor="middle" font-size="10.5" fill="#64748b">SARIF output, blocks</text>
+  <text x="470" y="396" text-anchor="middle" font-size="10.5" fill="#64748b">non-compliant deploys</text>
+  <rect x="625" y="338" width="280" height="80" rx="7" fill="#ffffff" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="765" y="366" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">WandB RAI (eval gates)</text>
+  <text x="765" y="382" text-anchor="middle" font-size="10.5" fill="#64748b">evidence-backed release</text>
+  <text x="765" y="396" text-anchor="middle" font-size="10.5" fill="#64748b">approval records</text>
+
+  <!-- Layer 1: Organisational Governance -->
+  <rect x="20" y="450" width="920" height="122" rx="10" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <rect x="30" y="442" width="250" height="20" rx="5" fill="#DBEAFE"/>
+  <text x="155" y="456" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">Layer 1 &#x2014; Organisational Governance</text>
+  <rect x="35" y="472" width="210" height="80" rx="7" fill="#ffffff" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="140" y="498" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">ai-governance-</text>
+  <text x="140" y="512" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">framework</text>
+  <text x="140" y="530" text-anchor="middle" font-size="10.5" fill="#64748b">risk scoring, model cards</text>
+  <rect x="260" y="472" width="210" height="80" rx="7" fill="#ffffff" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="365" y="502" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">Assuro</text>
+  <text x="365" y="518" text-anchor="middle" font-size="10.5" fill="#64748b">full platform, Docker</text>
+  <text x="365" y="532" text-anchor="middle" font-size="10.5" fill="#64748b">EU AI Act + NIST + ISO</text>
+  <rect x="485" y="472" width="210" height="80" rx="7" fill="#ffffff" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="590" y="502" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">checkpoint-ai</text>
+  <text x="590" y="518" text-anchor="middle" font-size="10.5" fill="#64748b">self-assessment</text>
+  <text x="590" y="532" text-anchor="middle" font-size="10.5" fill="#64748b">OSCAL SSP, PyPI</text>
+  <rect x="710" y="472" width="210" height="80" rx="7" fill="#ffffff" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="815" y="502" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e293b">ai-rmf-starter</text>
+  <text x="815" y="518" text-anchor="middle" font-size="10.5" fill="#64748b">templates, docs-first</text>
+  <text x="815" y="532" text-anchor="middle" font-size="10.5" fill="#64748b">risk registers</text>
+
+  <!-- Bottom caption -->
+  <rect x="250" y="590" width="460" height="24" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="480" y="607" text-anchor="middle" font-size="11.5" fill="#334155">Implement bottom-up: structure &#x2192; gates &#x2192; guardrails &#x2192; eval</text>
+</svg>

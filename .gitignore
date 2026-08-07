@@ -42,3 +42,6 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# Local scratch copies made while pinning dependencies
+*.local-backup

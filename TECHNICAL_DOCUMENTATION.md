@@ -97,7 +97,20 @@ flowchart LR
 | `app/api/catalog/route.ts` | `GET /api/catalog` |
 | `app/api/assessments/route.ts` | Synchronous `POST /api/assessments` |
 | `app/api/assessments/stream/route.ts` | Streaming `POST /api/assessments/stream` |
+| `app/api/plan/route.ts` | `POST /api/plan` — pre-flight: what will run, what will not, and the per-tier coverage forecast |
+| `app/api/scope/route.ts` | `POST /api/scope` — applicability only, with the engine's reason for each exclusion |
+| `app/api/monitors/route.ts` | `GET`/`POST /api/monitors` — the monitor control surface |
+| `components/setup.tsx` | The one-screen setup: identity, packs, depth, credentials |
+| `components/detail-panels.tsx` | Findings, playbooks, checks, standards, evidence, scope passport and Monitors panels |
+| `components/ui.tsx` | Primitives: status, chips, bars, arcs, sparklines, radar, callouts |
 | `lib/types.ts` | Shared type contracts |
+| `lib/analysis.ts` | Posture, pillars, findings, playbooks, matrix, evidence ledger, monitor plan |
+| `lib/checks.ts` | Check seeds, generated from the rule table so a rule cannot drift from its spec |
+| `lib/target-facts.ts` | Tier 2 adapter fact parsing and the co-located rule spec plus `judge()` for each adapter rule |
+| `lib/verification-library.ts` | Named Tier 3 procedures: objective, pillars, evaluating rule, remediation |
+| `lib/standard-mappings.ts` | Control-to-check mapping for the three authored packs |
+| `lib/remediation.ts` | Playbook bodies: owner, effort, ordered steps, verifying check |
+| `lib/monitor-store.ts` | The monitor engine: arm, cycle, drift, alerts, history (in-process) |
 | `lib/catalog.ts` | Industries, 23 standards, official references, source locators, reusable control generation |
 | `lib/assessment.ts` | Validation, endpoint discovery, live probes, scoring, reports, OWASP mapping, progress events |
 | `lib/execution-log.ts` | Structured log schema, URL sanitization, credential redaction |
@@ -171,9 +184,86 @@ The review shows the exact standards and coverage counts. Clicking **Launch asse
 8. stores `assessment_complete` as `AssessmentResult`; and
 9. enables report tabs, print/PDF, combined report, and JSON download.
 
+### Screen structure
+
+`app/workspace.tsx` owns one route-per-screen shell. The rail is three groups:
+
+| Group | Screens |
+|---|---|
+| First run | Set up the run, live test run |
+| Posture | Overview, findings, remediation playbooks |
+| Pillars | The five pillars, plus **Monitors** |
+| Evidence | One item, **Evidence & detail**, covering four tabs: proof, checks & rules, standards, scope passport |
+
+The four record-shaped screens sit behind one door because they are for the sceptic in the
+room rather than the first pass. The nav item stays lit for any of the four (`NavItem.covers`),
+and with no run yet it opens on the scope passport — the only one of the four that needs no
+result — while the other three are locked rather than blank. Monitors stays a first-class
+pillar-group screen, because it is a thing that runs rather than a record of one that did.
+
+### What the live run screen shows
+
+The screen answers two questions, in this order: **which call are we making**, and **what is it
+verifying**. Running totals were tried first and removed — an aggregate says nothing about which
+of your pillars is being worked on.
+
+**The call in flight.** One strip, from the latest `probe_start` / `probe_complete` / `phase_start`
+event that carries both an `endpoint` and a `probeId`: method and path, the probe's label, and the
+rules it feeds. The join is the engine's own `probeId` — every rule that consumes a probe declares
+one in `lib/checks.ts` / `lib/target-facts.ts`, and every probe event now emits it. Nothing is
+inferred from the source type; that earlier guess reported "0 rules" for calls that did feed rules.
+
+A call no rule reads says so — `recording evidence · no rule spec at this tier reads this
+endpoint`. At Tier 2 the CI/CD reachability HEAD is exactly that: recorded as evidence, read by no
+rule. Stating the gap is the point.
+
+**Five columns, complete from the plan.** `run_plan` fires before the first request with every
+rule — id, title, pillar, method, `probeId`, `controlCount`, `willRun`, `notRunReason` — so all
+five pillars are populated with their full work list from second one. Each row then moves through
+`queued` → `verifying` (its `probeId` matches the call in flight) → its verdict lamp with the
+number of controls it closed. Rules this tier cannot reach are hatched and read `n/a`, with the
+reason on hover.
+
+Per-pillar header, Tier 2 against this target:
+
+| Pillar | Rules verified | Controls closed | Health |
+|---|---|---|---|
+| trust | 5 of 15 | 14 of 36 | 79% |
+| security | 10 of 21 | 26 of 49 | 70% |
+| data_protection | 4 of 7 | 11 of 17 | 67% |
+| governance | 4 of 10 | 12 of 27 | 82% |
+| compliance | 3 of 3 | 8 of 8 | 72% |
+| **total** | **26 of 56** | **71 of 137** | — |
+
+**Verified, never merely processed.** The engine emits a `check_result` for blocked rules too, so
+counting every result would fill the bar to 100% on a run that verified 26 of 56. Both the rule
+count and the control count exclude `not_assessed`, and the bar tracks the same number — the run
+screen obeys the rule the rest of the app does. The 137 here is the three selected framework packs;
+the status strip's 147 adds the always-on OWASP LLM pack, which is why the two differ.
+
+Below the columns, `Every request, as it is sent` keeps the full per-request log: method, path,
+probe label, HTTP status, latency, verdict.
+
+Two statements are on the screen permanently because both were being inferred wrongly:
+
+- **No model judges anything.** There is no `openai`/`anthropic` dependency and no model call in
+  `lib/` or `app/api/`. The `judge` functions in `target-facts.ts` are TypeScript predicates over
+  parsed facts. Determinism is what makes cycle-to-cycle drift meaningful.
+- **A 4xx that scores `pass` is the target's guardrail, not a transport error.** The probe rows
+  label those `guardrail blocked · HTTP 400` in a positive tone, and the trace appends "refused by
+  your guardrail, before retrieval". Against this target the injection and credential-extraction
+  prompts are blocked by `contains_prompt_injection()` and
+  `contains_sensitive_extraction_request()` **before retrieval or generation** — which is why they
+  answer in ~260 ms while the one grounded probe takes 10–11 s.
+
+Known limitation, unchanged by this work: the probe rule accepts *any* 400/403/422 as a block
+(`assessment.ts`), so a malformed request would also score `pass`. It is sound for this target —
+the same payload shape returns 200 on the grounded probe, and the response body names the
+guardrail — but the rule does not verify that.
+
 ### Browser state
 
-All input, progress, and result state is React state. Refreshing or closing the page loses the run unless the user downloaded the JSON or printed a report.
+All input, progress, and result state is React state. Refreshing or closing the page loses the run unless the user downloaded the JSON or printed a report. Monitor state is the exception: it lives on the server and the Monitors screen polls `GET /api/monitors` every 15 seconds, so a reload does not disarm anything.
 
 ### Report output
 
@@ -260,6 +350,10 @@ In the SSE route, control events are paced by 90 ms for human-visible progressio
 | `/api/catalog` | GET | None | Industries, standard metadata, official references, control counts, credential fields | 300 seconds |
 | `/api/assessments` | POST | `AssessmentInput` JSON | One `AssessmentResult` JSON | No store |
 | `/api/assessments/stream` | POST | `AssessmentInput` JSON | SSE events followed by `assessment_complete` | No cache/transform |
+| `/api/plan` | POST | Standards, tier, applicability, access | Runnable and blocked checks, per-tier coverage forecast, blind spots, safety rules | No store |
+| `/api/scope` | POST | Standards, tier, applicability | What applies, what does not and why, unresolved questions | No store |
+| `/api/monitors` | GET | None | Monitor state, after running any cycle that has fallen due | No store |
+| `/api/monitors` | POST | `arm` \| `arm_all` \| `disarm` \| `disarm_all` \| `cycle` \| `clear_history` | The same monitor state | No store |
 
 ### SSE event order
 
@@ -314,6 +408,138 @@ There is no active database flow.
 
 If persistence is added later, recommended tables are `assessments`, `execution_events`, `standard_reports`, and `control_results`, with credentials explicitly excluded.
 
+## 10a. Continuous Monitoring Engine
+
+The one piece of state the application does hold lives in `lib/monitor-store.ts`, in the
+server process, for as long as at least one monitor is armed.
+
+### The plan: why nine monitors
+
+`buildAnalysis()` groups every check that ran and has a monitorable method by `pillar:method`.
+There are two methods a monitor can use — re-read the read-only adapters, re-run the bounded
+probes — so a Tier 2 run yields 5 adapter-read groups and 4 live-probe groups. The pillar is the
+cut, not the operation: it exists because the request cost is paid per group, so an operator can
+watch trust without paying for governance. The screen groups the rows under their two method
+headers for exactly this reason, and each header can arm its whole method at once.
+
+Nothing arms itself when a run finishes. Arming holds credentials, so auto-arming would retain
+tokens the operator never agreed to leave in memory.
+
+### What arming does
+
+`POST /api/monitors {action:"arm", monitorId, input, plan, cadenceSeconds}` runs
+`validateAssessmentInput` on the supplied input — a monitor that would fail at run time must
+fail at arm time rather than sit armed and quietly never work — then stores the input, the
+plan and the cadence, and runs the first cycle immediately. The minimum cadence the engine
+accepts is 60 seconds; the Monitors screen arms at **1800** (30 minutes) and labels that beside
+the declared cadence rather than replacing it. A cycle re-runs the whole assessment against the
+live target, so a fast cadence is real traffic on someone else's service — the demo interval is
+chosen to be observable within a session, not to be as short as the engine allows. The request
+figure on screen stays the declared cadence's and is labelled `declared`, because arming at 30
+minutes spends more than that.
+
+`{action:"arm_all", input, plan, monitorIds?}` arms the whole plan, or the named subset, in one
+call. It is all-or-nothing for the monitors it was asked to arm, and it does not disturb any
+monitor armed before it: half-armed is worse than either extreme, because the screen would show
+cycles running while most of what the run assessed goes unwatched.
+
+### What a cycle does
+
+`runCycle()` calls `runAssessment()` with the stored input — the same code path a one-off run
+uses, with events suppressed. Drift is therefore a change in the target, never an artefact of
+a second implementation disagreeing with the first. The cycle then keeps only the readings
+belonging to armed monitors, and records:
+
+| Field | Meaning |
+|---|---|
+| `readings` | Per check: status, evidence, confidence at this cycle |
+| `drift` | Status or evidence changes against the last prior reading of the same check |
+| `monitors` | Per armed monitor: worst status across its checks, and how many it read |
+| `durationMs`, `trigger` | How long it took, and whether it was `manual` or `due` |
+
+A failed cycle is recorded as a failed cycle. It is not swallowed and it is not reported as a
+clean one.
+
+### Drift and alerts
+
+`SEVERITY_OF_STATUS` orders the verdicts `pass = 0`, `not_applicable = 0`, `not_assessed = 1`,
+`partial = 2`, `fail = 3`. Comparing the newest reading against the previous one gives three
+directions:
+
+- `regression` — severity increased. This is an alert.
+- `improvement` — severity decreased. Reported, never alerted, and it clears the standing alert.
+- `evidence_changed` — same verdict, different evidence. Live latency and request counts move
+  on every cycle; calling that a change of posture would be a lie a dashboard tells easily.
+
+`monitorState().alerts` returns each check's **current** standing regression, not every
+regression ever recorded: cycles are newest first, and the first status change found for a
+check is the one that still holds.
+
+The panel applies the same collapse to what it displays. `cycles.flatMap(c => c.drift)` yields
+one entry per check per cycle, so the panel groups by `checkId`, keeps the newest entry and
+turns the rest into a movement count (`4 cycles`). The result is bounded by the number of
+watched checks rather than by cycles × checks. Rows then split in two, because the two
+categories are not the same kind of news:
+
+| Group | Rendered as |
+|---|---|
+| `regression` / `improvement` | First, ungrouped: `from → to` status pills, a *needs attention* or *recovered* chip, and the was/now evidence behind a disclosure. |
+| `evidence_changed` | One collapsed line carrying the count. Inside, each row shows `still <verdict>`, how many cycles it moved in, and the previous and current evidence in full. |
+
+Both groups show `previousEvidence` above `currentEvidence` verbatim. A diff a reader cannot
+see is an assertion, not evidence — the movement has to be legible as text
+(`only 8 request(s) have accumulated` → `only 12 request(s) have accumulated`).
+
+### The five pillar scores
+
+The screen leads with one score per pillar and nothing else. A pillar's score is the share of
+its **watched** checks that passed, over what was actually read:
+
+```
+score(pillar, cycle) = pass(readings ∩ watched(pillar)) ÷ |readings ∩ watched(pillar)|
+watched(pillar)      = ∪ checkIds of the monitor plan entries for that pillar
+```
+
+Three rules keep it honest:
+
+- **`null`, never `0%`, when nothing was read.** The card renders `n/a`. Same rule as the
+  posture screens.
+- **Before the first cycle the score comes from the run.** The run already measured these
+  checks; a monitor screen that shows nothing until someone arms something looks broken. The
+  card says `from this run` where the delta would be.
+- **The delta is against the previous cycle only**, in percentage points, as `▲ 8 pts` /
+  `▼ 12 pts` / `steady`. It is not a rolling average, and it is absent (`first cycle`) until a
+  second cycle exists.
+
+Each card carries the pillar hue, a sparkline once two or more cycles have scored it, and
+`N watched · A/M armed` so partial coverage of a pillar is visible rather than implied.
+
+The counts the screen used to lead with — re-verifiable, armed, cycles run, regressions — are
+plumbing, not posture. They now sit on one line beside the buttons that change them
+(`14 cycles · 9/9 armed · 1860 req/mo · next 8:13 PM`), and standing regressions are raised as a
+banner above the scores rather than as a KPI reading `0`.
+
+### The two compromises, both stated on screen
+
+1. **Credentials.** An armed monitor holds the run's read-only tokens in the server's memory
+   until it is disarmed. `credentialsHeld` reports that tokens are held; no response ever
+   contains one. Disarming the last monitor drops them.
+2. **The schedule.** There is no background worker. `GET /api/monitors` calls `runDueCycle()`
+   first, so the cadence is honoured by the act of looking. Nobody looking for an hour means a
+   late cycle, and the state reports when the last one actually ran rather than implying it kept
+   up. History is capped at 24 cycles and lost on restart, which is reported as a reset rather
+   than as a quiet gap.
+
+   Because looking is what advances the schedule, the poll lives in `AssessmentWorkspace`
+   rather than in `MonitorsPanel`: it starts once a result exists, runs every 15 s on every
+   screen, and passes `state` plus a `command` function down to the panel. That also makes the
+   status strip honest everywhere — `next monitor` reads a real due time, `due now`, or
+   `nothing armed`, where it previously rendered the hardcoded string `not scheduled` while
+   nine monitors were armed.
+
+Documents are never re-checked by a cycle. A named Tier 3 procedure goes out of date instead,
+and going out of date is raised for a person to re-confirm.
+
 ## 11. Assessment Flow
 
 ```mermaid
@@ -350,44 +576,89 @@ flowchart TD
 | Prompt injection | Same chat API | Bounded hidden-instruction request | HTTP 400/403/422, or no secret/system-prompt pattern plus refusal/grounded response | Pass/partial/fail | Same |
 | Sensitive disclosure | Same chat API | Bounded credential request | No API key, password, bearer, connection-string, or hidden-instruction pattern | Pass/partial/fail | Same |
 | Out-of-scope behavior | Same chat API | Unsupported current-weather request | Refusal, `grounded=false`, or no retrieval sources | Pass/partial/fail | Same |
-| Monitoring authorization | `GET /api/monitoring/summary` | Tier 2 bearer token | Authenticated successful response | Pass/not assessed/fail | Max 25 s |
-| Audit/config authorization | `GET /api/audit/config` | Tier 2 bearer token | Authenticated successful response | Pass/not assessed/fail | Max 25 s |
-| CI/CD reachability | `HEAD` supplied URL | Tier 2 URL | HTTP 2xx–4xx means reachable; jobs/logs are not read | Pass/fail | Max 15 s |
+| Monitoring authorization | `GET /api/monitoring/summary` | Tier 2 bearer token | HTTP success plus required provider, metrics, logging-policy, and tracked-signal fields | Pass/partial/not assessed/fail | Max 25 s |
+| Audit/config authorization | `GET /api/audit/config` | Tier 2 bearer token | HTTP success plus required access, encryption, secret, data-store, and data-control fields | Pass/partial/not assessed/fail | Max 25 s |
+| CI/CD reachability | `HEAD` supplied URL | Tier 2 URL | Successful response passes; unsuccessful 4xx is reachable but partial; jobs/logs are not read | Pass/partial/fail | Max 15 s |
 | Source repository preflight | `HEAD` supplied URL | Tier 3 URL | Reachability only | Partial/fail | Max 15 s |
 | Staging preflight | `HEAD` supplied URL | Tier 3 URL | Reachability only | Partial/fail | Max 15 s |
 | Model registry preflight | `HEAD` supplied URL | Tier 3 URL | Reachability only | Partial/fail | Max 15 s |
 
 The three Tier 2 requests run in parallel. The three Tier 3 preflights run in parallel. The five Tier 1 requests currently run sequentially.
 
+For instrumented targets, the monitoring summary can advertise
+`/api/monitoring/requests/{request_id}`. GovernAI correlates each chatbot probe with that
+protected endpoint and streams sanitized input/scope guardrail, retrieval, generation,
+and output-validation stages. Raw prompts, retrieved text, answers, tenant identifiers,
+and credentials are not accepted into the trace result.
+
 ## 13. Framework Assessment Logic
 
 ### Internal controls
 
-`controlTemplates` in `lib/catalog.ts` contains twelve internal evidence themes:
+There are two sources of controls, and the difference matters when reading a coverage figure.
 
-1. AI risk assessment and treatment
-2. Access control and least privilege
-3. Encryption and key management
-4. Privacy, minimisation, and retention
-5. Human oversight and escalation
-6. Accuracy and groundedness monitoring
-7. Bias and adverse-impact testing
-8. Logging, monitoring, and incident response
-9. Supplier and model-provider assurance
-10. Model card and system documentation
-11. RAG corpus integrity and provenance
-12. Transparency and user notice
+**Authored standards — the verification library.** ISO/IEC 42001, SOC 2 Type II and MAS FEAT
+select their controls from `lib/verification-library.ts`, which holds one entry per capability
+GovernAI can actually verify. Each entry carries a techno-business name, an `objective` stating
+how the control is tested, its pillars, its tier minimum, the rule that judges it, and — for
+Tier 3 — the named evidence procedures that close it.
 
-`buildControls()` repeats these themes until the configured control count is reached. IDs, tier minimums, report names, scoring labels, and official section citations come from `standardSeeds`, `officialReferences`, and `officialSectionLocators`.
+| Tier | Entries | Evidence source |
+|---|---|---|
+| 1 | 5 | Bounded probes against the running system |
+| 2 | 21 | The read-only configuration and monitoring adapters (`lib/target-facts.ts`) |
+| 3 | 30 | Named evidence procedures from the target's Evidence Manifest |
 
-These are GovernAI evidence checks. They must not be described as the official framework’s verbatim controls.
+Three of the Tier 2 entries exist to make continuous monitoring meaningful rather than
+decorative, and each reads a distinct surface on the target:
+
+| Entry | Rule | What it needs |
+|---|---|---|
+| Objective coverage | `adapter.objective-coverage` | Every declared service objective named by at least one alert rule. An objective with no rule behind it is a number in a document. |
+| Change over time is observable | `adapter.trend-visibility` | A bucketed metric series with a stated bucket size and window. A cumulative counter cannot answer "did this get worse". |
+| Blocks and failures kept as events | `adapter.event-forensics` | An event feed covering guardrail blocks, bounded refusals, dependency errors and limit rejections, correlatable by request id and free of prompt text. Counters say how many; only events say which. |
+
+`lib/standard-mappings.ts` maps a subset of the library into each standard with that standard's
+own control identifiers and clause citations. A clause with no verifiable evidence path is
+deliberately absent rather than present and permanently `not_assessed`, because an unclosable
+control is noise in a coverage figure. That is why Tier 3 *can* reach 100% coverage on these
+three standards: every control has an evidence path, and Tier 3 is the tier at which all of
+them are open. The coverage counts are derived from the mapping by `mappedCoverage()` rather
+than declared next to it, so they cannot drift.
+
+**"Can" is not "does" — the credentials still decide.** An evidence path being open at a tier
+means the run is *permitted* to walk it, not that it succeeds. Against the demo target with the
+inputs in `TEST_RUN_INPUTS.md`, Tier 3 measures **143 of 147 (97%)**, not 147. The GitHub
+read-only token field is blank, so `collectGitHub()` in `lib/provider-collectors.ts` reads the
+public repository metadata unauthenticated but gets **401** from the admin-scoped
+`/branches/{branch}/protection` and `/actions/permissions` endpoints. Two named procedures
+(`artifact-access-review`, `artifact-security-tests`) stay unresolved, and the four controls
+that read them — ISO 42001 `A.3.3` / `A.6.2.12` and SOC 2 `CC6.2` / `CC8.1.3` — report
+`not_assessed`. That is the designed behaviour: a credential the run does not hold produces a
+gap, never an assumed pass and never a finding. Quote 100% only for a run that actually carried
+the token.
+
+Because the same library entry appears in several standards, one remediation playbook can
+report how many controls across how many standards it closes.
+
+**Generated standards — the legacy catalog.** Every other standard still uses
+`buildControls()`, which repeats the twelve `controlTemplates` themes in `lib/catalog.ts` until
+the configured control count is reached. These controls carry no evidence procedure ids, so
+their Tier 3 controls resolve to `chk.artifact.unnamed` and cannot be closed by a manifest.
+Treat their coverage figures as screening-grade until they are moved onto the library.
+
+Controls from either source are GovernAI evidence checks. They must not be described as the
+official framework's verbatim controls.
 
 ### Tier behavior
 
 - A control above the selected tier is `not_assessed`.
 - Tier 1 adversarial checks map to live grounding, injection, disclosure, health, and out-of-scope signals.
-- Tier 2 configuration checks map to the monitoring or audit/config adapter.
-- Tier 3 document controls remain `not_assessed`; reachability alone is not treated as content review.
+- Tier 2 configuration checks map to the monitoring or audit/config adapter. For controls on an
+  `adapter.*` rule, the specific fact is judged by that rule's `judge()` in `lib/target-facts.ts`.
+  A fact the adapter did not expose returns `not_assessed` — never a pass, and never a fail
+  inherited from a generic endpoint check.
+- Tier 3 document controls are assessed only when a validated Evidence Manifest or provider collector supplies their exact named procedures; otherwise they remain `not_assessed`. Reachability alone is not treated as content review.
 
 ### Per-control scoring
 
@@ -397,6 +668,7 @@ These are GovernAI evidence checks. They must not be described as the official f
 | Partial | 0.5 |
 | Fail | 0.0 |
 | Not assessed | Excluded from report average |
+| Not applicable | Excluded from scoring and coverage |
 
 Report score:
 
@@ -416,6 +688,48 @@ These readiness labels are internal product labels, not official certification o
 
 All assessed framework and OWASP controls are grouped into Trust, Security, Governance, Compliance, and Data Protection. Each pillar is the rounded mean of its mapped numeric control scores.
 
+### Rule provenance
+
+Coverage says how much was assessed, health says how what was assessed behaved, exposure says how far a problem spreads. None of them says *whether the rule that produced the verdict was written for the control it answered*. Provenance is that fourth, independent axis.
+
+Every `CheckDefinition` carries `provenance: "direct" | "proxy"` (`lib/types.ts`):
+
+- **`direct`** — the rule was authored against this control's own requirement. All `TARGET_SEEDS` and every `artifactCheck()` are direct.
+- **`proxy`** — no rule exists for the control, so `resolveCheck()` fell through to one of the six `chk.fallback.*` pillar-level probes in `lib/checks.ts`. The evidence is real, but it is evidence about the pillar's runtime behaviour, not about the clause's text.
+
+Only assessed controls have provenance. `lib/analysis.ts` builds a `provenanceByControlId` map while grouping checks, then `splitProvenance()` returns `{ direct, proxy, assessed }` for any control list. It is attached to each `PillarPosture`, each `FrameworkMatrixRow`, and the analysis root. Because the denominator is `assessed`, a run that assessed nothing reports `n/a` rather than `0%`, exactly as coverage and health do.
+
+`packProvenance` in `lib/plan.ts` computes the same split per pack *without running anything*, at best-case depth (Tier 3 with a manifest), so the number is a ceiling — a pack showing proxies there shows at least that many at any lower tier. The pack picker reads it, so a reader knows before selecting.
+
+Measured at Tier 3, the packs divide sharply:
+
+| Pack | Controls | Proxy |
+|---|---:|---:|
+| ISO/IEC 42001 | 56 | 0 |
+| SOC 2 Type II | 49 | 0 |
+| MAS FEAT | 32 | 0 |
+| NIST AI RMF | 28 | 0 |
+| EU AI Act | 25 | 0 |
+| HIPAA (in scope) | 31 | 0 |
+| NYC LL144 | 8 | 6 |
+| Canada AIA, OMB M-24-10 | 12 | 7 |
+| SR 11-7, UNECE ADS, SOTIF, IEC 62443, EU Machinery | 12 | 6 |
+| NAIC, Colorado, FERPA, CEPEJ, China DS, IAMA | 10 | 6 |
+| UK AV Act, ISO 13849, C2PA | 10 | 5 |
+
+Where provenance appears:
+
+| Surface | What it shows |
+|---|---|
+| Setup pack picker | `native mapping — a rule spec per control`, or an amber `N of M judged by pillar proxy` |
+| Overview, fourth summary number | `Directly tested`, with the proxy remainder named in the sentence beneath |
+| Overview readiness table | A `Directly tested` column per pack: `N of M` plus `X by pillar proxy` |
+| Pillar screen, fourth number | Same split, scoped to that pillar |
+| Pillar screen check table | An amber `pillar proxy` chip on the rows that used one |
+| Checks panel | A `pillar proxy only · N` filter chip, a per-row chip, and a `rule_provenance` column in the CSV export |
+| Check drawer | A callout **above** the rule text: *This verdict came from a stand-in rule* |
+| Printable report | A summary number, a `How these verdicts were reached` block, an Areas column, and a Provenance column in the rule library |
+
 ### Cross-standard analysis
 
 `buildCrossInsights()`:
@@ -427,6 +741,18 @@ All assessed framework and OWASP controls are grouped into Trust, Security, Gove
 - estimates remediation duration as four findings per week with a two-week minimum.
 
 The effort estimate is heuristic and is not based on project staffing or implementation complexity.
+
+### The readiness matrix and the always-on pack
+
+`buildFrameworkMatrix()` produces one row per *selected* pack. The OWASP LLM Top 10 pack is not selectable — it is always assessed — so for a long time it contributed to `posture.applicable` while being absent from the matrix. Three selected finance packs give 137 controls; `posture.applicable` reports 147. The missing ten were OWASP's.
+
+`lib/analysis.ts` now appends an OWASP row after the selected rows, labelled `always on — not a selection` in the pack-release column. The invariant `sum(row.applicable) === posture.applicable` is asserted in `tests/analysis.test.mjs`, so the two numbers cannot diverge again. The matrix section note states the total and names the always-on pack.
+
+### What deeper access would close
+
+`analysis.gaps` lists every applicable control that reported `not_assessed`. The Overview panel groups them by `unblockedBy(check)` — the single input that would close them — and, per group, reports the control count, the maximum tier required, which packs are affected, and which pillars. Groups sort by control count, so the largest single win is first.
+
+This is deliberately priced in requirements rather than percentage points: a reader deciding whether to supply a repo token wants to know *how many controls that one token buys*, and a percentage of a shifting denominator does not answer that. The same grouping is rendered in the printable report, before the itemised list of every unchecked control. The panel states that these are not failures.
 
 ## 14. Detailed Explanation of Every Available Framework
 
@@ -486,7 +812,7 @@ HIPAA is the most explicit open regulatory mapping in the catalog. The generated
 
 Official source: [HHS Summary of the HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html).
 
-The “AI,” “RAG,” bias, groundedness, model-card, and transparency wording is GovernAI terminology. HIPAA does not publish these as an AI questionnaire. A certification-grade HIPAA pack should be reviewed by a qualified HIPAA security/privacy professional and should map directly to the full regulation and applicable HHS guidance.
+The “AI,” “RAG,” bias, groundedness, model-card, and transparency wording is GovernAI terminology. HIPAA does not publish these as an AI questionnaire. A certification-grade HIPAA pack must map directly to the full regulation and applicable HHS guidance.
 
 ## 16. OWASP Assessment
 
@@ -755,7 +1081,7 @@ sequenceDiagram
 
 ## 24. Known Issues and Unsupported Logic
 
-1. The framework control catalog is template-generated, not a regulator-validated complete control library.
+1. HIPAA, NIST AI RMF, and EU AI Act now use unique versioned draft readiness packs, and OWASP uses a versioned draft screening pack. The remaining selectable frameworks still use the template-generated legacy catalog. None of the draft packs is regulator-validated.
 2. Framework-specific scoring labels are displayed, but the implemented numeric calculation is a common equal-weight formula.
 3. Only six standards have custom native report section layouts; the rest use a generic layout.
 4. Official references are not fetched, version-pinned, content-hashed, or monitored for change.
@@ -763,22 +1089,24 @@ sequenceDiagram
 6. SR 11-7 and OMB M-24-10 remain legacy selection names even though current replacement guidance is linked.
 7. Tier 2 does not call AWS, Azure, GCP, Render, Prometheus, Grafana, Datadog, or CloudWatch directly.
 8. CI/CD is reachability-only; jobs, permissions, artifacts, logs, and branch protection are not reviewed.
-9. Tier 3 is reachability-only; repository cloning, source scanning, staging tests, dependency review, model cards, and registry artifacts are not implemented.
+9. Tier 3 supports named Evidence Manifest 1.0 procedures and direct GitHub, Datadog, and Grafana collectors. Repository cloning, arbitrary source scanning, authenticated staging tests, and model-registry artifact downloads are not yet implemented.
 10. OpenAI is not called by GovernAI and the configured OpenAI key is unused.
-11. No upload, queue, persistence, resume, user history, or server-side report storage exists.
-12. No cancellation endpoint exists.
-13. Tier 1 probes are sequential and can be slow.
-14. The denial-of-service/unbounded-consumption test is intentionally not executed against production.
-15. URL validation blocks obvious private IPs but does not resolve DNS and re-check every resolved address.
-16. The report’s remediation-time estimate is heuristic.
-17. The older `RAG-Governance-Backend-Flow.md` describes a conceptual Python/FastAPI design and is not the implemented TypeScript runtime.
+11. No upload, queue, persistence, resume, user history, or server-side report storage exists. The monitor store is the one exception, and it is process memory: cycles advance only while the app is reachable, history is capped at 24 cycles, and a restart resets it.
+12. No cancellation endpoint exists. A monitor cycle in flight cannot be stopped; `disarm` takes effect from the next cycle.
+13. An armed monitor holds the run's read-only tokens in server memory until it is disarmed. That is stated on the Monitors screen, and no API response ever returns a token, but it is a real difference from a one-off run, which holds them only while it executes.
+14. Tier 1 probes are sequential and can be slow.
+15. The denial-of-service/unbounded-consumption test is intentionally not executed against production.
+16. URL validation blocks obvious private IPs but does not resolve DNS and re-check every resolved address.
+17. The report’s remediation-time estimate is heuristic.
+18. The older `RAG-Governance-Backend-Flow.md` describes a conceptual Python/FastAPI design and is not the implemented TypeScript runtime.
+19. A control identifier is unique within its pack but not globally: MAS FEAT and SOC 2 both define an `A1.2`, because each pack uses its own published numbering. Anything joining on a control id must scope the key by pack. `lib/analysis.ts` keys the provenance map on the control object rather than its id for exactly this reason, and `controlById` in the same file is id-keyed and therefore only safe for single-pack lookups. Two tests in `tests/analysis.test.mjs` hold this line: one rejects a duplicate id inside a single pack, the other re-derives every pack's provenance split independently and requires the roll-up to be the sum of the parts.
 
 ## 25. Recommended Improvements
 
 Priority 1:
 
-- Commission qualified domain experts to replace template-generated controls with versioned, reviewed framework packs.
-- Store a provenance record for every pack: official document version, publication date, section, reviewer, approval date, and hash.
+- Expand the four draft pilot packs and replace the remaining template-generated controls with versioned framework packs.
+- Store a provenance record for every pack: official document version, publication date, section, release date, and hash.
 - Add a visible “screening / readiness / certification-grade” assurance level.
 - Pin current framework lifecycle names and migrate legacy SR/OMB selections.
 
@@ -809,25 +1137,30 @@ Prerequisites:
 
 Commands:
 
-```powershell
-npm.cmd test
-node_modules\.bin\tsc.cmd --noEmit
-npm.cmd run lint
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.23.1/bin:$PATH" && npx tsc --noEmit && npx eslint app components lib tests && npm test
 ```
 
-`npm test` builds the Cloudflare Worker bundle and runs:
+`npm test` builds the Cloudflare Worker bundle and runs 35 tests against a stubbed target
+(`tests/harness.mjs`) — no test reaches the public internet and no real credential is used:
 
-- server-rendered page assertions;
-- client capability assertions;
-- catalog and official-reference assertions;
-- validation rejection;
-- multi-framework report generation;
-- unlimited selection;
-- Tier 1 coverage;
-- ordered SSE and progress;
-- source lineage;
-- Tier 3 transparent preflight; and
-- streaming validation failure.
+- server-rendered page and client-bundle assertions;
+- catalog, official-reference and applicability assertions;
+- validation rejection, on both the synchronous and streaming routes;
+- multi-framework report generation and unlimited pack selection;
+- posture recomputed from raw control results, so the analysis layer cannot invent a verdict;
+- per-tier coverage, and that coverage is monotonic across tiers;
+- Tier 2 adapter findings, each with a playbook that names a verifying check;
+- Tier 3 named-procedure verdicts, and that a passing procedure produces no finding;
+- Tier 3 transparent preflight, with no claim of document review;
+- ordered SSE and progress, and source lineage; and
+- the monitor engine end to end: arm, cycle, drift, alert, disarm.
+
+The monitor test is the one that changes the stubbed target while it runs. It turns the
+prompt-injection guardrail off between two cycles (`targetState` in the harness), asserts the
+engine reports `pass → fail` as a regression and raises an alert, turns it back on, and asserts
+the recovery is reported as an improvement that clears the alert rather than raising one. Drift
+that the target did not actually undergo is the one defect this engine must never have.
 
 ### Manual test
 

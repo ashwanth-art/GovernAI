@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" font-family="Helvetica, Arial, sans-serif">
+  <rect width="900" height="440" fill="#ffffff"/>
+  <text x="450" y="20" text-anchor="middle" font-size="17" font-weight="bold" fill="#1e293b">Tool Maturity &#x2014; GitHub Stars and Language</text>
+  <text x="450" y="38" text-anchor="middle" font-size="12" fill="#64748b">Established ML fairness libraries vs. newer governance-specific tools (July 2026)</text>
+
+  <!-- scale -->
+  <line x1="230" y1="52" x2="230" y2="360" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="230" y="376" font-size="10" fill="#94a3b8">0</text>
+  <line x1="377" y1="52" x2="377" y2="360" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="377" y="376" font-size="10" fill="#94a3b8">2k</text>
+  <line x1="524" y1="52" x2="524" y2="360" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="524" y="376" font-size="10" fill="#94a3b8">4k</text>
+  <line x1="671" y1="52" x2="671" y2="360" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="671" y="376" font-size="10" fill="#94a3b8">6k</text>
+  <text x="810" y="376" font-size="10" fill="#94a3b8">7k+</text>
+
+  <!-- NeMo: 6700/7000*588=569 -->
+  <text x="215" y="72" text-anchor="end" font-size="13" fill="#334155">NeMo Guardrails</text>
+  <rect x="230" y="58" width="569" height="32" rx="5" fill="#B91C1C"/>
+  <text x="808" y="79" font-size="13" font-weight="bold" fill="#B91C1C">6.7k</text>
+  <rect x="230" y="94" width="50" height="15" rx="3" fill="#FEF2F2" stroke="#B91C1C" stroke-width="0.5"/>
+  <text x="255" y="105" text-anchor="middle" font-size="9.5" fill="#B91C1C">Python</text>
+
+  <!-- AIF360: 2300/7000*588=193 -->
+  <text x="215" y="132" text-anchor="end" font-size="13" fill="#334155">IBM AI Fairness 360</text>
+  <rect x="230" y="118" width="193" height="32" rx="5" fill="#2563EB"/>
+  <text x="432" y="139" font-size="13" font-weight="bold" fill="#2563EB">~2.3k</text>
+  <rect x="230" y="154" width="50" height="15" rx="3" fill="#EFF6FF" stroke="#2563EB" stroke-width="0.5"/>
+  <text x="255" y="165" text-anchor="middle" font-size="9.5" fill="#2563EB">Python</text>
+
+  <!-- Fairlearn: 1900/7000*588=160 -->
+  <text x="215" y="192" text-anchor="end" font-size="13" fill="#334155">Microsoft Fairlearn</text>
+  <rect x="230" y="178" width="160" height="32" rx="5" fill="#2563EB"/>
+  <text x="400" y="199" font-size="13" font-weight="bold" fill="#2563EB">~1.9k</text>
+  <rect x="230" y="214" width="50" height="15" rx="3" fill="#EFF6FF" stroke="#2563EB" stroke-width="0.5"/>
+  <text x="255" y="225" text-anchor="middle" font-size="9.5" fill="#2563EB">Python</text>
+
+  <!-- ai-governance-framework -->
+  <text x="215" y="255" text-anchor="end" font-size="13" fill="#334155">ai-governance-framework</text>
+  <rect x="230" y="241" width="22" height="32" rx="5" fill="#6D28D9"/>
+  <text x="262" y="262" font-size="12" font-weight="bold" fill="#6D28D9">new</text>
+  <rect x="296" y="248" width="50" height="15" rx="3" fill="#F5F3FF" stroke="#6D28D9" stroke-width="0.5"/>
+  <text x="321" y="259" text-anchor="middle" font-size="9.5" fill="#6D28D9">Python</text>
+
+  <!-- Assuro -->
+  <text x="215" y="300" text-anchor="end" font-size="13" fill="#334155">Assuro</text>
+  <rect x="230" y="286" width="22" height="32" rx="5" fill="#047857"/>
+  <text x="262" y="307" font-size="12" font-weight="bold" fill="#047857">new</text>
+  <rect x="296" y="293" width="55" height="15" rx="3" fill="#ECFDF5" stroke="#047857" stroke-width="0.5"/>
+  <text x="323" y="304" text-anchor="middle" font-size="9.5" fill="#047857">Go + TS</text>
+
+  <!-- OPA -->
+  <text x="215" y="348" text-anchor="end" font-size="13" fill="#334155">OPA NIST AI RMF</text>
+  <rect x="230" y="334" width="22" height="32" rx="5" fill="#94A3B8"/>
+  <text x="262" y="355" font-size="12" font-weight="bold" fill="#64748b">new</text>
+  <rect x="296" y="341" width="42" height="15" rx="3" fill="#f8fafc" stroke="#94A3B8" stroke-width="0.5"/>
+  <text x="317" y="352" text-anchor="middle" font-size="9.5" fill="#64748b">Rego</text>
+
+  <!-- annotation -->
+  <rect x="230" y="395" width="440" height="30" rx="15" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="450" y="415" text-anchor="middle" font-size="11.5" fill="#334155">Newer governance tools (2026) vs. established ML fairness libraries (2018&#x2013;2022)</text>
+</svg>

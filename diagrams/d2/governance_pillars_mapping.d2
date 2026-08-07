@@ -1,0 +1,77 @@
+...@_theme
+
+# Governance Pillars: The Common Layer Under Every Standard
+# This is the structurally friendliest diagram for D2: a clean 3-layer
+# hierarchy (5 pillars over 7 characteristics) plus an example table.
+
+direction: down
+
+title: "Governance Pillars: The Common Layer Under Every Standard\nEvery control from every standard is tagged to one of 5 pillars, built on the 7 trustworthy-AI characteristics (NIST AI RMF)" {
+  near: top-center
+  style: {
+    stroke-width: 0
+    fill: transparent
+    font-size: 19
+    bold: true
+    font-color: "#1e293b"
+  }
+}
+
+pillars: "THE 5 GOVERNANCE PILLARS" {
+  class: panel
+  grid-columns: 5
+  grid-gap: 18
+
+  p1: "TRUST" {
+    class: trust
+    d: "Explainability & transparency\nHuman oversight (HITL)\nAccuracy & reliability metrics\nFairness & bias monitoring\n\nMaps to: Valid & Reliable,\nExplainable, Fair"
+    d.class: item
+  }
+  p2: "SECURITY" {
+    class: security
+    d: "IAM least privilege\nEncryption (rest / transit)\nNetwork isolation\nGuardrails, injection defence\n\nMaps to: Secure & Resilient"
+    d.class: item
+  }
+  p3: "GOVERNANCE" {
+    class: gov
+    d: "Operating model & ownership\nAI inventory & model cards\nRoles: AI risk owner, DPO\nRelease & version control\n\nMaps to: Accountable &\nTransparent"
+    d.class: item
+  }
+  p4: "COMPLIANCE" {
+    class: comp
+    d: "Regulatory mapping per standard\nImpact / risk assessments\nAudit trails\nBreach-notification runbooks\n\nMaps to: Accountable &\nTransparent"
+    d.class: item
+  }
+  p5: "DATA PROTECTION" {
+    class: dataprot
+    d: "Minimisation, purpose limits\nPII redaction before LLM\nRetention & deletion rules\nData-subject rights workflow\n\nMaps to: Privacy-Enhanced"
+    d.class: item
+  }
+}
+
+foundation: "BUILT ON 7 TRUSTWORTHY-AI CHARACTERISTICS (NIST AI RMF) — the measurable primitives behind every pillar" {
+  class: panel
+  grid-columns: 7
+  grid-gap: 12
+
+  c1: "Valid &\nReliable";        c1.class: charac
+  c2: "Safe";                     c2.class: charac
+  c3: "Secure &\nResilient";      c3.class: charac
+  c4: "Accountable &\nTransparent"; c4.class: charac
+  c5: "Explainable &\nInterpretable"; c5.class: charac
+  c6: "Privacy-\nEnhanced";       c6.class: charac
+  c7: "Fair — bias\nis managed";  c7.class: charac
+}
+
+pillars -> foundation: {style.bold: true}
+
+footer: "Pillar tags let the aggregation step spot when fixing ONE gap (e.g. encryption) simultaneously satisfies controls in TWO different standards.\nSee the worked control-by-control mapping in the table below." {
+  near: bottom-center
+  style: {
+    stroke-width: 0
+    fill: transparent
+    font-size: 13
+    italic: true
+    font-color: "#475569"
+  }
+}

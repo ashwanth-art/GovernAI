@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 760" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1400" height="760" fill="#ffffff"/>
+
+  <!-- LIFECYCLE container -->
+  <rect x="30" y="35" width="1340" height="165" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="46" y="23" width="700" height="26" rx="6" fill="#e2e8f0"/>
+  <text x="396" y="41" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#475569">AI system lifecycle — MAP the context · MEASURE against thresholds · MANAGE and improve</text>
+
+  <rect x="60" y="80" width="240" height="90" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="180" y="115" text-anchor="middle" font-size="15.5" font-weight="bold" fill="#1e293b">Data sourcing</text>
+  <text x="180" y="136" text-anchor="middle" font-size="12.5" fill="#64748b">consent, lawful basis,</text>
+  <text x="180" y="152" text-anchor="middle" font-size="12.5" fill="#64748b">provenance</text>
+
+  <rect x="322" y="80" width="240" height="90" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="442" y="115" text-anchor="middle" font-size="15.5" font-weight="bold" fill="#1e293b">Data preparation</text>
+  <text x="442" y="136" text-anchor="middle" font-size="12.5" fill="#64748b">minimisation, quality,</text>
+  <text x="442" y="152" text-anchor="middle" font-size="12.5" fill="#64748b">de-identification</text>
+
+  <rect x="584" y="80" width="240" height="90" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="704" y="115" text-anchor="middle" font-size="15.5" font-weight="bold" fill="#1e293b">Model build / selection</text>
+  <text x="704" y="136" text-anchor="middle" font-size="12.5" fill="#64748b">foundation model choice,</text>
+  <text x="704" y="152" text-anchor="middle" font-size="12.5" fill="#64748b">fine-tuning, vendor checks</text>
+
+  <rect x="846" y="80" width="240" height="90" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="966" y="115" text-anchor="middle" font-size="15.5" font-weight="bold" fill="#1e293b">Deployment &amp; use</text>
+  <text x="966" y="136" text-anchor="middle" font-size="12.5" fill="#64748b">prompts, outputs,</text>
+  <text x="966" y="152" text-anchor="middle" font-size="12.5" fill="#64748b">human oversight</text>
+
+  <rect x="1108" y="80" width="240" height="90" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="1228" y="115" text-anchor="middle" font-size="15.5" font-weight="bold" fill="#1e293b">Monitor &amp; retire</text>
+  <text x="1228" y="136" text-anchor="middle" font-size="12.5" fill="#64748b">drift, incidents, audits,</text>
+  <text x="1228" y="152" text-anchor="middle" font-size="12.5" fill="#64748b">decommissioning</text>
+
+  <line x1="300" y1="125" x2="315" y2="125" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+  <line x1="562" y1="125" x2="577" y2="125" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+  <line x1="824" y1="125" x2="839" y2="125" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+  <line x1="1086" y1="125" x2="1101" y2="125" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+
+  <!-- DATA GOVERNANCE container -->
+  <rect x="30" y="255" width="650" height="200" rx="12" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="2"/>
+  <rect x="46" y="243" width="250" height="26" rx="6" fill="#d1fae5"/>
+  <text x="171" y="261" text-anchor="middle" font-size="14" font-weight="bold" fill="#047857">Data Governance foundation</text>
+  <rect x="55" y="295" width="290" height="60" rx="10" fill="#ffffff" stroke="#34d399" stroke-width="1.5"/>
+  <text x="200" y="330" text-anchor="middle" font-size="14.5" fill="#1e293b">Catalogue, lineage &amp; ownership</text>
+  <rect x="365" y="295" width="290" height="60" rx="10" fill="#ffffff" stroke="#34d399" stroke-width="1.5"/>
+  <text x="510" y="330" text-anchor="middle" font-size="14.5" fill="#1e293b">Quality &amp; accuracy rules</text>
+  <rect x="55" y="375" width="290" height="60" rx="10" fill="#ffffff" stroke="#34d399" stroke-width="1.5"/>
+  <text x="200" y="410" text-anchor="middle" font-size="14.5" fill="#1e293b">Access control &amp; classification</text>
+  <rect x="365" y="375" width="290" height="60" rx="10" fill="#ffffff" stroke="#34d399" stroke-width="1.5"/>
+  <text x="510" y="410" text-anchor="middle" font-size="14.5" fill="#1e293b">Retention &amp; minimisation</text>
+
+  <!-- LLMOPS container -->
+  <rect x="720" y="255" width="650" height="200" rx="12" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="2"/>
+  <rect x="736" y="243" width="290" height="26" rx="6" fill="#ede9fe"/>
+  <text x="881" y="261" text-anchor="middle" font-size="14" font-weight="bold" fill="#6d28d9">LLMOps — governance as daily routine</text>
+  <rect x="745" y="295" width="290" height="60" rx="10" fill="#ffffff" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="890" y="330" text-anchor="middle" font-size="14.5" fill="#1e293b">Release &amp; version management</text>
+  <rect x="1055" y="295" width="290" height="60" rx="10" fill="#ffffff" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="1200" y="330" text-anchor="middle" font-size="14.5" fill="#1e293b">Experimentation &amp; evaluation</text>
+  <rect x="745" y="375" width="290" height="60" rx="10" fill="#ffffff" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="890" y="410" text-anchor="middle" font-size="14.5" fill="#1e293b">Define the metrics &amp; thresholds</text>
+  <rect x="1055" y="375" width="290" height="60" rx="10" fill="#ffffff" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="1200" y="410" text-anchor="middle" font-size="14.5" fill="#1e293b">Monitoring &amp; alerting</text>
+
+  <!-- dashed connectors lifecycle -> foundations -->
+  <line x1="355" y1="200" x2="355" y2="248" stroke="#059669" stroke-width="2" stroke-dasharray="6 5"/>
+  <line x1="1045" y1="200" x2="1045" y2="248" stroke="#7c3aed" stroke-width="2" stroke-dasharray="6 5"/>
+
+  <!-- CONTROL PLANE -->
+  <rect x="30" y="510" width="1340" height="215" rx="12" fill="#0f172a"/>
+  <text x="700" y="545" text-anchor="middle" font-size="17" font-weight="bold" fill="#ffffff">GOVERN — CROSS-CUTTING CONTROL PLANE (one control set, every regulation)</text>
+  <!-- row 1 -->
+  <rect x="60" y="570" width="215" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="167" y="595" text-anchor="middle" font-size="13.5" fill="#e2e8f0">AI policy &amp; accountability</text>
+  <rect x="290" y="570" width="185" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="382" y="595" text-anchor="middle" font-size="13.5" fill="#e2e8f0">Role-based access</text>
+  <rect x="490" y="570" width="200" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="590" y="595" text-anchor="middle" font-size="13.5" fill="#e2e8f0">Encryption everywhere</text>
+  <rect x="705" y="570" width="235" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="822" y="595" text-anchor="middle" font-size="13.5" fill="#e2e8f0">PII redaction &amp; guardrails</text>
+  <rect x="955" y="570" width="190" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="1050" y="595" text-anchor="middle" font-size="13.5" fill="#e2e8f0">Evaluation gates</text>
+  <rect x="1160" y="570" width="185" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="1252" y="595" text-anchor="middle" font-size="13.5" fill="#e2e8f0">Human oversight</text>
+  <!-- row 2 -->
+  <rect x="60" y="630" width="225" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="172" y="655" text-anchor="middle" font-size="13.5" fill="#e2e8f0">Audit &amp; invocation logging</text>
+  <rect x="300" y="630" width="170" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="385" y="655" text-anchor="middle" font-size="13.5" fill="#e2e8f0">DPIA / records</text>
+  <rect x="485" y="630" width="185" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="577" y="655" text-anchor="middle" font-size="13.5" fill="#e2e8f0">Consent &amp; notices</text>
+  <rect x="685" y="630" width="215" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="792" y="655" text-anchor="middle" font-size="13.5" fill="#e2e8f0">Vendor due diligence</text>
+  <rect x="915" y="630" width="205" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="1017" y="655" text-anchor="middle" font-size="13.5" fill="#e2e8f0">Retention &amp; deletion</text>
+  <rect x="1135" y="630" width="210" height="40" rx="20" fill="#1e293b" stroke="#475569"/>
+  <text x="1240" y="655" text-anchor="middle" font-size="13.5" fill="#e2e8f0">Breach runbooks</text>
+  <text x="700" y="702" text-anchor="middle" font-size="13" fill="#94a3b8">Implement once — map to NIST AI RMF, GDPR, HIPAA and DPDPA many times</text>
+</svg>

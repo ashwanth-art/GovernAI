@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 490" font-family="Helvetica, Arial, sans-serif">
+  <rect width="960" height="490" fill="#ffffff"/>
+  <text x="480" y="20" text-anchor="middle" font-size="17" font-weight="bold" fill="#1e293b">Framework Coverage Matrix &#x2014; Pillars vs. Tools</text>
+  <text x="480" y="38" text-anchor="middle" font-size="12" fill="#64748b">Which open-source tools address each governance pillar</text>
+
+  <!-- Column headers -->
+  <text x="265" y="60" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">ai-gov-</text>
+  <text x="265" y="71" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">framework</text>
+  <text x="345" y="66" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">Assuro</text>
+  <text x="425" y="60" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">check-</text>
+  <text x="425" y="71" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">point-ai</text>
+  <text x="505" y="60" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">OPA</text>
+  <text x="505" y="71" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">bundle</text>
+  <text x="585" y="60" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">NeMo</text>
+  <text x="585" y="71" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">Guards</text>
+  <text x="665" y="60" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">Open-</text>
+  <text x="665" y="71" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">Guards</text>
+  <text x="745" y="66" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">PolicyAware</text>
+  <text x="825" y="66" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">AIF360</text>
+  <text x="905" y="60" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">RAI</text>
+  <text x="905" y="71" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e293b">Toolkit</text>
+
+  <!-- Row: TRUST -->
+  <rect x="30" y="82" width="190" height="64" rx="8" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <text x="125" y="120" text-anchor="middle" font-size="15" font-weight="bold" fill="#2563EB">TRUST</text>
+  <circle cx="265" cy="114" r="16" fill="#2563EB"/>
+  <circle cx="345" cy="114" r="16" fill="none" stroke="#2563EB" stroke-width="2"/>
+  <circle cx="425" cy="114" r="16" fill="none" stroke="#2563EB" stroke-width="2"/>
+  <circle cx="505" cy="114" r="16" fill="none" stroke="#2563EB" stroke-width="2"/>
+  <circle cx="585" cy="114" r="16" fill="#2563EB" opacity="0.4"/>
+  <circle cx="665" cy="114" r="16" fill="none" stroke="#2563EB" stroke-width="2"/>
+  <circle cx="745" cy="114" r="16" fill="none" stroke="#2563EB" stroke-width="2"/>
+  <circle cx="825" cy="114" r="16" fill="#2563EB"/>
+  <circle cx="905" cy="114" r="16" fill="#2563EB"/>
+
+  <!-- Row: SECURITY -->
+  <rect x="30" y="158" width="190" height="64" rx="8" fill="#FEF2F2" stroke="#B91C1C" stroke-width="2"/>
+  <text x="125" y="196" text-anchor="middle" font-size="15" font-weight="bold" fill="#B91C1C">SECURITY</text>
+  <circle cx="265" cy="190" r="16" fill="none" stroke="#B91C1C" stroke-width="2"/>
+  <circle cx="345" cy="190" r="16" fill="none" stroke="#B91C1C" stroke-width="2"/>
+  <circle cx="425" cy="190" r="16" fill="none" stroke="#B91C1C" stroke-width="2"/>
+  <circle cx="505" cy="190" r="16" fill="#B91C1C"/>
+  <circle cx="585" cy="190" r="16" fill="#B91C1C"/>
+  <circle cx="665" cy="190" r="16" fill="#B91C1C"/>
+  <circle cx="745" cy="190" r="16" fill="#B91C1C"/>
+  <circle cx="825" cy="190" r="16" fill="none" stroke="#B91C1C" stroke-width="2"/>
+  <circle cx="905" cy="190" r="16" fill="#B91C1C" opacity="0.4"/>
+
+  <!-- Row: GOVERNANCE -->
+  <rect x="30" y="234" width="190" height="64" rx="8" fill="#F5F3FF" stroke="#6D28D9" stroke-width="2"/>
+  <text x="125" y="272" text-anchor="middle" font-size="15" font-weight="bold" fill="#6D28D9">GOVERNANCE</text>
+  <circle cx="265" cy="266" r="16" fill="#6D28D9"/>
+  <circle cx="345" cy="266" r="16" fill="#6D28D9"/>
+  <circle cx="425" cy="266" r="16" fill="#6D28D9"/>
+  <circle cx="505" cy="266" r="16" fill="#6D28D9"/>
+  <circle cx="585" cy="266" r="16" fill="none" stroke="#6D28D9" stroke-width="2"/>
+  <circle cx="665" cy="266" r="16" fill="none" stroke="#6D28D9" stroke-width="2"/>
+  <circle cx="745" cy="266" r="16" fill="#6D28D9" opacity="0.4"/>
+  <circle cx="825" cy="266" r="16" fill="none" stroke="#6D28D9" stroke-width="2"/>
+  <circle cx="905" cy="266" r="16" fill="#6D28D9"/>
+
+  <!-- Row: COMPLIANCE -->
+  <rect x="30" y="310" width="190" height="64" rx="8" fill="#FFFBEB" stroke="#B45309" stroke-width="2"/>
+  <text x="125" y="348" text-anchor="middle" font-size="15" font-weight="bold" fill="#B45309">COMPLIANCE</text>
+  <circle cx="265" cy="342" r="16" fill="#B45309" opacity="0.4"/>
+  <circle cx="345" cy="342" r="16" fill="#B45309"/>
+  <circle cx="425" cy="342" r="16" fill="#B45309"/>
+  <circle cx="505" cy="342" r="16" fill="#B45309"/>
+  <circle cx="585" cy="342" r="16" fill="none" stroke="#B45309" stroke-width="2"/>
+  <circle cx="665" cy="342" r="16" fill="none" stroke="#B45309" stroke-width="2"/>
+  <circle cx="745" cy="342" r="16" fill="none" stroke="#B45309" stroke-width="2"/>
+  <circle cx="825" cy="342" r="16" fill="none" stroke="#B45309" stroke-width="2"/>
+  <circle cx="905" cy="342" r="16" fill="#B45309"/>
+
+  <!-- Row: DATA PROTECTION -->
+  <rect x="30" y="386" width="190" height="64" rx="8" fill="#ECFDF5" stroke="#047857" stroke-width="2"/>
+  <text x="125" y="416" text-anchor="middle" font-size="13" font-weight="bold" fill="#047857">DATA</text>
+  <text x="125" y="432" text-anchor="middle" font-size="13" font-weight="bold" fill="#047857">PROTECTION</text>
+  <circle cx="265" cy="418" r="16" fill="#047857" opacity="0.4"/>
+  <circle cx="345" cy="418" r="16" fill="none" stroke="#047857" stroke-width="2"/>
+  <circle cx="425" cy="418" r="16" fill="none" stroke="#047857" stroke-width="2"/>
+  <circle cx="505" cy="418" r="16" fill="none" stroke="#047857" stroke-width="2"/>
+  <circle cx="585" cy="418" r="16" fill="#047857" opacity="0.4"/>
+  <circle cx="665" cy="418" r="16" fill="#047857"/>
+  <circle cx="745" cy="418" r="16" fill="#047857"/>
+  <circle cx="825" cy="418" r="16" fill="none" stroke="#047857" stroke-width="2"/>
+  <circle cx="905" cy="418" r="16" fill="none" stroke="#047857" stroke-width="2"/>
+
+  <!-- Legend -->
+  <circle cx="320" cy="475" r="9" fill="#334155"/>
+  <text x="334" y="479" font-size="11" fill="#334155">Strong</text>
+  <circle cx="400" cy="475" r="9" fill="#334155" opacity="0.4"/>
+  <text x="414" y="479" font-size="11" fill="#334155">Partial</text>
+  <circle cx="490" cy="475" r="9" fill="none" stroke="#334155" stroke-width="2"/>
+  <text x="504" y="479" font-size="11" fill="#334155">Minimal / indirect</text>
+</svg>

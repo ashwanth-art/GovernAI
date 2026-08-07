@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" font-family="Helvetica, Arial, sans-serif">
+  <rect width="900" height="480" fill="#ffffff"/>
+  <text x="450" y="22" text-anchor="middle" font-size="18" font-weight="bold" fill="#1e293b">Implement Once, Map Many Times</text>
+  <text x="450" y="40" text-anchor="middle" font-size="12" fill="#64748b">A single control set satisfies multiple regulations and frameworks</text>
+
+  <!-- Center: controls -->
+  <rect x="250" y="60" width="400" height="310" rx="14" fill="#0f172a"/>
+  <text x="450" y="88" text-anchor="middle" font-size="15" font-weight="bold" fill="#ffffff">SHARED CONTROL SET</text>
+
+  <rect x="270" y="100" width="165" height="30" rx="15" fill="#1e293b" stroke="#475569"/>
+  <text x="352" y="120" text-anchor="middle" font-size="11.5" fill="#e2e8f0">Access control (IAM)</text>
+  <rect x="455" y="100" width="165" height="30" rx="15" fill="#1e293b" stroke="#475569"/>
+  <text x="537" y="120" text-anchor="middle" font-size="11.5" fill="#e2e8f0">Encryption (KMS)</text>
+
+  <rect x="270" y="140" width="165" height="30" rx="15" fill="#1e293b" stroke="#475569"/>
+  <text x="352" y="160" text-anchor="middle" font-size="11.5" fill="#e2e8f0">PII redaction</text>
+  <rect x="455" y="140" width="165" height="30" rx="15" fill="#1e293b" stroke="#475569"/>
+  <text x="537" y="160" text-anchor="middle" font-size="11.5" fill="#e2e8f0">Audit logging</text>
+
+  <rect x="270" y="180" width="165" height="30" rx="15" fill="#1e293b" stroke="#475569"/>
+  <text x="352" y="200" text-anchor="middle" font-size="11.5" fill="#e2e8f0">Evaluation gates</text>
+  <rect x="455" y="180" width="165" height="30" rx="15" fill="#1e293b" stroke="#475569"/>
+  <text x="537" y="200" text-anchor="middle" font-size="11.5" fill="#e2e8f0">Human oversight</text>
+
+  <rect x="270" y="220" width="165" height="30" rx="15" fill="#1e293b" stroke="#475569"/>
+  <text x="352" y="240" text-anchor="middle" font-size="11.5" fill="#e2e8f0">DPIA / risk assessments</text>
+  <rect x="455" y="220" width="165" height="30" rx="15" fill="#1e293b" stroke="#475569"/>
+  <text x="537" y="240" text-anchor="middle" font-size="11.5" fill="#e2e8f0">Breach runbooks</text>
+
+  <text x="450" y="300" text-anchor="middle" font-size="12" fill="#94a3b8">Build &#xD7;1 &#x2192; Claim &#xD7;5 pillars &#x2192; Prove &#xD7;4 frameworks</text>
+
+  <!-- NIST top-left -->
+  <line x1="270" y1="105" x2="105" y2="55" stroke="#6D28D9" stroke-width="2.5"/>
+  <circle cx="75" cy="40" r="36" fill="#F5F3FF" stroke="#6D28D9" stroke-width="2.5"/>
+  <text x="75" y="36" text-anchor="middle" font-size="12" font-weight="bold" fill="#6D28D9">NIST AI</text>
+  <text x="75" y="50" text-anchor="middle" font-size="12" font-weight="bold" fill="#6D28D9">RMF</text>
+
+  <!-- ISO top-right -->
+  <line x1="630" y1="105" x2="790" y2="55" stroke="#047857" stroke-width="2.5"/>
+  <circle cx="820" cy="40" r="36" fill="#ECFDF5" stroke="#047857" stroke-width="2.5"/>
+  <text x="820" y="36" text-anchor="middle" font-size="12" font-weight="bold" fill="#047857">ISO</text>
+  <text x="820" y="50" text-anchor="middle" font-size="12" font-weight="bold" fill="#047857">42001</text>
+
+  <!-- GDPR bottom-left -->
+  <line x1="270" y1="310" x2="105" y2="410" stroke="#2563EB" stroke-width="2.5"/>
+  <circle cx="75" cy="430" r="36" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.5"/>
+  <text x="75" y="436" text-anchor="middle" font-size="14" font-weight="bold" fill="#2563EB">GDPR</text>
+
+  <!-- HIPAA bottom-center -->
+  <line x1="450" y1="370" x2="450" y2="410" stroke="#B91C1C" stroke-width="2.5"/>
+  <circle cx="450" cy="438" r="32" fill="#FEF2F2" stroke="#B91C1C" stroke-width="2.5"/>
+  <text x="450" y="444" text-anchor="middle" font-size="12" font-weight="bold" fill="#B91C1C">HIPAA</text>
+
+  <!-- DPDPA bottom-right -->
+  <line x1="630" y1="310" x2="790" y2="410" stroke="#B45309" stroke-width="2.5"/>
+  <circle cx="820" cy="430" r="36" fill="#FFFBEB" stroke="#B45309" stroke-width="2.5"/>
+  <text x="820" y="436" text-anchor="middle" font-size="13" font-weight="bold" fill="#B45309">DPDPA</text>
+</svg>

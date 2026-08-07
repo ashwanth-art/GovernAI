@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 230" font-family="Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="1400" height="230" fill="#ffffff"/>
+
+  <!-- 7 chips: x = 30 + i*(180+16), w=180, y=30, h=110 -->
+  <g>
+    <rect x="30" y="30" width="180" height="110" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+    <text x="120" y="78" text-anchor="middle" font-size="17" font-weight="bold" fill="#1d4ed8">Valid &amp;</text>
+    <text x="120" y="100" text-anchor="middle" font-size="17" font-weight="bold" fill="#1d4ed8">Reliable</text>
+  </g>
+  <g>
+    <rect x="226" y="30" width="180" height="110" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="2.5"/>
+    <text x="316" y="90" text-anchor="middle" font-size="17" font-weight="bold" fill="#047857">Safe</text>
+  </g>
+  <g>
+    <rect x="422" y="30" width="180" height="110" rx="12" fill="#fef2f2" stroke="#dc2626" stroke-width="2.5"/>
+    <text x="512" y="78" text-anchor="middle" font-size="17" font-weight="bold" fill="#b91c1c">Secure &amp;</text>
+    <text x="512" y="100" text-anchor="middle" font-size="17" font-weight="bold" fill="#b91c1c">Resilient</text>
+  </g>
+  <g>
+    <rect x="618" y="30" width="180" height="110" rx="12" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2.5"/>
+    <text x="708" y="78" text-anchor="middle" font-size="17" font-weight="bold" fill="#6d28d9">Accountable &amp;</text>
+    <text x="708" y="100" text-anchor="middle" font-size="17" font-weight="bold" fill="#6d28d9">Transparent</text>
+  </g>
+  <g>
+    <rect x="814" y="30" width="180" height="110" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="2.5"/>
+    <text x="904" y="78" text-anchor="middle" font-size="17" font-weight="bold" fill="#b45309">Explainable &amp;</text>
+    <text x="904" y="100" text-anchor="middle" font-size="17" font-weight="bold" fill="#b45309">Interpretable</text>
+  </g>
+  <g>
+    <rect x="1010" y="30" width="180" height="110" rx="12" fill="#f0fdfa" stroke="#0d9488" stroke-width="2.5"/>
+    <text x="1100" y="78" text-anchor="middle" font-size="17" font-weight="bold" fill="#0f766e">Privacy-</text>
+    <text x="1100" y="100" text-anchor="middle" font-size="17" font-weight="bold" fill="#0f766e">Enhanced</text>
+  </g>
+  <g>
+    <rect x="1206" y="30" width="164" height="110" rx="12" fill="#fdf2f8" stroke="#db2777" stroke-width="2.5"/>
+    <text x="1288" y="72" text-anchor="middle" font-size="17" font-weight="bold" fill="#be185d">Fair — bias</text>
+    <text x="1288" y="94" text-anchor="middle" font-size="17" font-weight="bold" fill="#be185d">is managed</text>
+  </g>
+
+  <rect x="30" y="165" width="1340" height="40" rx="20" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="700" y="191" text-anchor="middle" font-size="15.5" fill="#334155">Seven characteristics of trustworthy AI (NIST AI RMF) — these become the measurable requirements behind Trust, Security, Governance, Compliance and Data Protection</text>
+</svg>

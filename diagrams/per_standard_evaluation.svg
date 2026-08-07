@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="800" fill="#ffffff"/>
+  <text x="600" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">Per-Standard Evaluation Engine - Internal Flow</text>
+  <text x="600" y="48" text-anchor="middle" font-size="11" fill="#64748b">Each selected standard spawns its own evaluation engine. This shows how ONE standard is evaluated end-to-end.</text>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- ===== LEFT COLUMN: CONTROL PACK LOADING ===== -->
+  <rect x="30" y="65" width="250" height="200" rx="12" fill="#F5F3FF" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="30" y="65" width="250" height="28" rx="12" fill="#7c3aed"/>
+  <text x="155" y="84" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">1. LOAD CONTROL PACK</text>
+  <text x="45" y="110" font-size="9" fill="#1e293b" font-weight="bold">Selected: ISO 42001</text>
+  <text x="45" y="130" font-size="9" fill="#64748b">Load from control_packs/iso42001.yaml</text>
+  <text x="45" y="150" font-size="8" fill="#1e293b">controls:</text>
+  <text x="55" y="165" font-size="8" fill="#64748b">- id: A.2.2 - AI Policy</text>
+  <rect x="180" y="158" width="80" height="12" rx="3" fill="#7c3aed"/><text x="220" y="167" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">GOVERNANCE</text>
+  <text x="55" y="178" font-size="8" fill="#64748b">- id: A.4.3 - Risk Assessment</text>
+  <rect x="180" y="171" width="55" height="12" rx="3" fill="#2563eb"/><text x="207" y="180" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">TRUST</text>
+  <text x="55" y="191" font-size="8" fill="#64748b">- id: A.6.2.7 - Data Security</text>
+  <rect x="180" y="184" width="60" height="12" rx="3" fill="#dc2626"/><text x="210" y="193" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">SECURITY</text>
+  <text x="55" y="204" font-size="8" fill="#64748b">- id: A.8.4 - Monitoring</text>
+  <rect x="180" y="197" width="80" height="12" rx="3" fill="#d97706"/><text x="220" y="206" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">COMPLIANCE</text>
+  <text x="55" y="217" font-size="8" fill="#64748b">  ... (38 total controls)</text>
+  <text x="45" y="234" font-size="7.5" fill="#7c3aed" font-weight="bold">Each control also carries a pillar_tag (Section 6)</text>
+  <text x="45" y="246" font-size="7.5" fill="#7c3aed" font-weight="bold">for cross-standard comparability + shared-gap detection</text>
+
+  <!-- Arrow down -->
+  <line x1="155" y1="265" x2="155" y2="290" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===== LEFT COLUMN: TIER FILTERING ===== -->
+  <rect x="30" y="295" width="250" height="130" rx="12" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <rect x="30" y="295" width="250" height="28" rx="12" fill="#059669"/>
+  <text x="155" y="314" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">2. FILTER BY TIER</text>
+  <text x="45" y="340" font-size="9" fill="#1e293b" font-weight="bold">If Tier 1 (API-only):</text>
+  <text x="55" y="355" font-size="8" fill="#64748b">Run 22/38 controls (black-box testable)</text>
+  <text x="45" y="375" font-size="9" fill="#1e293b" font-weight="bold">If Tier 2 (Infra connectors):</text>
+  <text x="55" y="390" font-size="8" fill="#64748b">Run 32/38 controls (+ infra checks)</text>
+  <text x="45" y="410" font-size="9" fill="#1e293b" font-weight="bold">If Tier 3 (Full source):</text>
+  <text x="55" y="425" font-size="8" fill="#64748b">Run 38/38 controls (complete)</text>
+
+  <!-- Arrow down -->
+  <line x1="155" y1="425" x2="155" y2="453" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===== CENTER: CONTROL EXECUTION LOOP ===== -->
+  <rect x="30" y="458" width="530" height="320" rx="14" fill="#ffffff" stroke="#2563EB" stroke-width="2.5"/>
+  <rect x="30" y="458" width="530" height="30" rx="14" fill="#2563EB"/>
+  <text x="295" y="478" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">3. EXECUTE CONTROL TESTS (LangGraph Orchestration)</text>
+
+  <!-- Loop visualization -->
+  <rect x="50" y="500" width="160" height="70" rx="8" fill="#EFF6FF" stroke="#2563EB" stroke-width="1"/>
+  <text x="130" y="518" text-anchor="middle" font-size="9" font-weight="bold" fill="#2563EB">FOR EACH CONTROL:</text>
+  <text x="60" y="537" font-size="8" fill="#1e293b">1. Read test_type</text>
+  <text x="60" y="551" font-size="8" fill="#1e293b">2. Select test method</text>
+  <text x="60" y="565" font-size="8" fill="#1e293b">3. Execute probes</text>
+
+  <!-- Test type branches -->
+  <line x1="210" y1="535" x2="240" y2="508" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="210" y1="535" x2="240" y2="540" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="210" y1="535" x2="240" y2="572" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="245" y="495" width="155" height="25" rx="5" fill="#FEF2F2" stroke="#dc2626" stroke-width="1"/>
+  <text x="322" y="512" text-anchor="middle" font-size="8" fill="#dc2626" font-weight="bold">Adversarial Probe</text>
+
+  <rect x="245" y="527" width="155" height="25" rx="5" fill="#ECFDF5" stroke="#059669" stroke-width="1"/>
+  <text x="322" y="544" text-anchor="middle" font-size="8" fill="#059669" font-weight="bold">Config/API Check</text>
+
+  <rect x="245" y="559" width="155" height="25" rx="5" fill="#FEF3C7" stroke="#d97706" stroke-width="1"/>
+  <text x="322" y="576" text-anchor="middle" font-size="8" fill="#d97706" font-weight="bold">Document/Policy Verify</text>
+
+  <!-- Results box -->
+  <line x1="400" y1="540" x2="428" y2="540" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="432" y="500" width="118" height="80" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+  <text x="491" y="518" text-anchor="middle" font-size="9" font-weight="bold" fill="#1e293b">Result</text>
+  <text x="445" y="535" font-size="8" fill="#059669">Pass / Fail / Partial</text>
+  <text x="445" y="550" font-size="8" fill="#64748b">score: 0.0 - 1.0</text>
+  <text x="445" y="565" font-size="8" fill="#64748b">evidence: [...]</text>
+  <text x="445" y="580" font-size="8" fill="#64748b">remediation: "..."</text>
+
+  <!-- OWASP Box -->
+  <rect x="50" y="585" width="500" height="75" rx="8" fill="#FFF7ED" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="300" y="605" text-anchor="middle" font-size="9" font-weight="bold" fill="#ea580c">OWASP LLM Top 10 Security Probes (always run alongside)</text>
+  <text x="65" y="625" font-size="8" fill="#64748b">Prompt Injection (LLM01) | Data Leakage (LLM06) | Excessive Agency (LLM08) | Model DoS (LLM04)</text>
+  <text x="65" y="642" font-size="8" fill="#64748b">RAG Poisoning (LLM03) | Sensitive Info Disclosure (LLM02) | Insecure Output (LLM05)</text>
+  <text x="65" y="655" font-size="8" fill="#ea580c">OWASP findings attach to relevant controls in whichever standard maps to that risk area</text>
+
+  <!-- Scoring -->
+  <rect x="50" y="668" width="500" height="95" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="1.5"/>
+  <text x="300" y="690" text-anchor="middle" font-size="9" font-weight="bold" fill="#059669">4. SCORING (per standard)</text>
+  <text x="65" y="710" font-size="8" fill="#1e293b">Each control result (0.0-1.0) is weighted by that standard's own weighting scheme</text>
+  <text x="65" y="727" font-size="8" fill="#1e293b">ISO 42001: Annex A weights by criticality level. HIPAA: Equal weight per safeguard category.</text>
+  <text x="65" y="744" font-size="8" fill="#1e293b" font-weight="bold">Final per-standard score = weighted average of all tested controls</text>
+  <text x="65" y="758" font-size="8" fill="#64748b">Untestable controls (tier too low) marked as "Not Assessed" with confidence = 0</text>
+
+  <!-- ===== RIGHT COLUMN: REPORT GENERATION ===== -->
+  <rect x="590" y="295" width="580" height="470" rx="14" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <rect x="590" y="295" width="580" height="30" rx="14" fill="#d97706"/>
+  <text x="880" y="315" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">5. PER-STANDARD REPORT OUTPUT</text>
+
+  <!-- Report Structure -->
+  <rect x="610" y="340" width="265" height="248" rx="8" fill="#FEF2F2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="742" y="358" text-anchor="middle" font-size="10" font-weight="bold" fill="#dc2626">HIPAA Report Format</text>
+  <line x1="610" y1="365" x2="875" y2="365" stroke="#fecaca" stroke-width="1"/>
+  <text x="625" y="382" font-size="8" fill="#1e293b" font-weight="bold">Header:</text>
+  <text x="625" y="395" font-size="8" fill="#64748b">Entity Name, Assessment Date, Tier Level</text>
+  <text x="625" y="415" font-size="8" fill="#1e293b" font-weight="bold">Administrative Safeguards (45 CFR 164.308):</text>
+  <text x="635" y="428" font-size="8" fill="#64748b">Risk Analysis: PASS/FAIL + evidence</text>
+  <text x="635" y="441" font-size="8" fill="#64748b">Workforce Training: PASS/FAIL + evidence</text>
+  <text x="625" y="461" font-size="8" fill="#1e293b" font-weight="bold">Technical Safeguards (45 CFR 164.312):</text>
+  <text x="635" y="474" font-size="8" fill="#64748b">Access Control: PASS/FAIL + evidence</text>
+  <text x="635" y="487" font-size="8" fill="#64748b">Encryption: PASS/FAIL + evidence</text>
+  <text x="625" y="507" font-size="8" fill="#1e293b" font-weight="bold">Physical Safeguards (45 CFR 164.310):</text>
+  <text x="635" y="520" font-size="8" fill="#64748b">Facility Access: PASS/FAIL + evidence</text>
+  <text x="625" y="540" font-size="8" fill="#dc2626" font-weight="bold">Overall: HIPAA Compliance Score: 78%</text>
+  <text x="625" y="555" font-size="8" fill="#dc2626">Deficiencies: 3 critical, 2 moderate</text>
+  <rect x="625" y="562" width="42" height="12" rx="3" fill="#dc2626"/><text x="646" y="571" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">SEC</text>
+  <rect x="670" y="562" width="42" height="12" rx="3" fill="#059669"/><text x="691" y="571" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">DATA</text>
+  <rect x="715" y="562" width="42" height="12" rx="3" fill="#7c3aed"/><text x="736" y="571" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">GOV</text>
+  <text x="625" y="580" font-size="6.5" fill="#64748b">Pillar breakdown appended (Section 6)</text>
+
+  <!-- ISO Report -->
+  <rect x="890" y="340" width="265" height="248" rx="8" fill="#F5F3FF" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="1022" y="358" text-anchor="middle" font-size="10" font-weight="bold" fill="#7c3aed">ISO 42001 Report Format</text>
+  <line x1="890" y1="365" x2="1155" y2="365" stroke="#ede9fe" stroke-width="1"/>
+  <text x="905" y="382" font-size="8" fill="#1e293b" font-weight="bold">Statement of Applicability:</text>
+  <text x="905" y="395" font-size="8" fill="#64748b">38 controls, 32 assessed, 6 excluded (tier)</text>
+  <text x="905" y="415" font-size="8" fill="#1e293b" font-weight="bold">Clause 4-10 Conformity:</text>
+  <text x="915" y="428" font-size="8" fill="#64748b">4. Context: Conforms</text>
+  <text x="915" y="441" font-size="8" fill="#64748b">5. Leadership: Non-conformity (minor)</text>
+  <text x="915" y="454" font-size="8" fill="#64748b">6. Planning: Conforms</text>
+  <text x="905" y="474" font-size="8" fill="#1e293b" font-weight="bold">Annex A Control Results:</text>
+  <text x="915" y="487" font-size="8" fill="#64748b">A.2.2 AI Policy: Conforms</text>
+  <text x="915" y="500" font-size="8" fill="#64748b">A.6.2.7 Data Sec: Non-conformity</text>
+  <text x="905" y="520" font-size="8" fill="#1e293b" font-weight="bold">Certificate Readiness:</text>
+  <text x="915" y="533" font-size="8" fill="#64748b">3 minor NC, 1 major NC = NOT READY</text>
+  <text x="905" y="555" font-size="8" fill="#7c3aed" font-weight="bold">Score: 72% (needs 85% for cert)</text>
+  <rect x="905" y="562" width="42" height="12" rx="3" fill="#7c3aed"/><text x="926" y="571" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">GOV</text>
+  <rect x="950" y="562" width="42" height="12" rx="3" fill="#2563eb"/><text x="971" y="571" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">TRUST</text>
+  <rect x="995" y="562" width="42" height="12" rx="3" fill="#dc2626"/><text x="1016" y="571" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">SEC</text>
+  <text x="905" y="580" font-size="6.5" fill="#64748b">Pillar breakdown appended (Section 6)</text>
+
+  <!-- Cross-Standard Insights -->
+  <rect x="610" y="603" width="545" height="157" rx="8" fill="#FEF3C7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="882" y="623" text-anchor="middle" font-size="10" font-weight="bold" fill="#d97706">Cross-Standard Insights (when 2+ standards selected)</text>
+  <line x1="610" y1="631" x2="1155" y2="631" stroke="#fde68a" stroke-width="1"/>
+
+  <text x="625" y="649" font-size="9" fill="#1e293b" font-weight="bold">Shared Gaps (same pillar tag across standards):</text>
+  <text x="635" y="665" font-size="8" fill="#64748b">1. Missing audit trail - HIPAA 164.312(b) AND ISO A.8.4 (COMPLIANCE + GOVERNANCE tag)</text>
+  <text x="635" y="680" font-size="8" fill="#64748b">2. No encryption at rest - HIPAA 164.312(a)(2)(iv) AND ISO A.6.2.7 (SECURITY tag)</text>
+  <text x="635" y="695" font-size="8" fill="#64748b">3. No bias testing - N/A for HIPAA but fails ISO A.5.4 (TRUST tag)</text>
+
+  <text x="625" y="715" font-size="9" fill="#1e293b" font-weight="bold">Priority Matrix:</text>
+  <text x="635" y="730" font-size="8" fill="#dc2626">CRITICAL: 2 shared gaps (impact: both standards)</text>
+  <text x="635" y="745" font-size="8" fill="#d97706">HIGH: 1 HIPAA-only gap (PHI handling)</text>
+  <text x="635" y="758" font-size="7" fill="#059669">MEDIUM: 2 ISO-only gaps (documentation)</text>
+
+  <!-- RIGHT: Tier coverage annotation -->
+  <rect x="590" y="65" width="580" height="215" rx="12" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="590" y="65" width="580" height="28" rx="12" fill="#64748b"/>
+  <text x="880" y="84" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">TIER IMPACT ON CONTROL COVERAGE</text>
+
+  <text x="610" y="112" font-size="10" font-weight="bold" fill="#2563EB">Tier 1 (API Only)</text>
+  <text x="610" y="128" font-size="8" fill="#64748b">Can test: prompt injection, data leakage, output filtering, response consistency</text>
+  <text x="610" y="141" font-size="8" fill="#64748b">Cannot test: encryption config, access controls, audit logs, infrastructure</text>
+  <text x="610" y="154" font-size="8" fill="#dc2626">Coverage: ~55-60% of most standards</text>
+
+  <text x="610" y="175" font-size="10" font-weight="bold" fill="#7c3aed">Tier 2 (API + Infra Connectors)</text>
+  <text x="610" y="191" font-size="8" fill="#64748b">Also tests: cloud configs via APIs, CI/CD pipelines, monitoring dashboards, log access</text>
+  <text x="610" y="204" font-size="8" fill="#64748b">Cannot test: source code review, model weights, training data, staging environments</text>
+  <text x="610" y="217" font-size="8" fill="#7c3aed">Coverage: ~80-85% of most standards</text>
+
+  <text x="610" y="238" font-size="10" font-weight="bold" fill="#059669">Tier 3 (Full Source + Staging)</text>
+  <text x="610" y="254" font-size="8" fill="#64748b">Also tests: code review, model card verification, training data audit, staging penetration tests</text>
+  <text x="610" y="267" font-size="8" fill="#059669">Coverage: 100% of standard controls (all testable)</text>
+</svg>

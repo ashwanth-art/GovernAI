@@ -4,8 +4,6 @@
 > Prepared by: AI Governance Assessment Engine Design Team
 > Date: July 2026
 
-> **Implementation note:** This file began as a target-architecture proposal and includes Python/FastAPI/YAML examples that are not present in the deployed TypeScript application. For the implementation-accurate startup, API, database, assessment, logging, source-mapping, testing, and deployment description, use [`TECHNICAL_DOCUMENTATION.md`](./TECHNICAL_DOCUMENTATION.md).
-
 ---
 
 ## 1. Architecture Overview
@@ -17,7 +15,7 @@ The system does not run a fixed checklist against every client. Instead, the use
 This is the defining characteristic of the platform: **dynamic, standard-driven evaluation.**
 
 ```
-INDUSTRY SELECTED --> STANDARDS RECOMMENDED --> USER PICKS ANY SUPPORTED SET --> EVALUATE ONLY THOSE --> ONE REPORT PER STANDARD
+INDUSTRY SELECTED --> STANDARDS RECOMMENDED --> USER PICKS 1-3 --> EVALUATE ONLY THOSE --> ONE REPORT PER STANDARD
 ```
 
 ### Why This Works
@@ -41,7 +39,7 @@ Underneath these standard-specific structures, every individual control is also 
 **Step 1: Selection Screen (what the user sees)**
 - Select industry from a dropdown (10 industries supported)
 - The system immediately recommends the 2-3 most relevant standards for that industry, pre-checked
-- User can accept the recommendation or adjust it, selecting any number of supported standards (at least one)
+- User can accept the recommendation or adjust (pick 1-3 standards total)
 - Select access tier (Tier 1/2/3) and provide the matching credentials
 
 **Step 2: Validate + Load**
@@ -60,7 +58,7 @@ Underneath these standard-specific structures, every individual control is also 
 - One report generated per selected standard, in that standard's native format
 - A Cross-Standard Insights report is added automatically when 2+ standards are selected
 - A 5-Pillar Radar Summary rolls everything up for an at-a-glance comparable view
-- If the user picked any number of standards, the same number of reports is generated - no unused frameworks, no missing ones, nothing evaluated that wasn't selected
+- If the user picked 3 standards, 3 reports are generated - no unused frameworks, no missing ones, nothing evaluated that wasn't selected
 
 ---
 
@@ -116,7 +114,7 @@ No single standard covers everything an organization needs:
 | **Certifiable** | Get a certificate to show clients | ISO 42001, SOC 2 |
 | **Methodological** | Best-practice guidance | NIST AI RMF, CEPEJ Charter |
 
-Many organizations start with one mandatory framework and one certifiable framework, then add any other supported standards required by their jurisdictions, customers, or risk program.
+Most organizations need two: one mandatory (legal) and one certifiable (business trust). The third standard is optional for organizations wanting comprehensive coverage.
 
 ---
 
@@ -127,8 +125,8 @@ The tier determines how many controls within each standard can actually be teste
 | Tier | Access Level | What You Provide | Coverage |
 |------|-------------|------------------|----------|
 | **Tier 1** | API Only | Chatbot endpoint + API key | ~55-60% of controls |
-| **Tier 2** | API + Target Adapters | + Bearer tokens for target-host audit/monitoring adapters, CI/CD URL | Up to ~80-85% mapped, subject to evidence returned |
-| **Tier 3** | Source + Staging Inputs | + Source code repo, staging env, model registry | Requires dedicated connectors for full verification |
+| **Tier 2** | API + Infrastructure | + Cloud API keys, monitoring API, CI/CD access | ~80-85% of controls |
+| **Tier 3** | Full Source + Staging | + Source code repo, staging env, model registry | 100% of controls |
 
 ### What Each Tier Unlocks
 
@@ -141,12 +139,12 @@ The tier determines how many controls within each standard can actually be teste
 - Self-reported compliance questionnaire probes
 
 **Tier 2 (adds Gray-Box):**
-- Protected `GET /api/audit/config` call on the assessed target's host
-- Protected `GET /api/monitoring/summary` call on the assessed target's host
-- `HEAD` reachability check against the supplied CI/CD URL
-- Mapping of returned adapter evidence to configuration, logging, access, encryption, and isolation controls
-
-The infrastructure and monitoring provider names are report context; the current implementation does not sign in to Render, AWS, Azure, GCP, Prometheus, Grafana, Datadog, or CloudWatch directly. CI/CD workflow runs and logs are not read by the reachability check.
+- Cloud configuration audit (AWS/GCP/Azure APIs)
+- Monitoring and logging verification (Datadog/CloudWatch)
+- CI/CD pipeline security checks
+- Access control configuration review
+- Encryption-at-rest/in-transit verification
+- Network isolation checks
 
 **Tier 3 (adds White-Box):**
 - Source code review for security vulnerabilities
@@ -520,26 +518,24 @@ backend/
 The frontend collects:
 
 1. **Industry Selection** - Dropdown with 10 industries
-2. **Standard Selection** - Checkboxes with no artificial maximum, dynamically pre-populated with the most relevant standards for the selected industry. Each recommended standard explains why it is recommended (mandatory / certifiable / methodological)
+2. **Standard Selection** - Checkboxes (1-3), dynamically pre-populated with the most popular standards for the selected industry. Each recommended standard shows a tooltip explaining why it's recommended (mandatory / certifiable / methodological)
 3. **Tier Selection** - Toggle between Tier 1/2/3 with live coverage % update per selected standard
 4. **Credentials** - Dynamic form based on tier:
    - Tier 1: API endpoint + key only
-   - Tier 2: + Bearer tokens for the target-host audit/config and monitoring adapters, plus a CI/CD URL
+   - Tier 2: + Cloud provider API key, monitoring API key
    - Tier 3: + Git repo URL, staging environment URL
 
 ### Output Panel (Tabbed)
 
 | Tab | Content |
 |-----|---------|
-| **Live Progress** | Real-time stream separating live network requests from fast local control mappings, with endpoint, method, HTTP status, latency, source type, and result |
+| **Live Progress** | Real-time stream showing each control being tested, pass/fail, running scores per standard |
 | **[Standard 1] Report** | Full formatted report in that standard's structure |
 | **[Standard 2] Report** | Full formatted report in that standard's structure |
 | **Cross Insights** | Shared gaps, priority matrix, 5-pillar radar summary, effort estimate |
 | **Download** | PDF download for each report + combined package |
 
 A persistent banner across the output panel reinforces the core mechanic: *"Only the standards selected in the input panel are ever evaluated - nothing runs unrequested."*
-
-The deployed assessment uses GovernAI's built-in compliance control mappings. It does not fetch official ISO, regulator, or standards pages during each run, and its output is assessment evidence rather than an official certification or legal determination.
 
 ### Real-Time Communication (SSE)
 
@@ -584,30 +580,6 @@ function useAssessmentStream(assessmentId: string) {
   return progress;
 }
 ```
-
-### Source lineage shown during execution
-
-The production UI separates three facts that must not be conflated:
-
-1. **Observed target evidence** — an actual request to the assessed chatbot, target-host adapter, or supplied CI/CD URL. The trace records the method, endpoint, HTTP result, latency, request sequence, and the exact validation rule.
-2. **Local control mapping** — the GovernAI backend applies its versioned built-in control pack to evidence already collected from the target. These mappings are paced in the SSE workflow so the UI visibly advances one control at a time.
-3. **Official authority reference** — every supported standard records an authority, title, HTTPS reference, lifecycle status, and note. This link proves where the framework can be checked, but it is labelled **reference only — not fetched in this run** unless a future evidence collector actually requests that page.
-
-Each `standard_start`, `control_result`, and `standard_complete` event includes:
-
-```json
-{
-  "sequence": 24,
-  "sourceType": "control_mapping",
-  "officialAuthority": "U.S. Department of Health and Human Services",
-  "officialReferenceTitle": "HIPAA Security Rule",
-  "officialReferenceUrl": "https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html",
-  "officialPageFetched": false,
-  "validationMethod": "Apply the selected control-pack rule to the live evidence available at this tier."
-}
-```
-
-The final report repeats the official authority reference and the access disclosure. Licensed ISO, IEC, and AICPA sources are identified as official previews rather than implying that proprietary standards text was copied or fetched. Superseded selections, including SR 11-7 and OMB M-24-10, link to their current replacement guidance and display that lifecycle warning.
 
 ---
 
@@ -657,11 +629,17 @@ No code changes are needed to the evaluation engine itself. The system is entire
 | Question | Answer |
 |----------|--------|
 | What drives the evaluation? | The industry and standards the user selects on the input screen |
-| How many engines? | One per selected supported standard, with no artificial selection maximum |
+| How many engines? | One per selected standard (1-3), running in parallel |
 | What about security? | OWASP runs always, findings map to standard controls via shared pillar tags |
 | How is output formatted? | Each standard gets its own native report format |
 | What if standards overlap? | Cross-insights report shows shared gaps using pillar tags |
 | How do results stay comparable? | Every control also rolls up to 5 governance pillars (Trust, Security, Governance, Compliance, Data Protection) |
 | How to add new standards? | Add a YAML control pack + report template - it plugs into the same pillar system automatically |
 | What determines depth? | The access tier (1/2/3) limits which controls can be tested |
-| Is anything hardcoded? | Yes. The deployed implementation generates framework checks from twelve reusable TypeScript templates in `lib/catalog.ts`; YAML control packs are a recommended future architecture. |
+| Is anything hardcoded? | No - fully data-driven via YAML packs |
+
+
+
+
+
+

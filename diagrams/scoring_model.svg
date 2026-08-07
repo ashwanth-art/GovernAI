@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 400" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1100" height="400" fill="#ffffff"/>
+  <text x="550" y="24" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">Scoring Model  How Findings Become a Grade</text>
+  <text x="550" y="44" text-anchor="middle" font-size="11" fill="#64748b">Weighted multi-pillar fusion with confidence-adjusted scoring</text>
+
+  <!-- 5 Pillar weight boxes -->
+  <rect x="30" y="70" width="190" height="80" rx="10" fill="#F5F3FF" stroke="#7c3aed" stroke-width="2"/>
+  <text x="125" y="100" text-anchor="middle" font-size="16" font-weight="bold" fill="#7c3aed">30%</text>
+  <text x="125" y="120" text-anchor="middle" font-size="12" fill="#1e293b">Compliance</text>
+  <text x="125" y="138" text-anchor="middle" font-size="10" fill="#64748b">NIST + EU AI Act + ISO</text>
+
+  <rect x="240" y="70" width="190" height="80" rx="10" fill="#FEF2F2" stroke="#dc2626" stroke-width="2"/>
+  <text x="335" y="100" text-anchor="middle" font-size="16" font-weight="bold" fill="#dc2626">30%</text>
+  <text x="335" y="120" text-anchor="middle" font-size="12" fill="#1e293b">Security</text>
+  <text x="335" y="138" text-anchor="middle" font-size="10" fill="#64748b">OWASP LLM + RAG attacks</text>
+
+  <rect x="450" y="70" width="190" height="80" rx="10" fill="#FFFBEB" stroke="#d97706" stroke-width="2"/>
+  <text x="545" y="100" text-anchor="middle" font-size="16" font-weight="bold" fill="#d97706">20%</text>
+  <text x="545" y="120" text-anchor="middle" font-size="12" fill="#1e293b">Risk</text>
+  <text x="545" y="138" text-anchor="middle" font-size="10" fill="#64748b">Hallucination + resilience</text>
+
+  <rect x="660" y="70" width="190" height="80" rx="10" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <text x="755" y="100" text-anchor="middle" font-size="16" font-weight="bold" fill="#2563EB">10%</text>
+  <text x="755" y="120" text-anchor="middle" font-size="12" fill="#1e293b">Trust</text>
+  <text x="755" y="138" text-anchor="middle" font-size="10" fill="#64748b">Fairness + explainability</text>
+
+  <rect x="870" y="70" width="200" height="80" rx="10" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <text x="970" y="100" text-anchor="middle" font-size="16" font-weight="bold" fill="#059669">10%</text>
+  <text x="970" y="120" text-anchor="middle" font-size="12" fill="#1e293b">Data Protection</text>
+  <text x="970" y="138" text-anchor="middle" font-size="10" fill="#64748b">PII handling + privacy</text>
+
+  <!-- Arrow down to formula -->
+  <line x1="550" y1="150" x2="550" y2="180" stroke="#64748b" stroke-width="2"/>
+  <polygon points="545,177 555,177 550,185" fill="#64748b"/>
+
+  <!-- Formula box -->
+  <rect x="200" y="190" width="700" height="50" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="550" y="220" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">Overall = (Compliance � 0.30) + (Security � 0.30) + (Risk � 0.20) + (Trust � 0.10) + (Data � 0.10)</text>
+
+  <!-- Arrow down to grade -->
+  <line x1="550" y1="240" x2="550" y2="265" stroke="#64748b" stroke-width="2"/>
+  <polygon points="545,262 555,262 550,270" fill="#64748b"/>
+
+  <!-- Grade scale -->
+  <rect x="60" y="275" width="150" height="50" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="1.5"/>
+  <text x="135" y="298" text-anchor="middle" font-size="18" font-weight="bold" fill="#059669">A+ / A</text>
+  <text x="135" y="316" text-anchor="middle" font-size="10" fill="#64748b">90-100: Audit-ready</text>
+
+  <rect x="230" y="275" width="150" height="50" rx="8" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.5"/>
+  <text x="305" y="298" text-anchor="middle" font-size="18" font-weight="bold" fill="#2563EB">B</text>
+  <text x="305" y="316" text-anchor="middle" font-size="10" fill="#64748b">80-89: Mostly compliant</text>
+
+  <rect x="400" y="275" width="150" height="50" rx="8" fill="#FFFBEB" stroke="#d97706" stroke-width="1.5"/>
+  <text x="475" y="298" text-anchor="middle" font-size="18" font-weight="bold" fill="#d97706">C</text>
+  <text x="475" y="316" text-anchor="middle" font-size="10" fill="#64748b">70-79: Gaps exist</text>
+
+  <rect x="570" y="275" width="150" height="50" rx="8" fill="#FEF2F2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="645" y="298" text-anchor="middle" font-size="18" font-weight="bold" fill="#dc2626">D</text>
+  <text x="645" y="316" text-anchor="middle" font-size="10" fill="#64748b">60-69: Non-compliant</text>
+
+  <rect x="740" y="275" width="150" height="50" rx="8" fill="#1e293b" stroke="#1e293b" stroke-width="1.5"/>
+  <text x="815" y="298" text-anchor="middle" font-size="18" font-weight="bold" fill="#ffffff">F</text>
+  <text x="815" y="316" text-anchor="middle" font-size="10" fill="#94a3b8">&lt;60: Immediate action</text>
+
+  <!-- Confidence note -->
+  <rect x="200" y="345" width="700" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="550" y="365" text-anchor="middle" font-size="11" fill="#64748b">Each pillar score is adjusted by confidence: Verified findings count 100%, Observed 80%, Suspected 50%, Not Assessed excluded from calculation</text>
+  <text x="550" y="380" text-anchor="middle" font-size="11" fill="#64748b">Report clearly states: "Score based on X% of total controls assessed at Tier [1/2/3]"</text>
+</svg>

@@ -1,0 +1,133 @@
+...@_theme
+
+# Backend Pipeline: Dynamic Standard Selection Drives Everything
+#
+# Layout note: root stacks the 4 steps vertically, each step lays its own
+# items out horizontally. This gives a page-friendly landscape ratio instead
+# of the 3:1 letterbox that `direction: right` at root produces.
+# Labels are plain strings, NOT |md| blocks — markdown blocks become
+# <foreignObject>, which librsvg (sharp) does not render.
+
+direction: down
+
+title: "Backend Pipeline: Dynamic Standard Selection Drives Everything\nUser picks industry + standards on screen. The system evaluates only those standards and returns exactly matching reports." {
+  near: top-center
+  style: {
+    stroke-width: 0
+    fill: transparent
+    font-size: 19
+    bold: true
+    font-color: "#1e293b"
+  }
+}
+
+s1: "STEP 1 — SELECTION SCREEN (what the user sees)" {
+  class: step
+  grid-columns: 5
+  grid-gap: 20
+
+  industry: "1. Select industry\n\nHealthcare  ▾"
+  industry.class: item
+
+  standards: "2. Choose standards (1–3)\nRecommended for Healthcare:\n\n[x] HIPAA — mandatory, legal\n[x] ISO 42001 — certifiable, client trust\n[ ] NIST AI RMF — optional, best practice"
+  standards.class: item
+
+  tier: "3. Access tier + credentials\n\nTier 1  |  [Tier 2]  |  Tier 3\nAPI key, cloud config, monitoring"
+  tier.class: item
+
+  go: "Start\nAssessment →"
+  go.class: report
+
+  differentiator: "KEY\nDIFFERENTIATOR"
+  differentiator.class: note
+
+}
+
+s2: "STEP 2 — VALIDATE + LOAD" {
+  class: step
+  grid-columns: 3
+  grid-gap: 20
+
+  validate: "Validate endpoint + credentials\nConfirm RAG behaviour (not a plain LLM wrapper)\nDiscover model, vector DB, embeddings"
+  validate.class: item
+
+  load: "Load control packs — picked standards only\n\nHIPAA      → 12 controls\nISO 42001  → 38 controls"
+  load.class: item
+
+  only: "Only the standards picked in Step 1\nare loaded — nothing else runs"
+  only.class: note
+
+}
+
+s3: "STEP 3 — EVALUATE (one engine per picked standard, in parallel)" {
+  class: step
+  grid-columns: 3
+  grid-gap: 20
+
+  hipaa: "HIPAA Engine — 12 controls" {
+    grid-columns: 2
+    grid-gap: 16
+    class: engine
+    tests: "PHI protection\nBAA verification\nAudit trails\nBreach readiness"
+    tests.class: item
+    tags: "pillar tags" {
+      grid-columns: 3
+      grid-gap: 10
+      class: item
+      t1: "TRUST";           t1.class: trust
+      t2: "SECURITY";        t2.class: security
+      t3: "DATA PROTECTION"; t3.class: dataprot
+    }
+  }
+
+  iso: "ISO 42001 Engine — 38 controls" {
+    grid-columns: 2
+    grid-gap: 16
+    class: engine
+    tests: "AI lifecycle management\nBias + fairness\nHuman oversight\nData governance"
+    tests.class: item
+    tags: "pillar tags" {
+      grid-columns: 3
+      grid-gap: 10
+      class: item
+      t1: "GOVERNANCE"; t1.class: gov
+      t2: "TRUST";      t2.class: trust
+      t3: "COMPLIANCE"; t3.class: comp
+    }
+  }
+
+  owasp: "OWASP LLM Top 10 probes run alongside\nevery assessment, regardless of standards picked —\nno paper standard substitutes for\nreal adversarial testing"
+  owasp.class: owasp
+}
+
+s4: "STEP 4 — REPORTS (exactly matches Step 1)" {
+  class: step
+  grid-columns: 4
+  grid-gap: 20
+
+  r1: "HIPAA\nCompliance Report"
+  r1.class: report
+  r2: "ISO 42001\nEvidence Pack"
+  r2.class: report
+
+  always: "Always included:\n\nCross-Standard Insights\n5-Pillar Radar Summary"
+  always.class: item
+
+  guarantee: "Picked 3 standards? 3 reports.\nNo unused frameworks, no missing ones.\nNothing is evaluated that wasn't selected."
+  guarantee.class: note
+}
+
+s1 -> s2: "selection" {style.bold: true}
+s2 -> s3: "control packs" {style.bold: true}
+s3 -> s4: "scored results" {style.bold: true}
+
+footer: "Underneath the standard-specific reports: every control is tagged to one of 5 governance pillars —\nTrust, Security, Governance, Compliance, Data Protection — so results stay comparable across industries and standards. See Section 6." {
+  near: bottom-center
+  style: {
+    stroke-width: 0
+    fill: transparent
+    font-size: 13
+    italic: true
+    font-color: "#475569"
+  }
+}

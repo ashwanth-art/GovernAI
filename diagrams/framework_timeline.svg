@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" font-family="Helvetica, Arial, sans-serif">
+  <rect width="960" height="400" fill="#ffffff"/>
+  <text x="480" y="20" text-anchor="middle" font-size="17" font-weight="bold" fill="#1e293b">EU AI Act Compliance Timeline</text>
+  <text x="480" y="38" text-anchor="middle" font-size="12" fill="#64748b">Key regulatory milestones and when each governance layer should be operational</text>
+
+  <!-- spine -->
+  <line x1="60" y1="142" x2="900" y2="142" stroke="#cbd5e1" stroke-width="3.5"/>
+
+  <!-- Aug 2024 -->
+  <circle cx="90" cy="142" r="9" fill="#94A3B8"/>
+  <text x="90" y="115" text-anchor="middle" font-size="11" font-weight="bold" fill="#64748b">Aug 2024</text>
+  <text x="90" y="168" text-anchor="middle" font-size="10.5" fill="#94a3b8">Entered</text>
+  <text x="90" y="180" text-anchor="middle" font-size="10.5" fill="#94a3b8">into force</text>
+
+  <!-- Feb 2025 -->
+  <circle cx="260" cy="142" r="14" fill="#B91C1C"/>
+  <text x="260" y="110" text-anchor="middle" font-size="13" font-weight="bold" fill="#B91C1C">Feb 2025</text>
+  <text x="260" y="172" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Prohibited AI banned</text>
+  <text x="260" y="186" text-anchor="middle" font-size="10.5" fill="#64748b">Social scoring, emotion</text>
+  <text x="260" y="198" text-anchor="middle" font-size="10.5" fill="#64748b">recognition at work</text>
+
+  <!-- Aug 2025 -->
+  <circle cx="440" cy="142" r="14" fill="#6D28D9"/>
+  <text x="440" y="110" text-anchor="middle" font-size="13" font-weight="bold" fill="#6D28D9">Aug 2025</text>
+  <text x="440" y="172" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">GPAI model rules</text>
+  <text x="440" y="186" text-anchor="middle" font-size="10.5" fill="#64748b">Foundation model providers</text>
+  <text x="440" y="198" text-anchor="middle" font-size="10.5" fill="#64748b">must document + eval</text>
+
+  <!-- Aug 2026 -->
+  <circle cx="660" cy="142" r="20" fill="#B45309"/>
+  <text x="660" y="100" text-anchor="middle" font-size="14" font-weight="bold" fill="#B45309">Aug 2, 2026</text>
+  <text x="660" y="180" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">HIGH-RISK obligations</text>
+  <text x="660" y="194" text-anchor="middle" font-size="10.5" fill="#64748b">Risk management, human</text>
+  <text x="660" y="206" text-anchor="middle" font-size="10.5" fill="#64748b">oversight, logging</text>
+
+  <!-- 2027 -->
+  <circle cx="850" cy="142" r="16" fill="#047857"/>
+  <text x="850" y="108" text-anchor="middle" font-size="13" font-weight="bold" fill="#047857">2027</text>
+  <text x="850" y="174" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Full enforcement</text>
+  <text x="850" y="188" text-anchor="middle" font-size="10.5" fill="#64748b">All EU AI Act + DPDPA</text>
+  <text x="850" y="200" text-anchor="middle" font-size="10.5" fill="#64748b">fully active</text>
+
+  <!-- Tool readiness bars -->
+  <text x="60" y="250" font-size="11.5" font-weight="bold" fill="#2563EB">Layer 1 (Governance platforms)</text>
+  <rect x="60" y="257" width="600" height="11" rx="5" fill="#2563EB" opacity="0.7"/>
+  <text x="668" y="266" font-size="10.5" fill="#2563EB">Deploy now</text>
+
+  <text x="60" y="290" font-size="11.5" font-weight="bold" fill="#6D28D9">Layer 2 (Policy-as-code)</text>
+  <rect x="260" y="297" width="400" height="11" rx="5" fill="#6D28D9" opacity="0.7"/>
+  <text x="668" y="306" font-size="10.5" fill="#6D28D9">Ready by Aug 2026</text>
+
+  <text x="60" y="330" font-size="11.5" font-weight="bold" fill="#B91C1C">Layer 3 (Runtime guardrails)</text>
+  <rect x="440" y="337" width="220" height="11" rx="5" fill="#B91C1C" opacity="0.7"/>
+  <text x="668" y="346" font-size="10.5" fill="#B91C1C">Before high-risk go-live</text>
+
+  <text x="60" y="370" font-size="11.5" font-weight="bold" fill="#B45309">Layer 4 (Continuous eval)</text>
+  <rect x="660" y="377" width="200" height="11" rx="5" fill="#B45309" opacity="0.7"/>
+  <text x="868" y="386" font-size="10.5" fill="#B45309">Ongoing</text>
+</svg>

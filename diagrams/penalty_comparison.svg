@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="Helvetica, Arial, sans-serif">
+  <rect width="960" height="470" fill="#ffffff"/>
+  <text x="480" y="22" text-anchor="middle" font-size="18" font-weight="bold" fill="#1e293b">Regulatory Penalty Comparison (Log Scale)</text>
+  <text x="480" y="40" text-anchor="middle" font-size="12" fill="#64748b">Enforcement figures span four orders of magnitude</text>
+
+  <line x1="240" y1="55" x2="240" y2="370" stroke="#e2e8f0" stroke-width="1.5"/>
+  <line x1="240" y1="370" x2="900" y2="370" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="240" y="386" font-size="10" fill="#94a3b8">&#x20AC;100k</text>
+  <line x1="405" y1="55" x2="405" y2="370" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="405" y="386" font-size="10" fill="#94a3b8">&#x20AC;1m</text>
+  <line x1="570" y1="55" x2="570" y2="370" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="570" y="386" font-size="10" fill="#94a3b8">&#x20AC;10m</text>
+  <line x1="735" y1="55" x2="735" y2="370" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="735" y="386" font-size="10" fill="#94a3b8">&#x20AC;100m</text>
+  <text x="880" y="386" font-size="10" fill="#94a3b8">&#x20AC;1bn+</text>
+
+  <!-- Berlin bank -->
+  <text x="225" y="82" text-anchor="end" font-size="13" fill="#334155">Berlin bank</text>
+  <text x="225" y="96" text-anchor="end" font-size="10.5" fill="#94a3b8">Art. 22 automated decision</text>
+  <rect x="240" y="70" width="79" height="36" rx="6" fill="#94A3B8"/>
+  <text x="328" y="93" font-size="14" font-weight="bold" fill="#334155">&#x20AC;300k</text>
+
+  <!-- OpenAI -->
+  <text x="225" y="142" text-anchor="end" font-size="13" fill="#334155">OpenAI (Italy)</text>
+  <text x="225" y="156" text-anchor="end" font-size="10.5" fill="#94a3b8">Training data transparency</text>
+  <rect x="240" y="130" width="359" height="36" rx="6" fill="#B45309"/>
+  <text x="608" y="153" font-size="14" font-weight="bold" fill="#B45309">&#x20AC;15m</text>
+
+  <!-- DPDPA -->
+  <text x="225" y="202" text-anchor="end" font-size="13" fill="#334155">DPDPA maximum</text>
+  <text x="225" y="216" text-anchor="end" font-size="10.5" fill="#94a3b8">&#x20AC;250cr security failure</text>
+  <rect x="240" y="190" width="403" height="36" rx="6" fill="#6D28D9"/>
+  <text x="652" y="213" font-size="14" font-weight="bold" fill="#6D28D9">&#x2248;&#x20AC;28m</text>
+
+  <!-- Clearview -->
+  <text x="225" y="262" text-anchor="end" font-size="13" fill="#334155">Clearview AI</text>
+  <text x="225" y="276" text-anchor="end" font-size="10.5" fill="#94a3b8">Cumulative, 5 regulators</text>
+  <rect x="240" y="250" width="495" height="36" rx="6" fill="#B91C1C"/>
+  <text x="744" y="273" font-size="14" font-weight="bold" fill="#B91C1C">&#x2248;&#x20AC;100m</text>
+
+  <!-- GDPR max -->
+  <text x="225" y="322" text-anchor="end" font-size="13" fill="#334155">GDPR max</text>
+  <text x="225" y="336" text-anchor="end" font-size="10.5" fill="#94a3b8">4% global turnover</text>
+  <rect x="240" y="310" width="630" height="36" rx="6" fill="#2563EB"/>
+  <text x="880" y="333" font-size="14" font-weight="bold" fill="#2563EB">uncapped</text>
+
+  <!-- callout -->
+  <rect x="240" y="415" width="480" height="34" rx="17" fill="#FEF2F2" stroke="#B91C1C" stroke-width="1.5"/>
+  <text x="480" y="437" text-anchor="middle" font-size="12.5" fill="#B91C1C">Every fine was for a governance basic &#x2014; not for using AI itself</text>
+</svg>

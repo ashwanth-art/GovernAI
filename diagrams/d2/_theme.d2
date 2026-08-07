@@ -1,0 +1,91 @@
+# Shared styling for all AI Governance diagrams.
+# Palette matches the hand-authored SVGs in ../ so old and new diagrams
+# can sit in the same document without clashing.
+
+classes: {
+  # ---- structural ----
+  step: {
+    style: {
+      font-size: 16
+      fill: "#EFF6FF"
+      stroke: "#2563EB"
+      stroke-width: 2
+      font-color: "#1e293b"
+      bold: true
+    }
+  }
+  panel: {
+    style: {
+      fill: "#F8FAFC"
+      stroke: "#94a3b8"
+      stroke-width: 2
+      font-color: "#1e293b"
+      bold: true
+    }
+  }
+  item: {
+    style: {
+      fill: "#ffffff"
+      stroke: "#cbd5e1"
+      font-size: 13
+      font-color: "#334155"
+      bold: false
+    }
+  }
+  engine: {
+    style: {
+      font-size: 14
+      fill: "#F5F3FF"
+      stroke: "#7c3aed"
+      stroke-width: 2
+      font-color: "#1e293b"
+      bold: true
+    }
+  }
+  report: {
+    style: {
+      fill: "#ECFDF5"
+      stroke: "#059669"
+      stroke-width: 2
+      font-color: "#064e3b"
+      bold: true
+    }
+  }
+  note: {
+    style: {
+      fill: "#FFFBEB"
+      stroke: "#f59e0b"
+      font-size: 12
+      font-color: "#78350f"
+      italic: true
+      bold: false
+    }
+  }
+  owasp: {
+    style: {
+      fill: "#FEF2F2"
+      stroke: "#dc2626"
+      stroke-width: 2
+      font-color: "#7f1d1d"
+      font-size: 12
+    }
+  }
+
+  # ---- the 5 governance pillars ----
+  trust:    { style: { fill: "#7c3aed"; stroke: "#5b21b6"; font-color: "#ffffff"; font-size: 11; bold: true } }
+  security: { style: { fill: "#dc2626"; stroke: "#991b1b"; font-color: "#ffffff"; font-size: 11; bold: true } }
+  gov:      { style: { fill: "#2563eb"; stroke: "#1e40af"; font-color: "#ffffff"; font-size: 11; bold: true } }
+  comp:     { style: { fill: "#059669"; stroke: "#065f46"; font-color: "#ffffff"; font-size: 11; bold: true } }
+  dataprot: { style: { fill: "#0891b2"; stroke: "#155e75"; font-color: "#ffffff"; font-size: 11; bold: true } }
+
+  # ---- the 7 trustworthy-AI characteristics (foundation layer) ----
+  charac: {
+    style: {
+      fill: "#E2E8F0"
+      stroke: "#475569"
+      font-color: "#1e293b"
+      font-size: 12
+      bold: false
+    }
+  }
+}

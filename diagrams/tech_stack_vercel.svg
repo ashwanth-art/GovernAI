@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 480" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1100" height="480" fill="#ffffff"/>
+  <text x="550" y="24" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">Tech Stack  Local Development + Vercel Deployment</text>
+  <text x="550" y="44" text-anchor="middle" font-size="11" fill="#64748b">Everything runs locally for development, deploys to Vercel for production</text>
+
+  <!-- Frontend Layer -->
+  <rect x="30" y="65" width="1040" height="105" rx="12" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <rect x="46" y="53" width="200" height="26" rx="6" fill="#BFDBFE"/>
+  <text x="146" y="71" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e40af">Frontend (Vercel)</text>
+
+  <rect x="50" y="85" width="150" height="60" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="125" y="112" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Next.js 14</text>
+  <text x="125" y="130" text-anchor="middle" font-size="10" fill="#64748b">App Router + SSR</text>
+
+  <rect x="220" y="85" width="150" height="60" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="295" y="112" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">TypeScript</text>
+  <text x="295" y="130" text-anchor="middle" font-size="10" fill="#64748b">Type-safe end to end</text>
+
+  <rect x="390" y="85" width="150" height="60" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="465" y="112" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Tailwind + shadcn</text>
+  <text x="465" y="130" text-anchor="middle" font-size="10" fill="#64748b">UI components</text>
+
+  <rect x="560" y="85" width="150" height="60" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="635" y="112" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Recharts</text>
+  <text x="635" y="130" text-anchor="middle" font-size="10" fill="#64748b">Score visualizations</text>
+
+  <rect x="730" y="85" width="150" height="60" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="805" y="112" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">SSE Client</text>
+  <text x="805" y="130" text-anchor="middle" font-size="10" fill="#64748b">Real-time progress</text>
+
+  <rect x="900" y="85" width="150" height="60" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="975" y="112" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Zustand</text>
+  <text x="975" y="130" text-anchor="middle" font-size="10" fill="#64748b">State management</text>
+
+  <!-- Backend Layer -->
+  <rect x="30" y="195" width="1040" height="105" rx="12" fill="#F5F3FF" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="46" y="183" width="310" height="26" rx="6" fill="#EDE9FE"/>
+  <text x="201" y="201" text-anchor="middle" font-size="13" font-weight="bold" fill="#6d28d9">Backend API (Vercel Serverless / Railway)</text>
+
+  <rect x="50" y="215" width="150" height="60" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.5"/>
+  <text x="125" y="242" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">FastAPI</text>
+  <text x="125" y="260" text-anchor="middle" font-size="10" fill="#64748b">REST + SSE streaming</text>
+
+  <rect x="220" y="215" width="150" height="60" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.5"/>
+  <text x="295" y="242" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">LangGraph</text>
+  <text x="295" y="260" text-anchor="middle" font-size="10" fill="#64748b">Agent orchestration</text>
+
+  <rect x="390" y="215" width="150" height="60" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.5"/>
+  <text x="465" y="242" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">DeepEval</text>
+  <text x="465" y="260" text-anchor="middle" font-size="10" fill="#64748b">Hallucination metrics</text>
+
+  <rect x="560" y="215" width="150" height="60" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.5"/>
+  <text x="635" y="242" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Garak</text>
+  <text x="635" y="260" text-anchor="middle" font-size="10" fill="#64748b">Security scanning</text>
+
+  <rect x="730" y="215" width="150" height="60" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.5"/>
+  <text x="805" y="242" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">checkpoint-ai</text>
+  <text x="805" y="260" text-anchor="middle" font-size="10" fill="#64748b">Compliance checks</text>
+
+  <rect x="900" y="215" width="150" height="60" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.5"/>
+  <text x="975" y="242" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">SABER</text>
+  <text x="975" y="260" text-anchor="middle" font-size="10" fill="#64748b">Risk extrapolation</text>
+
+  <!-- Data Layer -->
+  <rect x="30" y="325" width="1040" height="105" rx="12" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <rect x="46" y="313" width="220" height="26" rx="6" fill="#D1FAE5"/>
+  <text x="156" y="331" text-anchor="middle" font-size="13" font-weight="bold" fill="#047857">Data + Storage (Managed)</text>
+
+  <rect x="50" y="345" width="160" height="60" rx="8" fill="#ffffff" stroke="#6ee7b7" stroke-width="1.5"/>
+  <text x="130" y="372" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Neon PostgreSQL</text>
+  <text x="130" y="390" text-anchor="middle" font-size="10" fill="#64748b">Assessment results</text>
+
+  <rect x="230" y="345" width="160" height="60" rx="8" fill="#ffffff" stroke="#6ee7b7" stroke-width="1.5"/>
+  <text x="310" y="372" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Vercel Blob</text>
+  <text x="310" y="390" text-anchor="middle" font-size="10" fill="#64748b">Evidence artifacts</text>
+
+  <rect x="410" y="345" width="160" height="60" rx="8" fill="#ffffff" stroke="#6ee7b7" stroke-width="1.5"/>
+  <text x="490" y="372" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Upstash Redis</text>
+  <text x="490" y="390" text-anchor="middle" font-size="10" fill="#64748b">Job queue + cache</text>
+
+  <rect x="590" y="345" width="160" height="60" rx="8" fill="#ffffff" stroke="#6ee7b7" stroke-width="1.5"/>
+  <text x="670" y="372" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Vercel KV</text>
+  <text x="670" y="390" text-anchor="middle" font-size="10" fill="#64748b">Session state</text>
+
+  <rect x="770" y="345" width="160" height="60" rx="8" fill="#ffffff" stroke="#6ee7b7" stroke-width="1.5"/>
+  <text x="850" y="372" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">NextAuth.js</text>
+  <text x="850" y="390" text-anchor="middle" font-size="10" fill="#64748b">Authentication</text>
+
+  <!-- Local dev note -->
+  <rect x="30" y="445" width="1040" height="28" rx="6" fill="#0f172a"/>
+  <text x="550" y="464" text-anchor="middle" font-size="11" fill="#94a3b8">Local dev: pnpm dev (frontend :3000) + uvicorn main:app (backend :8000) � Deploy: vercel deploy (auto from git push)</text>
+</svg>

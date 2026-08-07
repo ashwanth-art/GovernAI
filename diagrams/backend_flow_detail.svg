@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="820" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="820" fill="#ffffff"/>
+  <text x="600" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">Backend Pipeline: Dynamic Standard Selection Drives Everything</text>
+  <text x="600" y="48" text-anchor="middle" font-size="11" fill="#64748b">User picks industry + standards on screen. The system evaluates only those standards and returns matching reports.</text>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- ================= STEP 1: SELECTION SCREEN MOCKUP ================= -->
+  <rect x="30" y="68" width="330" height="330" rx="12" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <rect x="30" y="68" width="330" height="28" rx="12" fill="#2563EB"/>
+  <text x="195" y="87" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">STEP 1: SELECTION SCREEN (what the user sees)</text>
+
+  <!-- Selling point ribbon -->
+  <rect x="245" y="102" width="105" height="20" rx="10" fill="#f59e0b"/>
+  <text x="297" y="116" text-anchor="middle" font-size="7.5" font-weight="bold" fill="#fff">KEY DIFFERENTIATOR</text>
+
+  <text x="45" y="118" font-size="9" font-weight="bold" fill="#1e293b">1. Select Industry</text>
+  <rect x="45" y="126" width="300" height="26" rx="6" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="58" y="143" font-size="9" fill="#475569">Healthcare</text>
+  <text x="325" y="144" font-size="11" fill="#64748b">v</text>
+
+  <text x="45" y="170" font-size="9" font-weight="bold" fill="#1e293b">2. Choose Standards to Evaluate Against</text>
+  <text x="45" y="182" font-size="7.5" fill="#7c3aed">System recommends the 2-3 most relevant for Healthcare</text>
+  <rect x="45" y="190" width="300" height="92" rx="6" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="55" y="198" width="13" height="13" rx="3" fill="#2563EB"/>
+  <text x="58" y="208" font-size="8" fill="#fff" font-weight="bold">v</text>
+  <text x="75" y="209" font-size="8.5" fill="#1e293b" font-weight="bold">HIPAA</text>
+  <text x="75" y="220" font-size="7.5" fill="#64748b">mandatory - legal requirement</text>
+  <rect x="55" y="230" width="13" height="13" rx="3" fill="#2563EB"/>
+  <text x="58" y="240" font-size="8" fill="#fff" font-weight="bold">v</text>
+  <text x="75" y="241" font-size="8.5" fill="#1e293b" font-weight="bold">ISO 42001</text>
+  <text x="75" y="252" font-size="7.5" fill="#64748b">certifiable - builds client trust</text>
+  <rect x="55" y="262" width="13" height="13" rx="3" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="75" y="272" font-size="8.5" fill="#94a3b8">NIST AI RMF (optional, best-practice)</text>
+
+  <text x="45" y="300" font-size="9" font-weight="bold" fill="#1e293b">3. Select Access Tier + Add Credentials</text>
+  <rect x="45" y="308" width="90" height="24" rx="5" fill="#fff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="90" y="324" text-anchor="middle" font-size="8" fill="#475569">Tier 1</text>
+  <rect x="141" y="308" width="90" height="24" rx="5" fill="#2563EB"/>
+  <text x="186" y="324" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold">Tier 2</text>
+  <rect x="237" y="308" width="90" height="24" rx="5" fill="#fff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="282" y="324" text-anchor="middle" font-size="8" fill="#475569">Tier 3</text>
+  <text x="45" y="350" font-size="7.5" fill="#64748b">API endpoint + key, cloud config access, monitoring API</text>
+
+  <rect x="45" y="362" width="300" height="26" rx="6" fill="#059669"/>
+  <text x="195" y="379" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">Start Assessment -&gt;</text>
+
+  <line x1="360" y1="233" x2="392" y2="233" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ================= STEP 2: VALIDATE + LOAD ================= -->
+  <rect x="398" y="150" width="185" height="165" rx="12" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <rect x="398" y="150" width="185" height="28" rx="12" fill="#059669"/>
+  <text x="490" y="169" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#fff">STEP 2: VALIDATE + LOAD</text>
+  <text x="412" y="196" font-size="8.5" fill="#1e293b">Validate endpoint + creds</text>
+  <text x="412" y="212" font-size="8.5" fill="#1e293b">Confirm RAG behavior</text>
+  <text x="412" y="228" font-size="8.5" fill="#1e293b">Discover architecture</text>
+  <text x="412" y="248" font-size="8.5" fill="#1e293b" font-weight="bold">Load control packs for:</text>
+  <text x="422" y="264" font-size="8" fill="#dc2626">HIPAA -&gt; 12 controls</text>
+  <text x="422" y="278" font-size="8" fill="#7c3aed">ISO 42001 -&gt; 38 controls</text>
+  <text x="412" y="298" font-size="7.5" fill="#64748b">(only the standards picked in Step 1</text>
+  <text x="412" y="310" font-size="7.5" fill="#64748b">are loaded - nothing else runs)</text>
+
+  <line x1="583" y1="233" x2="615" y2="233" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ================= STEP 3: EVALUATE PER STANDARD ================= -->
+  <rect x="620" y="110" width="330" height="245" rx="12" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
+  <rect x="620" y="110" width="330" height="28" rx="12" fill="#475569"/>
+  <text x="785" y="129" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#fff">STEP 3: EVALUATE (one engine per picked standard)</text>
+
+  <rect x="635" y="147" width="145" height="190" rx="8" fill="#FEF2F2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="707" y="165" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#dc2626">HIPAA Engine</text>
+  <text x="645" y="182" font-size="7.5" fill="#1e293b">Test 12 controls:</text>
+  <text x="645" y="196" font-size="7.5" fill="#64748b">- PHI protection</text>
+  <text x="645" y="209" font-size="7.5" fill="#64748b">- BAA verification</text>
+  <text x="645" y="222" font-size="7.5" fill="#64748b">- Audit trails</text>
+  <text x="645" y="235" font-size="7.5" fill="#64748b">- Breach readiness</text>
+  <rect x="645" y="246" width="35" height="14" rx="3" fill="#2563eb"/><text x="662" y="256" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">TRUST</text>
+  <rect x="683" y="246" width="45" height="14" rx="3" fill="#dc2626"/><text x="705" y="256" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">SECURITY</text>
+  <rect x="645" y="263" width="70" height="14" rx="3" fill="#059669"/><text x="680" y="273" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">DATA PROTECTION</text>
+  <text x="645" y="300" font-size="7" fill="#64748b">Every control is tagged to a</text>
+  <text x="645" y="312" font-size="7" fill="#64748b">governance pillar (see Section 6)</text>
+  <text x="645" y="326" font-size="8" fill="#dc2626" font-weight="bold">Output: HIPAA report</text>
+
+  <rect x="790" y="147" width="145" height="190" rx="8" fill="#F5F3FF" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="862" y="165" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#7c3aed">ISO 42001 Engine</text>
+  <text x="800" y="182" font-size="7.5" fill="#1e293b">Test 38 controls:</text>
+  <text x="800" y="196" font-size="7.5" fill="#64748b">- AI lifecycle mgmt</text>
+  <text x="800" y="209" font-size="7.5" fill="#64748b">- Bias + fairness</text>
+  <text x="800" y="222" font-size="7.5" fill="#64748b">- Human oversight</text>
+  <text x="800" y="235" font-size="7.5" fill="#64748b">- Data governance</text>
+  <rect x="800" y="246" width="80" height="14" rx="3" fill="#7c3aed"/><text x="840" y="256" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">GOVERNANCE</text>
+  <rect x="800" y="263" width="35" height="14" rx="3" fill="#2563eb"/><text x="817" y="273" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">TRUST</text>
+  <rect x="838" y="263" width="80" height="14" rx="3" fill="#d97706"/><text x="878" y="273" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">COMPLIANCE</text>
+  <text x="800" y="300" font-size="7" fill="#64748b">Every control is tagged to a</text>
+  <text x="800" y="312" font-size="7" fill="#64748b">governance pillar (see Section 6)</text>
+  <text x="800" y="326" font-size="8" fill="#7c3aed" font-weight="bold">Output: ISO report</text>
+
+  <line x1="950" y1="233" x2="982" y2="233" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ================= STEP 4: REPORTS MATCH SELECTION ================= -->
+  <rect x="988" y="90" width="182" height="285" rx="12" fill="#FEF3C7" stroke="#d97706" stroke-width="2"/>
+  <rect x="988" y="90" width="182" height="28" rx="12" fill="#d97706"/>
+  <text x="1079" y="109" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#fff">STEP 4: REPORTS</text>
+  <text x="1000" y="136" font-size="8" fill="#1e293b" font-weight="bold">Exactly matches Step 1 picks:</text>
+  <rect x="1000" y="146" width="160" height="24" rx="5" fill="#FEF2F2" stroke="#dc2626" stroke-width="1"/>
+  <text x="1080" y="162" text-anchor="middle" font-size="7.5" fill="#dc2626" font-weight="bold">HIPAA Compliance Report</text>
+  <rect x="1000" y="176" width="160" height="24" rx="5" fill="#F5F3FF" stroke="#7c3aed" stroke-width="1"/>
+  <text x="1080" y="192" text-anchor="middle" font-size="7.5" fill="#7c3aed" font-weight="bold">ISO 42001 Evidence Pack</text>
+  <text x="1000" y="218" font-size="8" fill="#1e293b" font-weight="bold">Plus, always included:</text>
+  <rect x="1000" y="226" width="160" height="24" rx="5" fill="#FFF7ED" stroke="#ea580c" stroke-width="1"/>
+  <text x="1080" y="242" text-anchor="middle" font-size="7.5" fill="#ea580c" font-weight="bold">Cross-Standard Insights</text>
+  <rect x="1000" y="256" width="160" height="24" rx="5" fill="#EFF6FF" stroke="#2563eb" stroke-width="1"/>
+  <text x="1080" y="272" text-anchor="middle" font-size="7.5" fill="#2563eb" font-weight="bold">5-Pillar Radar Summary</text>
+  <text x="1000" y="298" font-size="7" fill="#64748b">If the user had picked 3 standards,</text>
+  <text x="1000" y="310" font-size="7" fill="#64748b">3 reports would be generated -</text>
+  <text x="1000" y="322" font-size="7" fill="#64748b">no unused frameworks, no missing ones.</text>
+  <text x="1000" y="344" font-size="7.5" fill="#d97706" font-weight="bold">Nothing is evaluated that</text>
+  <text x="1000" y="356" font-size="7.5" fill="#d97706" font-weight="bold">wasn't selected in Step 1.</text>
+
+  <!-- ============ WHY DYNAMIC SELECTION IS THE DIFFERENTIATOR ============ -->
+  <rect x="30" y="415" width="1140" height="230" rx="14" fill="#0f172a"/>
+  <text x="600" y="445" text-anchor="middle" font-size="14" font-weight="bold" fill="#fbbf24">Why Dynamic Standard Selection Is the Selling Point</text>
+
+  <rect x="55" y="465" width="345" height="155" rx="10" fill="#1e293b"/>
+  <text x="75" y="490" font-size="10" font-weight="bold" fill="#6ee7b7">1. Relevance over volume</text>
+  <text x="75" y="510" font-size="8.5" fill="#cbd5e1">No generic 34-control checklist for every</text>
+  <text x="75" y="524" font-size="8.5" fill="#cbd5e1">client. A healthcare client is tested against</text>
+  <text x="75" y="538" font-size="8.5" fill="#cbd5e1">HIPAA, not against manufacturing safety</text>
+  <text x="75" y="552" font-size="8.5" fill="#cbd5e1">rules that will never apply to them.</text>
+
+  <rect x="425" y="465" width="345" height="155" rx="10" fill="#1e293b"/>
+  <text x="445" y="490" font-size="10" font-weight="bold" fill="#93c5fd">2. Audit-ready output</text>
+  <text x="445" y="510" font-size="8.5" fill="#cbd5e1">Each report is generated in the exact</text>
+  <text x="445" y="524" font-size="8.5" fill="#cbd5e1">structure an auditor or regulator expects -</text>
+  <text x="445" y="538" font-size="8.5" fill="#cbd5e1">HIPAA safeguards, ISO Annex A, NIST</text>
+  <text x="445" y="552" font-size="8.5" fill="#cbd5e1">functions - not a generic scorecard.</text>
+
+  <rect x="795" y="465" width="345" height="155" rx="10" fill="#1e293b"/>
+  <text x="815" y="490" font-size="10" font-weight="bold" fill="#f9a8d4">3. Extensible without re-engineering</text>
+  <text x="815" y="510" font-size="8.5" fill="#cbd5e1">New regulation passes? Add one YAML</text>
+  <text x="815" y="524" font-size="8.5" fill="#cbd5e1">control pack and it appears as a selectable</text>
+  <text x="815" y="538" font-size="8.5" fill="#cbd5e1">standard immediately - the evaluation</text>
+  <text x="815" y="552" font-size="8.5" fill="#cbd5e1">engine itself never changes.</text>
+
+  <text x="600" y="600" text-anchor="middle" font-size="9.5" fill="#94a3b8">Combine one mandatory (legal) and one certifiable (client-trust) standard to cover both legal risk and business credibility</text>
+  <text x="600" y="618" text-anchor="middle" font-size="9.5" fill="#94a3b8">while every control still rolls up into the same five governance pillars for cross-standard, cross-industry comparability.</text>
+
+  <!-- ============ FOOTER: PILLAR TAGGING NOTE ============ -->
+  <rect x="30" y="660" width="1140" height="60" rx="8" fill="#ffffff" stroke="#2563EB" stroke-width="1.5"/>
+  <text x="50" y="682" font-size="10" font-weight="bold" fill="#2563EB">Underneath the standard-specific reports: every control is tagged to one of 5 governance pillars</text>
+  <text x="50" y="700" font-size="9" fill="#64748b">Trust, Security, Governance, Compliance, Data Protection - so results stay comparable across industries and standards. See Section 6.</text>
+
+  <!-- ============ OWASP NOTE ============ -->
+  <rect x="30" y="735" width="1140" height="70" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="45" y="758" font-size="10" font-weight="bold" fill="#dc2626">OWASP LLM Top 10 security probes run alongside every assessment, regardless of standards picked</text>
+  <text x="45" y="778" font-size="9" fill="#64748b">Prompt injection, data leakage, RAG poisoning, and other technical vulnerabilities are tested unconditionally</text>
+  <text x="45" y="793" font-size="9" fill="#64748b">because no paper standard substitutes for real adversarial testing. Findings attach to whichever selected standard's controls they affect.</text>
+</svg>

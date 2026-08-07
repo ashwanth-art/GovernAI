@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-07-28T00:00:00.000Z",
+  "procedures": {
+    "document-security-risk-analysis": {
+      "status": "pass",
+      "summary": "The system-specific ePHI risk analysis is approved and current.",
+      "confidence": 0.95,
+      "artifactRef": "risk-analysis-2026"
+    },
+    "artifact-threat-model": {
+      "status": "pass",
+      "summary": "The threat model covers the RAG pipeline, model provider, vector store, and PHI trust boundaries.",
+      "confidence": 0.9,
+      "artifactRef": "threat-model-v4"
+    },
+    "document-risk-register": {
+      "status": "partial",
+      "summary": "The risk register exists, but two treatment dates are overdue.",
+      "confidence": 0.9,
+      "artifactRef": "ai-risk-register"
+    },
+    "artifact-rag-corpus-manifest": {
+      "status": "pass",
+      "summary": "Corpus sources, authorization, versions, checksums, and ingestion approvals are recorded.",
+      "confidence": 0.9,
+      "artifactRef": "corpus-manifest-2026-07"
+    }
+  }
+}

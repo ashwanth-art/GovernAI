@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="700" fill="#ffffff"/>
+  <text x="600" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">Frontend - Input and Output Panels</text>
+  <text x="600" y="48" text-anchor="middle" font-size="11" fill="#64748b">User selects industry + standards + tier. Frontend shows real-time progress and per-standard reports.</text>
+
+  <!-- ===== LEFT: INPUT PANEL ===== -->
+  <rect x="30" y="65" width="360" height="610" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="30" y="65" width="360" height="35" rx="14" fill="#2563EB"/>
+  <text x="210" y="88" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">INPUT: Assessment Configuration</text>
+
+  <!-- Industry Selector -->
+  <text x="50" y="125" font-size="10" font-weight="bold" fill="#1e293b">1. Select Your Industry</text>
+  <rect x="50" y="135" width="320" height="30" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="65" y="155" font-size="9" fill="#475569">Healthcare</text>
+  <text x="340" y="155" font-size="12" fill="#64748b">v</text>
+
+  <!-- Standards Selector -->
+  <text x="50" y="190" font-size="10" font-weight="bold" fill="#1e293b">2. Select Standards to Evaluate (1-3)</text>
+  <rect x="220" y="177" width="150" height="16" rx="8" fill="#f59e0b"/>
+  <text x="295" y="189" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff">DYNAMIC PER INDUSTRY</text>
+  <text x="50" y="205" font-size="8" fill="#64748b">Most popular for your industry pre-selected</text>
+  <rect x="50" y="215" width="320" height="100" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="60" y="225" width="14" height="14" rx="3" fill="#2563EB" stroke="#2563EB" stroke-width="1.5"/>
+  <text x="64" y="236" font-size="9" fill="#fff" font-weight="bold">v</text>
+  <text x="82" y="236" font-size="9" fill="#1e293b">HIPAA (mandatory for covered entities)</text>
+  <rect x="60" y="248" width="14" height="14" rx="3" fill="#2563EB" stroke="#2563EB" stroke-width="1.5"/>
+  <text x="64" y="259" font-size="9" fill="#fff" font-weight="bold">v</text>
+  <text x="82" y="259" font-size="9" fill="#1e293b">ISO 42001 (certifiable AI management)</text>
+  <rect x="60" y="271" width="14" height="14" rx="3" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="82" y="282" font-size="9" fill="#64748b">NIST AI RMF (US federal guidance)</text>
+  <text x="60" y="305" font-size="8" fill="#7c3aed">Why these? Click "i" for details on each standard</text>
+
+  <!-- Tier Selector -->
+  <text x="50" y="340" font-size="10" font-weight="bold" fill="#1e293b">3. Select Access Tier</text>
+  <rect x="50" y="350" width="100" height="32" rx="6" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.5"/>
+  <text x="100" y="370" text-anchor="middle" font-size="9" fill="#2563EB" font-weight="bold">Tier 1</text>
+  <rect x="160" y="350" width="100" height="32" rx="6" fill="#2563EB" stroke="#2563EB" stroke-width="1.5"/>
+  <text x="210" y="370" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">Tier 2</text>
+  <rect x="270" y="350" width="100" height="32" rx="6" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.5"/>
+  <text x="320" y="370" text-anchor="middle" font-size="9" fill="#2563EB" font-weight="bold">Tier 3</text>
+  <text x="50" y="400" font-size="8" fill="#64748b">Tier 2 selected: API + Infrastructure connectors</text>
+  <text x="50" y="415" font-size="8" fill="#64748b">Covers ~82% of HIPAA + ~85% of ISO 42001 controls</text>
+
+  <!-- Credentials -->
+  <text x="50" y="440" font-size="10" font-weight="bold" fill="#1e293b">4. Provide Credentials</text>
+  <rect x="50" y="450" width="320" height="25" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="60" y="467" font-size="8" fill="#94a3b8">Chatbot API Endpoint: https://api.example.com/chat</text>
+  <rect x="50" y="480" width="320" height="25" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="60" y="497" font-size="8" fill="#94a3b8">API Key: sk-xxx...xxx</text>
+  <rect x="50" y="510" width="320" height="25" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="60" y="527" font-size="8" fill="#94a3b8">Cloud Provider: [AWS v]  Account ID: 1234567890</text>
+  <rect x="50" y="540" width="320" height="25" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="60" y="557" font-size="8" fill="#94a3b8">Monitoring: [Datadog v]  API Key: dd-xxx...xxx</text>
+
+  <!-- Start Button -->
+  <rect x="50" y="580" width="320" height="35" rx="8" fill="#059669"/>
+  <text x="210" y="602" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">Start Assessment</text>
+
+  <!-- Pillar legend -->
+  <text x="50" y="635" font-size="8" font-weight="bold" fill="#1e293b">Results always roll up to 5 governance pillars:</text>
+  <rect x="50" y="643" width="45" height="14" rx="3" fill="#2563eb"/><text x="72" y="653" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">TRUST</text>
+  <rect x="100" y="643" width="60" height="14" rx="3" fill="#dc2626"/><text x="130" y="653" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">SECURITY</text>
+  <rect x="165" y="643" width="75" height="14" rx="3" fill="#7c3aed"/><text x="202" y="653" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">GOVERNANCE</text>
+  <rect x="245" y="643" width="70" height="14" rx="3" fill="#d97706"/><text x="280" y="653" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold">COMPLIANCE</text>
+  <rect x="320" y="643" width="50" height="14" rx="3" fill="#059669"/><text x="345" y="653" text-anchor="middle" font-size="5.5" fill="#fff" font-weight="bold">DATA PROT.</text>
+
+  <!-- ===== RIGHT: OUTPUT PANEL ===== -->
+  <rect x="420" y="65" width="750" height="610" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="420" y="65" width="750" height="35" rx="14" fill="#059669"/>
+  <text x="795" y="88" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">OUTPUT: Live Progress + Per-Standard Reports</text>
+
+  <!-- Tab Bar -->
+  <rect x="435" y="110" width="120" height="28" rx="6" fill="#2563EB"/>
+  <text x="495" y="128" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">Live Progress</text>
+  <rect x="560" y="110" width="120" height="28" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="620" y="128" text-anchor="middle" font-size="9" fill="#475569">HIPAA Report</text>
+  <rect x="685" y="110" width="130" height="28" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="750" y="128" text-anchor="middle" font-size="9" fill="#475569">ISO 42001 Report</text>
+  <rect x="820" y="110" width="120" height="28" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="880" y="128" text-anchor="middle" font-size="9" fill="#475569">Cross Insights</text>
+  <rect x="945" y="110" width="100" height="28" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="995" y="128" text-anchor="middle" font-size="9" fill="#475569">Download</text>
+
+  <!-- Live Progress Tab Content -->
+  <rect x="435" y="148" width="720" height="515" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Progress bars -->
+  <text x="455" y="175" font-size="10" font-weight="bold" fill="#1e293b">Overall Progress</text>
+  <rect x="455" y="182" width="680" height="8" rx="4" fill="#e2e8f0"/>
+  <rect x="455" y="182" width="462" height="8" rx="4" fill="#2563EB"/>
+  <text x="1100" y="190" font-size="8" fill="#64748b">68%</text>
+
+  <!-- Standard 1 Progress -->
+  <text x="455" y="215" font-size="9" font-weight="bold" fill="#dc2626">HIPAA Evaluation</text>
+  <rect x="455" y="222" width="680" height="6" rx="3" fill="#e2e8f0"/>
+  <rect x="455" y="222" width="612" height="6" rx="3" fill="#dc2626"/>
+  <text x="1100" y="228" font-size="8" fill="#64748b">90%</text>
+
+  <!-- Standard 2 Progress -->
+  <text x="455" y="248" font-size="9" font-weight="bold" fill="#7c3aed">ISO 42001 Evaluation</text>
+  <rect x="455" y="255" width="680" height="6" rx="3" fill="#e2e8f0"/>
+  <rect x="455" y="255" width="306" height="6" rx="3" fill="#7c3aed"/>
+  <text x="1100" y="261" font-size="8" fill="#64748b">45%</text>
+
+  <!-- Live Log -->
+  <text x="455" y="290" font-size="10" font-weight="bold" fill="#1e293b">Live Evaluation Stream</text>
+  <rect x="455" y="298" width="680" height="175" rx="6" fill="#0f172a"/>
+  <text x="465" y="318" font-size="8" fill="#6ee7b7">[14:32:01] HIPAA | A.308(a)(1) Risk Analysis ... PASS (0.85)</text>
+  <text x="465" y="335" font-size="8" fill="#6ee7b7">[14:32:04] HIPAA | A.312(a)(1) Access Control ... PASS (0.92)</text>
+  <text x="465" y="352" font-size="8" fill="#fca5a5">[14:32:08] HIPAA | A.312(a)(2)(iv) Encryption ... FAIL (0.20)</text>
+  <text x="465" y="369" font-size="8" fill="#6ee7b7">[14:32:12] HIPAA | A.312(b) Audit Controls ... PASS (0.78)</text>
+  <text x="465" y="386" font-size="8" fill="#fde68a">[14:32:15] ISO  | A.2.2 AI Policy ... PARTIAL (0.60)</text>
+  <text x="465" y="403" font-size="8" fill="#6ee7b7">[14:32:18] ISO  | A.4.3 Risk Assessment ... PASS (0.88)</text>
+  <text x="465" y="420" font-size="8" fill="#fca5a5">[14:32:22] ISO  | A.6.2.7 Data Security ... FAIL (0.15)</text>
+  <text x="465" y="437" font-size="8" fill="#fde68a">[14:32:26] OWASP | LLM01 Prompt Injection ... 3 vulns found</text>
+  <text x="465" y="454" font-size="8" fill="#93c5fd">[14:32:30] Running ISO | A.8.4 Monitoring check...</text>
+  <text x="465" y="468" font-size="8" fill="#475569">|</text>
+
+  <!-- Summary cards -->
+  <text x="455" y="500" font-size="10" font-weight="bold" fill="#1e293b">Running Scores</text>
+  <rect x="455" y="508" width="160" height="65" rx="6" fill="#FEF2F2" stroke="#dc2626" stroke-width="1"/>
+  <text x="535" y="524" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="bold">HIPAA</text>
+  <text x="535" y="545" text-anchor="middle" font-size="18" fill="#dc2626" font-weight="bold">78%</text>
+  <text x="535" y="558" text-anchor="middle" font-size="7" fill="#64748b">10/12 controls tested</text>
+  <rect x="475" y="562" width="120" height="9" rx="2" fill="#7c3aed" opacity="0.85"/><text x="535" y="569" text-anchor="middle" font-size="5.5" fill="#fff" font-weight="bold">SEC · GOV · DATA</text>
+
+  <rect x="625" y="508" width="160" height="65" rx="6" fill="#F5F3FF" stroke="#7c3aed" stroke-width="1"/>
+  <text x="705" y="524" text-anchor="middle" font-size="9" fill="#7c3aed" font-weight="bold">ISO 42001</text>
+  <text x="705" y="545" text-anchor="middle" font-size="18" fill="#7c3aed" font-weight="bold">72%</text>
+  <text x="705" y="558" text-anchor="middle" font-size="7" fill="#64748b">15/32 controls tested</text>
+  <rect x="645" y="562" width="120" height="9" rx="2" fill="#2563eb" opacity="0.85"/><text x="705" y="569" text-anchor="middle" font-size="5.5" fill="#fff" font-weight="bold">TRUST · GOV · SEC</text>
+
+  <rect x="795" y="508" width="160" height="65" rx="6" fill="#FFF7ED" stroke="#ea580c" stroke-width="1"/>
+  <text x="875" y="524" text-anchor="middle" font-size="9" fill="#ea580c" font-weight="bold">OWASP Security</text>
+  <text x="875" y="545" text-anchor="middle" font-size="18" fill="#ea580c" font-weight="bold">3</text>
+  <text x="875" y="558" text-anchor="middle" font-size="7" fill="#64748b">vulnerabilities found</text>
+  <rect x="815" y="562" width="120" height="9" rx="2" fill="#dc2626" opacity="0.85"/><text x="875" y="569" text-anchor="middle" font-size="5.5" fill="#fff" font-weight="bold">SECURITY</text>
+
+  <rect x="965" y="508" width="160" height="65" rx="6" fill="#FEF3C7" stroke="#d97706" stroke-width="1"/>
+  <text x="1045" y="524" text-anchor="middle" font-size="9" fill="#d97706" font-weight="bold">Shared Gaps</text>
+  <text x="1045" y="545" text-anchor="middle" font-size="18" fill="#d97706" font-weight="bold">2</text>
+  <text x="1045" y="558" text-anchor="middle" font-size="7" fill="#64748b">fix once, satisfy both</text>
+  <rect x="985" y="562" width="120" height="9" rx="2" fill="#d97706" opacity="0.85"/><text x="1045" y="569" text-anchor="middle" font-size="5.5" fill="#fff" font-weight="bold">CROSS-PILLAR</text>
+
+  <!-- Footer -->
+  <text x="455" y="595" font-size="8" fill="#64748b">SSE stream from backend. Each control result appears in real-time as it completes.</text>
+  <text x="455" y="608" font-size="8" fill="#64748b">After completion: switch to report tabs for full formatted per-standard reports.</text>
+  <text x="455" y="621" font-size="8" fill="#2563EB" font-weight="bold">Only the standards selected in the input panel are ever evaluated - nothing runs unrequested.</text>
+</svg>

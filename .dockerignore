@@ -1,0 +1,39 @@
+# Secrets. .env holds live credentials and must never be layered into an image.
+.env
+.env.*
+!.env.example
+*.local-backup
+
+# Version control and tooling state
+.git
+.gitignore
+.claude
+.wrangler
+.vscode
+.idea
+# NOTE: .openai/ and build/ are NOT excluded — vite.config.ts imports
+# ./.openai/hosting.json and ./build/sites-vite-plugin at build time.
+
+# Build output — the image builds these itself, and copying a host build in would
+# ship whatever happened to be on disk instead of what the Dockerfile produced.
+dist
+.next
+node_modules
+
+# Docs, design assets and generated artefacts that nothing at runtime reads.
+# Scoped to the repo root with a leading slash — a blanket *.png would also drop
+# public/og.png, which the build copies into dist/client.
+/*.docx
+/*.png
+/*.pdf
+/*.md
+design
+diagrams
+examples
+outputs
+work
+tests
+
+# Local scratch
+*.log
+.DS_Store

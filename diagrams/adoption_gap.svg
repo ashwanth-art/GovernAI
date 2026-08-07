@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" font-family="Helvetica, Arial, sans-serif">
+  <rect width="960" height="460" fill="#ffffff"/>
+  <text x="480" y="22" text-anchor="middle" font-size="18" font-weight="bold" fill="#1e293b">The Adoption vs. Governance Gap (2025&#x2013;2026)</text>
+  <text x="480" y="40" text-anchor="middle" font-size="12" fill="#64748b">Near-universal AI adoption, minority governance &#x2014; the space where fines and incidents live</text>
+
+  <rect x="320" y="50" width="12" height="12" rx="3" fill="#2563EB"/>
+  <text x="336" y="60" font-size="11" fill="#334155">AI adoption / attention</text>
+  <rect x="500" y="50" width="12" height="12" rx="3" fill="#B91C1C"/>
+  <text x="516" y="60" font-size="11" fill="#334155">Governance in place</text>
+
+  <line x1="200" y1="72" x2="200" y2="410" stroke="#e2e8f0" stroke-width="1.5"/>
+  <line x1="200" y1="410" x2="920" y2="410" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="200" y="425" font-size="10" fill="#94a3b8">0%</text>
+  <text x="900" y="425" font-size="10" fill="#94a3b8">100%</text>
+
+  <!-- Row 1: 79% vs 48% -->
+  <text x="185" y="100" text-anchor="end" font-size="14" fill="#334155">Deploying</text>
+  <text x="185" y="115" text-anchor="end" font-size="14" fill="#334155">agentic AI</text>
+  <rect x="200" y="86" width="569" height="28" rx="14" fill="#2563EB"/>
+  <text x="778" y="105" font-size="14" font-weight="bold" fill="#2563EB">79%</text>
+  <rect x="200" y="120" width="346" height="28" rx="14" fill="#B91C1C"/>
+  <text x="555" y="139" font-size="14" font-weight="bold" fill="#B91C1C">48%</text>
+
+  <!-- Row 2: 62% vs 27% -->
+  <text x="185" y="185" text-anchor="end" font-size="14" fill="#334155">Board</text>
+  <text x="185" y="200" text-anchor="end" font-size="14" fill="#334155">discusses AI</text>
+  <rect x="200" y="172" width="447" height="28" rx="14" fill="#2563EB"/>
+  <text x="656" y="191" font-size="14" font-weight="bold" fill="#2563EB">62%</text>
+  <rect x="200" y="206" width="194" height="28" rx="14" fill="#B91C1C"/>
+  <text x="403" y="225" font-size="14" font-weight="bold" fill="#B91C1C">27%</text>
+
+  <!-- Row 3: 28% vs 17% -->
+  <text x="185" y="272" text-anchor="end" font-size="14" fill="#334155">Named</text>
+  <text x="185" y="287" text-anchor="end" font-size="14" fill="#334155">AI owner</text>
+  <rect x="200" y="258" width="202" height="28" rx="14" fill="#2563EB"/>
+  <text x="411" y="277" font-size="14" font-weight="bold" fill="#2563EB">28%</text>
+  <rect x="200" y="292" width="122" height="28" rx="14" fill="#B91C1C"/>
+  <text x="331" y="311" font-size="14" font-weight="bold" fill="#B91C1C">17%</text>
+
+  <!-- Row 4: <10% -->
+  <text x="185" y="358" text-anchor="end" font-size="14" fill="#334155">In dev</text>
+  <text x="185" y="373" text-anchor="end" font-size="14" fill="#334155">pipelines</text>
+  <rect x="200" y="352" width="72" height="28" rx="14" fill="#B91C1C"/>
+  <text x="281" y="371" font-size="14" font-weight="bold" fill="#B91C1C">&lt;10%</text>
+
+  <!-- gap annotation -->
+  <path d="M 775 92 L 808 92 L 808 142 L 775 142" fill="none" stroke="#B45309" stroke-width="2"/>
+  <text x="816" y="120" font-size="12" font-weight="bold" fill="#B45309">GAP</text>
+
+  <text x="480" y="452" text-anchor="middle" font-size="11" fill="#94a3b8">Sources: Gartner 2025, McKinsey State of AI 2025, Trustmarque 2025</text>
+</svg>
