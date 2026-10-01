@@ -284,6 +284,35 @@ export function LiveRun({
     if (node) node.scrollTop = node.scrollHeight;
   }, [visible.length, running, openRow]);
 
+  /* The requests still out, with how long each has been waiting. Reaching the target
+     is a handful of calls that can each take seconds — and on a host that sleeps
+     when idle, the first one waits out a boot — so the screen names what it is
+     waiting on and counts it, rather than sitting on an empty feed. */
+  const inFlight = useMemo(() => {
+    const open = new Map<string, { label: string; endpoint?: string; method?: string; sinceMs: number }>();
+    for (const event of events) {
+      const probeId = typeof event.data.probeId === "string" ? event.data.probeId : "";
+      if (!probeId) continue;
+      if (event.name === "probe_start" || event.name === "phase_start") {
+        open.set(probeId, {
+          label: String(event.data.control ?? probeId),
+          endpoint: typeof event.data.endpoint === "string" ? event.data.endpoint : undefined,
+          method: typeof event.data.method === "string" ? event.data.method : undefined,
+          sinceMs: Number(event.data.elapsedMs) || 0,
+        });
+      } else if (event.name === "probe_complete") {
+        open.delete(probeId);
+      }
+    }
+    return [...open.entries()].map(([id, entry]) => ({
+      id,
+      ...entry,
+      waitingMs: Math.max(0, elapsedMs - entry.sinceMs),
+    }));
+  }, [events, elapsedMs]);
+  const longestWaitMs = inFlight.reduce((longest, entry) => Math.max(longest, entry.waitingMs), 0);
+  const waking = longestWaitMs > 8000;
+
   const stage = progress?.stageId ?? "reach";
   const plain = PLAIN[stage] ?? PLAIN.reach;
   const expectedSeconds = Number(startEvent?.data.estimatedSeconds) || plan?.estimatedSeconds || 0;
@@ -352,6 +381,34 @@ export function LiveRun({
                 </div>
               );
             })}
+          </div>
+        ) : null}
+
+        {running && !hasResult && inFlight.length ? (
+          <div className="inflight" aria-live="polite">
+            <div className="inflight-hd">
+              <span>
+                Waiting on {inFlight.length} request{inFlight.length === 1 ? "" : "s"} · sent together
+              </span>
+              <span className="mono">{(longestWaitMs / 1000).toFixed(1)}s</span>
+            </div>
+            {inFlight.map((entry) => (
+              <div className="inflight-row" key={entry.id}>
+                <span className="ic live">◐</span>
+                <span className="tx">
+                  {entry.label}
+                  {entry.method ? <small> · {entry.method}</small> : null}
+                </span>
+                <span className="ms">{(entry.waitingMs / 1000).toFixed(1)}s</span>
+              </div>
+            ))}
+            {waking ? (
+              <p className="inflight-note">
+                The target is slow to answer. A service on a free host sleeps when idle and takes
+                20–50 seconds to wake on its first request — nothing is wrong, and the run carries
+                on as soon as it answers. A second run straight after this one will not wait.
+              </p>
+            ) : null}
           </div>
         ) : null}
 

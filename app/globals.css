@@ -782,6 +782,35 @@ a { color: var(--green); text-underline-offset: 3px; }
   font-variant-numeric: tabular-nums;
 }
 
+/* the requests still out, while the target is being reached */
+.inflight {
+  margin-top: 24px; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--paper-2, transparent);
+}
+.inflight-hd {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: 12px; color: var(--faint); margin-bottom: 6px;
+}
+.inflight-hd .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.inflight-row {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 4px 0; font-size: 13.5px;
+}
+.inflight-row .ic { color: var(--green); flex: none; animation: inflight-pulse 1.2s ease-in-out infinite; }
+.inflight-row .tx { flex: 1 1 auto; min-width: 0; }
+.inflight-row .tx small { color: var(--faint); }
+.inflight-row .ms {
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.inflight-note {
+  margin-top: 8px; font-size: 12.5px; color: var(--partial);
+  text-wrap: pretty;
+}
+@keyframes inflight-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .inflight-row .ic { animation: none; } }
+
 /* the live feed */
 .feed {
   border-top: 1px solid var(--line);

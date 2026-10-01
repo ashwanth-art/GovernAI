@@ -253,6 +253,37 @@ export function AssessmentWorkspace() {
     return () => window.clearTimeout(task);
   }, [input, scope, plan, resolveScope, buildPlan]);
 
+  /* Wake the target before the run needs it. A service on a free host sleeps when
+     idle and holds its first request for the length of a boot — 20 to 50 seconds —
+     and that wait used to land inside "Reach the target", where it read as the run
+     being broken. One health read while the reader is still filling in the setup
+     moves the boot out of the run. The answer is discarded: the connect step runs
+     its own pre-flight, and nothing here is evidence. Repeated every ten minutes
+     while the page stays open, inside the host's fifteen-minute idle window. */
+  const wakeEndpoint = input.credentials.chatbotEndpoint?.trim() ?? "";
+  useEffect(() => {
+    if (!/^https?:\/\//i.test(wakeEndpoint)) return;
+    const wake = () => {
+      void fetch("/api/preflight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tier: 1,
+          credentials: { chatbotEndpoint: wakeEndpoint },
+          fields: ["chatbotEndpoint"],
+        }),
+      }).catch(() => {
+        /* A failed wake-up costs nothing; the run reports reachability itself. */
+      });
+    };
+    const first = window.setTimeout(wake, 700);
+    const again = window.setInterval(wake, 10 * 60 * 1000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(again);
+    };
+  }, [wakeEndpoint]);
+
   const runPreflight = useCallback(async () => {
     setPreflightLoading(true);
     try {
