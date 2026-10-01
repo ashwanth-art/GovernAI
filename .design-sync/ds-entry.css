@@ -1,0 +1,20 @@
+/* Stylesheet entry for the design-system bundle.
+   ----------------------------------------------------------------------------
+   Two things the app gets for free but a design system does not:
+
+   1. Tailwind's theme/preflight arrive in app/globals.css as bare package
+      specifiers (`@import "tailwindcss/theme.css"`). cssEntry is COPIED into
+      the bundle verbatim, so those would dangle — bundling here flattens them.
+   2. --font-geist-sans / --font-geist-mono are injected at runtime by
+      next/font/google (app/layout.tsx). Nothing injects them in a rendered
+      design, so they are bound below to the families shipped in ds-fonts.css.
+
+   Built by cfg.buildCmd into .design-sync/styles.built.css, which is cfg.cssEntry.
+   Regenerate whenever app/globals.css changes. */
+
+@import "../app/globals.css";
+
+:root {
+  --font-geist-sans: "Geist";
+  --font-geist-mono: "Geist Mono";
+}

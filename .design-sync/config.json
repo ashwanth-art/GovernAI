@@ -1,0 +1,36 @@
+{
+  "shape": "package",
+  "projectId": "0995eae7-8250-49d9-b741-531e412871d4",
+  "pkg": "govern-ai-assessment",
+  "globalName": "GovernAI",
+  "srcDir": "components",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": ".design-sync/styles.built.css",
+  "buildCmd": "node_modules/.bin/esbuild .design-sync/ds-entry.css --bundle --outfile=.design-sync/styles.built.css",
+  "extraFonts": [".design-sync/ds-fonts.css"],
+  "runtimeFontPrefixes": ["Inter", "Cambria"],
+  "readmeHeader": ".design-sync/conventions.md",
+  "componentSrcMap": {
+    "Pill": "components/kit.tsx",
+    "Sev": "components/kit.tsx",
+    "SevRow": "components/kit.tsx",
+    "Ring": "components/kit.tsx",
+    "Meter": "components/kit.tsx",
+    "Disc": "components/kit.tsx",
+    "Kv": "components/kit.tsx",
+    "Tag": "components/kit.tsx",
+    "Report": null,
+    "Step": null,
+    "LiveRun": null
+  },
+  "dtsPropsFor": {
+    "Pill": "/** A control status, spelled exactly as the API spells it. */\n  status: \"pass\" | \"fail\" | \"partial\" | \"not_assessed\" | \"not_applicable\" | (string & {});",
+    "Sev": "/** Severity rank, rendered as a filled square sized by rank. */\n  severity: \"critical\" | \"high\" | \"medium\" | \"low\";",
+    "SevRow": "/**\n   * Counts keyed by severity. Absent severities are omitted, not zeroed, and an\n   * empty object renders the phrase \"none open\" rather than an empty row.\n   * The numbers themselves are a `title` tooltip, not visible text — this is a\n   * glanceable density strip, so pair it with a label if the count must be read.\n   */\n  counts: Record<string, number>;",
+    "Ring": "/** 0-100. Clamped internally. */\n  percent: number;\n  /** Pre-formatted elapsed time, e.g. \"4m 12s\". */\n  elapsed?: string;\n  /** Separate from percent: a run that failed at 60% must not look like one that is 60% done. */\n  tone?: \"live\" | \"done\" | \"failed\";\n  /** Pixel diameter. Defaults to 188. */\n  size?: number;",
+    "Meter": "/** 0-100. Clamped internally. */\n  percent: number;\n  /** CSS colour for the fill. Defaults to var(--green). */\n  hue?: string;",
+    "Disc": "/** Leading glyph in the summary row. Defaults to a chevron. */\n  glyph?: React.ReactNode;\n  title: React.ReactNode;\n  /** Secondary line under the title. */\n  sub?: React.ReactNode;\n  /** Right-aligned content in the summary row. */\n  right?: React.ReactNode;\n  /** Renders the native <details> expanded. */\n  open?: boolean;\n  children: React.ReactNode;",
+    "Kv": "/** Label-over-value pairs. `k` is the label, `v` the value; `mono` sets a monospace value. */\n  items: Array<{ k: string; v: React.ReactNode; mono?: boolean }>;",
+    "Tag": "/** Framework pack short name, e.g. \"NIST AI RMF\". */\n  pack: string;\n  /** The control id within that pack, e.g. \"GOVERN-1.1\". */\n  id: string;"
+  }
+}
