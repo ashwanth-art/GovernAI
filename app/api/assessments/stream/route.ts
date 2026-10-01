@@ -6,6 +6,7 @@ import {
   type RunStageId,
 } from "@/lib/assessment";
 import { redactLogText, writeExecutionLog } from "@/lib/execution-log";
+import { resolveServerCredentials } from "@/lib/server-credentials";
 import type { AssessmentInput } from "@/lib/types";
 
 export const runtime = "edge";
@@ -104,6 +105,7 @@ export async function POST(request: Request) {
     });
     return Response.json({ errors: ["Request body must be valid JSON."] }, { status: 400 });
   }
+  input = resolveServerCredentials(input);
   const errors = validateAssessmentInput(input);
   if (errors.length) {
     writeExecutionLog({

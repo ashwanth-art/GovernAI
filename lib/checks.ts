@@ -459,7 +459,7 @@ export function artifactCheck(control: Control): CheckDefinition {
     request: {
       method: "GET",
       endpoint: "{evidenceManifestUrl}",
-      note: "Reads the supplied Evidence Manifest. GovernAI does not extract or interpret document content — it accepts a named procedure verdict.",
+      note: "Reads the supplied Evidence Manifest. ARQ Governance does not extract or interpret document content — it accepts a named procedure verdict.",
     },
     rule: {
       id: control.evaluationRuleId ?? "artifact.unnamed",

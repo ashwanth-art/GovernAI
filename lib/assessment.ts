@@ -44,7 +44,7 @@ export const credentialFields: Record<AccessTier, CredentialField[]> = {
       label: "Chatbot base URL or API endpoint",
       type: "url",
       placeholder: "https://chat-bot-22j5.onrender.com/",
-      help: "GovernAI discovers /health and the public /v1/web-chat route when a base URL is supplied.",
+      help: "ARQ Governance discovers /health and the public /v1/web-chat route when a base URL is supplied.",
     },
     {
       key: "tenantId",
@@ -199,7 +199,7 @@ export const credentialFields: Record<AccessTier, CredentialField[]> = {
       type: "url",
       placeholder: "https://evidence.example.com/governai-manifest.json",
       required: false,
-      help: "Optional GovernAI 1.0 JSON evidence manifest. Named procedures can directly assess document and artifact controls.",
+      help: "Optional ARQ Governance 1.0 JSON evidence manifest. Named procedures can directly assess document and artifact controls.",
     },
     {
       key: "evidenceManifestToken",
@@ -1250,13 +1250,22 @@ async function collectLiveSignals(input: AssessmentInput, emit: EventCallback): 
         sourceType: "artifact_manifest",
         endpoint: safeDisplayUrl(input.credentials.evidenceManifestUrl),
         method: "GET",
-        validationMethod: "Validate the GovernAI evidence manifest 1.0 schema and load only named procedures with an explicit status, summary, and confidence.",
+        validationMethod: "Validate the ARQ Governance evidence manifest 1.0 schema and load only named procedures with an explicit status, summary, and confidence.",
       });
     }
 
     providerCollectors = await collectProviderEvidence(input);
     providerCollectors.forEach((collector) => {
-      procedureEvidence = { ...procedureEvidence, ...collector.evidence };
+      /* A direct provider reading is normally the fresher source, but an
+         unavailable optional read is not evidence and must not erase a settled
+         manifest procedure. This used to turn four fully documented controls
+         back into not_assessed whenever public GitHub metadata was readable but
+         branch-protection administration was not. */
+      for (const [procedureId, reading] of Object.entries(collector.evidence)) {
+        const existing = procedureEvidence[procedureId];
+        if (reading.status === "not_assessed" && existing?.status !== "not_assessed") continue;
+        procedureEvidence[procedureId] = reading;
+      }
       const endpoint =
         collector.id === "github"
           ? safeDisplayUrl(input.credentials.repoUrl)
@@ -2120,14 +2129,14 @@ export async function runAssessment(
         status: "running",
         total: definition.controls.length,
         sourceType: "control_catalog",
-        message: "Applying the built-in GovernAI evidence mapping to evidence already collected from the target.",
+        message: "Applying the built-in ARQ Governance evidence mapping to evidence already collected from the target.",
         officialAuthority: definition.officialReference.authority,
         officialReferenceTitle: definition.officialReference.title,
         officialReferenceUrl: definition.officialReference.url,
         officialReferenceStatus: definition.officialReference.status,
         officialReferenceNote: definition.officialReference.note,
         officialPageFetched: false,
-        validationMethod: "Load the selected GovernAI evidence pack, then map the already-collected live evidence to each framework-referenced check.",
+        validationMethod: "Load the selected ARQ Governance evidence pack, then map the already-collected live evidence to each framework-referenced check.",
       });
       const report = buildStandardReport(definition, input, signals);
       reports.push(report);
@@ -2254,6 +2263,22 @@ export async function runAssessment(
         latencyMs: check.latencyMs,
         httpStatus: check.httpStatus,
         notRunReason: check.notRunReason,
+        /* The run screen shows what each rule did, which means it needs what the
+           rule was looking for and which clause in which standard it just settled.
+           Both are already on the execution object; withholding them was the only
+           reason the feed could not answer "what is it actually checking?". */
+        intent: check.intent,
+        provenance: check.provenance,
+        passWhen: check.rule?.passWhen,
+        failWhen: check.rule?.failWhen,
+        evidence: check.evidence,
+        endpoint: check.request ? `${check.request.method} ${check.request.endpoint}` : undefined,
+        controls: check.controls.map((entry) => ({
+          standardId: entry.standardId,
+          shortName: entry.shortName,
+          controlId: entry.controlId,
+          controlName: entry.controlName,
+        })),
         message: check.ran
           ? `${check.ruleId} → ${check.status} across ${check.controls.length} control(s).`
           : `${check.ruleId} did not run. ${check.notRunReason}`,
@@ -2323,8 +2348,8 @@ export async function runAssessment(
         traces: signals.traces,
         probes: signals.probes,
         execution: {
-          runner: "GovernAI assessment backend",
-          controlCatalog: "GovernAI built-in evidence mappings with official source citations",
+          runner: "ARQ Governance assessment backend",
+          controlCatalog: "ARQ Governance built-in evidence mappings with official source citations",
           officialStandardsPagesFetched: false,
           tier2RequestsParallel: input.tier >= 2,
           infrastructureProvider: input.credentials.cloudProvider?.trim() || undefined,

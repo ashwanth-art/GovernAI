@@ -13,6 +13,12 @@ const eslintConfig = defineConfig([
     "build/**",
     "chat_bot_work/**",
     "next-env.d.ts",
+    // Claude Design sync: generated upload bundle (includes a vendored React)
+    // and the staged converter scripts. Neither is our source, and both are
+    // gitignored — linting them buries real findings under thousands of
+    // warnings from third-party code.
+    "ds-bundle/**",
+    ".ds-sync/**",
   ]),
 ]);
 

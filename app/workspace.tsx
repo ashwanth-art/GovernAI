@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LiveRun, type RunEvent } from "@/components/live";
+import { Monitoring, useMonitors } from "@/components/monitor";
 import { CHAPTERS, Report } from "@/components/report";
 import {
   receiptFor,
@@ -20,31 +21,30 @@ import { createReportHtml } from "@/lib/report-html";
 import type { AssessmentInput, AssessmentResult, CheckPlan } from "@/lib/types";
 
 /**
- * Every connection field for all three tiers, pre-filled against the throwaway test
- * assistant so a first run is one pass through the track rather than fourteen paste
- * operations. Each value is editable on the connection step and nothing here is
- * authoritative — the form is the input.
- *
- * The three keys are the target's own placeholder service keys, and they only ever
- * reach the endpoints the connection step names. Replace this block with blanks
- * before pointing the app at anything real — a key that lives in source is a key
- * that leaks with the source.
+ * Public demo endpoints and context labels are convenient starting values. Password
+ * fields contain visibly masked, non-authorized placeholders so the form can be
+ * demonstrated without embedding a real access token in the client bundle. An
+ * operator replaces them with their own read-only credentials for authenticated
+ * Tier 2 or Tier 3 evidence collection.
  */
 const DEMO_CREDENTIALS: Record<string, string> = {
   chatbotEndpoint: "https://chat-bot-22j5.onrender.com/",
   tenantId: "aci-infotech",
-  chatbotApiKey: "aci-chatbot-local-2026-change-before-deploy",
+  chatbotApiKey: "demo-placeholder-chatbot-key",
   cloudProvider: "Render",
-  cloudApiKey: "aci-audit-local-2026-change-before-deploy",
+  cloudApiKey: "demo-placeholder-audit-key",
   monitoringProvider: "Prometheus",
-  monitoringApiKey: "aci-monitor-local-2026-change-before-deploy",
+  monitoringApiKey: "demo-placeholder-monitoring-key",
   cicdUrl: "https://github.com/ashwanth-art/chat_bot/actions",
   repoUrl: "https://github.com/ashwanth-art/chat_bot",
   stagingUrl: "https://chat-bot-22j5.onrender.com/",
   modelRegistryUrl: "https://platform.openai.com/docs/models",
   evidenceManifestUrl: "https://chat-bot-22j5.onrender.com/api/evidence/manifest",
   // The manifest sits behind the audit key rather than a credential of its own.
-  evidenceManifestToken: "aci-audit-local-2026-change-before-deploy",
+  evidenceManifestToken: "demo-placeholder-evidence-token",
+  githubToken: "demo-placeholder-github-token",
+  providerMonitoringApiKey: "demo-placeholder-provider-monitoring-key",
+  monitoringApplicationKey: "demo-placeholder-monitoring-app-key",
 };
 
 const startingInput: AssessmentInput = {
@@ -118,7 +118,19 @@ function appendEvent(current: RunEvent[], next: RunEvent): RunEvent[] {
 
 type Phase = "setup" | "run" | "report";
 
+/**
+ * The two top-level surfaces.
+ *
+ * Monitoring is a tab rather than a chapter of the report because it answers a
+ * different question on a different clock: the report is a statement about a
+ * moment, the monitor is a standing claim that the moment still holds. Folding it
+ * into the report would also mean it only existed while a report was on screen,
+ * and a schedule that stops when you navigate away is not a schedule.
+ */
+type View = "assess" | "monitor";
+
 export function AssessmentWorkspace() {
+  const [view, setView] = useState<View>("assess");
   const [phase, setPhase] = useState<Phase>("setup");
   const [at, setAt] = useState(0);
   const [reached, setReached] = useState(0);
@@ -144,6 +156,10 @@ export function AssessmentWorkspace() {
 
   const track = useMemo(() => trackFor(input), [input]);
   const step: StepId = track[Math.min(at, track.length - 1)] ?? "system";
+
+  /* Mounted here, not inside the monitoring screen: this build runs a due cycle when
+     the state is read, so the poll has to survive switching back to the assessment. */
+  const monitors = useMonitors();
 
   /* ---- the form, kept across reloads ------------------------------------ */
 
@@ -445,6 +461,8 @@ export function AssessmentWorkspace() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
+      /* Enter on the monitoring tab must not advance a wizard the reader cannot see. */
+      if (view !== "assess") return;
       const target = event.target as HTMLElement | null;
       const typing = target?.tagName === "TEXTAREA";
       if (event.key === "Enter" && !typing) {
@@ -464,7 +482,7 @@ export function AssessmentWorkspace() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, step, at, result, running, next, back, start, toReport]);
+  }, [view, phase, step, at, result, running, next, back, start, toReport]);
 
   /* ---- exports ---------------------------------------------------------- */
 
@@ -502,18 +520,27 @@ export function AssessmentWorkspace() {
         ? 100
         : Math.round(((at + (blocked ? 0 : 1)) / track.length) * 100);
 
+  const armedCount = monitors.state?.armed.length ?? 0;
+  const alertCount = monitors.state?.alerts.length ?? 0;
+
   const railNote =
-    phase === "report" && result
-      ? `${result.analysis.posture.assessed}/${result.analysis.posture.applicable} assessed · ${result.analysis.posture.openFindings} open`
-      : phase === "run"
-        ? running
-          ? "running"
-          : result
-            ? "settled"
-            : "stopped"
-        : plan
-          ? `${plan.runnableChecks} rules · ${plan.boundedRequests} requests · ${estimate(plan.estimatedSeconds)}`
-          : "planning…";
+    view === "monitor"
+      ? monitors.state?.running
+        ? "cycle running"
+        : armedCount
+          ? `${armedCount} armed · ${monitors.state?.cyclesRun ?? 0} cycles · ${alertCount} alert${alertCount === 1 ? "" : "s"}`
+          : "nothing armed"
+      : phase === "report" && result
+        ? `${result.analysis.posture.assessed}/${result.analysis.posture.applicable} assessed · ${result.analysis.posture.openFindings} open`
+        : phase === "run"
+          ? running
+            ? "running"
+            : result
+              ? "settled"
+              : "stopped"
+          : plan
+            ? `${plan.runnableChecks} rules · ${plan.boundedRequests} requests · ${estimate(plan.estimatedSeconds)}`
+            : "planning…";
 
   const receipts =
     phase === "setup"
@@ -528,13 +555,39 @@ export function AssessmentWorkspace() {
       <header className="rail">
         <div className="rail-fill" style={{ width: `${railFill}%` }} />
         <span className="mark">
-          <i>G</i>
+          <i>A</i>
           <b>
-            Govern<span>AI</span>
+            ARQ <span>Governance</span>
           </b>
         </span>
 
-        {phase === "setup" ? (
+        <nav className="tabs" aria-label="Sections">
+          <button
+            type="button"
+            className={view === "assess" ? "on" : ""}
+            aria-current={view === "assess" ? "page" : undefined}
+            onClick={() => setView("assess")}
+          >
+            Assessment
+          </button>
+          <button
+            type="button"
+            className={view === "monitor" ? "on" : ""}
+            aria-current={view === "monitor" ? "page" : undefined}
+            onClick={() => setView("monitor")}
+          >
+            Monitoring
+            {/* An alert outranks a count: a reader on the assessment tab needs to see
+                that something regressed without having to go and look. */}
+            {alertCount ? (
+              <b className="bad">{alertCount}</b>
+            ) : armedCount ? (
+              <b>{armedCount}</b>
+            ) : null}
+          </button>
+        </nav>
+
+        {view === "assess" && phase === "setup" ? (
           <nav className="dots" aria-label="Setup steps">
             {track.map((id, index) => (
               <button
@@ -551,7 +604,7 @@ export function AssessmentWorkspace() {
           </nav>
         ) : null}
 
-        {phase === "report" ? (
+        {view === "assess" && phase === "report" ? (
           <nav className="dots" aria-label="Report chapters">
             {CHAPTERS.map((entry) => (
               <button
@@ -571,13 +624,15 @@ export function AssessmentWorkspace() {
 
         <span className="rail-spacer" />
         <span className="rail-note">
-          {phase !== "setup" ? <b>{input.systemName || "Unnamed system"}</b> : null}{" "}
-          {phase !== "setup" ? "· " : ""}
+          {view === "assess" && phase !== "setup" ? (
+            <b>{input.systemName || "Unnamed system"}</b>
+          ) : null}{" "}
+          {view === "assess" && phase !== "setup" ? "· " : ""}
           {railNote}
         </span>
       </header>
 
-      {receipts.length ? (
+      {view === "assess" && receipts.length ? (
         <div className="trail" ref={trailRef}>
           {receipts.map((entry) => (
             <button
@@ -595,7 +650,7 @@ export function AssessmentWorkspace() {
       ) : null}
 
       <div className="stage" ref={stageRef}>
-        {phase === "setup" ? (
+        {view === "assess" && phase === "setup" ? (
           <div className={`step ${dir}`} key={step}>
             <Step
               id={step}
@@ -649,7 +704,7 @@ export function AssessmentWorkspace() {
           </div>
         ) : null}
 
-        {phase === "run" ? (
+        {view === "assess" && phase === "run" ? (
           <LiveRun
             events={events}
             running={running}
@@ -665,13 +720,28 @@ export function AssessmentWorkspace() {
           />
         ) : null}
 
-        {phase === "report" && result ? (
+        {view === "assess" && phase === "report" && result ? (
           <Report
             result={result}
             onActiveChapter={setChapter}
             onPrint={printReport}
             onExport={exportJson}
             onRerun={toSetup}
+            onGoToMonitoring={() => setView("monitor")}
+          />
+        ) : null}
+
+        {view === "monitor" ? (
+          <Monitoring
+            result={result}
+            input={input}
+            state={monitors.state}
+            errors={monitors.errors}
+            busy={monitors.busy}
+            command={monitors.command}
+            chosen={monitors.chosen}
+            setChosen={monitors.setChosen}
+            onGoToAssessment={() => setView("assess")}
           />
         ) : null}
       </div>

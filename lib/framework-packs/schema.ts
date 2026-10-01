@@ -92,7 +92,7 @@ export function createPackControl(
       section: input.section,
       url: source.url,
       mappingType: input.mappingType ?? "official_requirement",
-      note: "GovernAI-authored assessment objective mapped to the cited source; it is not a verbatim official questionnaire or a certification conclusion.",
+      note: "ARQ Governance-authored assessment objective mapped to the cited source; it is not a verbatim official questionnaire or a certification conclusion.",
     },
   };
 }

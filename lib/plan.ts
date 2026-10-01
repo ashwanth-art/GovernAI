@@ -79,11 +79,13 @@ export function boundedRequestCount(tier: AccessTier, access: AccessSignals = {}
 export function accessSignalsFromCredentials(
   credentials: Record<string, string> = {},
 ): AccessSignals {
+  const providerKey = credentials.providerMonitoringApiKey?.trim() ?? "";
   return {
     hasEvidenceManifest: Boolean(credentials.evidenceManifestUrl?.trim()),
     repoHost: credentials.repoUrl ?? "",
     monitoringProvider: credentials.monitoringProvider ?? "",
-    hasMonitoringKey: Boolean(credentials.providerMonitoringApiKey?.trim()),
+    hasMonitoringKey:
+      Boolean(providerKey) && providerKey !== "demo-placeholder-provider-monitoring-key",
   };
 }
 

@@ -10,7 +10,7 @@ import { controlBodyByKey, verifiableByKey } from "./verification-library";
  * what lets one remediation playbook report how many controls across how many
  * standards it closes.
  *
- * A standard only lists controls GovernAI can actually verify. A clause with no
+ * A standard only lists controls ARQ Governance can actually verify. A clause with no
  * verifiable evidence path is deliberately absent rather than present and
  * permanently not_assessed: an unclosable control is noise in a coverage figure.
  * That is why selecting Tier 3 reaches 100% coverage — every control here has an
@@ -819,7 +819,7 @@ export function buildMappedControls(
         section: entry.section,
         url: reference.url,
         mappingType: "governai_evidence_mapping" as const,
-        note: "GovernAI evidence check mapped to this official section; it is not a verbatim official questionnaire or certification control.",
+        note: "ARQ Governance evidence check mapped to this official section; it is not a verbatim official questionnaire or certification control.",
       },
     } satisfies Control;
   });

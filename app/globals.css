@@ -12,7 +12,7 @@
 @import "tailwindcss/preflight.css" layer(base);
 
 /* ============================================================================
-   GovernAI — design system, third edition
+   ARQ Governance — design system, third edition
    ----------------------------------------------------------------------------
    The first edition was a dashboard. The second was a document with a contents
    page. Both had the same defect: a permanent navigation panel implying that
@@ -191,6 +191,42 @@ a { color: var(--green); text-underline-offset: 3px; }
 }
 .mark b { font-weight: 700; }
 .mark b span { color: var(--green); }
+
+/* ---- top-level tabs: the two surfaces, not two steps of one ---------------
+   Deliberately a different shape from the step dots beside them. The dots are a
+   position in a sequence you are working through; these are two places you can
+   stand, and one of them keeps running while you are standing in the other. */
+.tabs {
+  display: flex; align-items: center; gap: 3px;
+  flex: 0 0 auto;
+  padding: 3px;
+  background: var(--paper-3);
+  border-radius: 100px;
+}
+.tabs button {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 13px;
+  border: 0; background: transparent;
+  border-radius: 100px;
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+}
+.tabs button:hover { color: var(--ink); }
+.tabs button.on {
+  background: var(--white); color: var(--ink);
+  box-shadow: var(--lift-1);
+}
+.tabs button b {
+  display: grid; place-items: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--green); color: var(--white);
+  border-radius: 100px;
+  font-size: 10px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tabs button b.bad { background: var(--fail); }
 
 /* the step dots */
 .dots { display: flex; align-items: center; gap: 5px; margin-left: 2px; }
@@ -748,19 +784,60 @@ a { color: var(--green); text-underline-offset: 3px; }
 
 /* the live feed */
 .feed {
-  margin-top: 30px;
   border-top: 1px solid var(--line);
-  max-height: 244px; overflow-y: auto;
+  max-height: 340px; overflow-y: auto;
   scrollbar-width: thin;
 }
+
+/* filter tabs above the feed: every rule is a row now, so the reader needs a way
+   to ask for a subset rather than scrolling 56 of them looking for the failures */
+.feed-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  margin-top: 30px; padding-bottom: 9px;
+}
+.feed-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.feed-tab {
+  border: 1px solid var(--line); background: transparent;
+  border-radius: 999px; padding: 4px 11px;
+  font: inherit; font-size: 12.5px; color: var(--muted);
+  cursor: pointer; transition: background .15s, border-color .15s, color .15s;
+}
+.feed-tab:hover { border-color: var(--line-strong); color: var(--ink); }
+.feed-tab.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.feed-tab b { font-variant-numeric: tabular-nums; margin-left: 3px; font-weight: 600; }
+.feed-hint { font-size: 12px; color: var(--faint); }
+
+.feed-item { border-bottom: 1px solid var(--line-soft); }
+.feed-item.open { background: var(--paper-2); }
 .feed-row {
   display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 11px;
   align-items: baseline;
+  width: 100%; text-align: left;
   padding: 9px 2px;
-  border-bottom: 1px solid var(--line-soft);
+  border: 0; background: transparent; font: inherit;
   font-size: 13.5px;
+  cursor: pointer;
   animation: feed-in .3s var(--ease-out) both;
 }
+.feed-row:hover { background: var(--paper-2); }
+.feed-row.dim .tx { color: var(--muted); }
+
+/* the expanded rule: what it looked for, where, and which clauses it settled */
+.feed-detail { padding: 2px 2px 15px 29px; font-size: 13px; }
+.fd-intent { color: var(--muted); margin: 0 0 11px; line-height: 1.55; }
+.fd-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 5px 14px; margin: 0 0 13px; }
+.fd-facts dt { color: var(--faint); font-size: 12px; white-space: nowrap; }
+.fd-facts dd { margin: 0; color: var(--ink); line-height: 1.5; }
+.fd-facts dd.mono { font-family: var(--mono); font-size: 12px; word-break: break-all; }
+.fd-lbl { display: block; font-size: 12px; color: var(--faint); margin-bottom: 6px; }
+.fd-standards { border-top: 1px solid var(--line-soft); padding-top: 11px; }
+.fd-std {
+  display: grid; grid-template-columns: 108px minmax(0, 1fr); gap: 11px;
+  padding: 3px 0; font-size: 12.5px;
+}
+.fd-std b { font-weight: 600; }
+.fd-std span { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
 @keyframes feed-in {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: none; }
@@ -886,10 +963,17 @@ a { color: var(--green); text-underline-offset: 3px; }
 .disc > summary .ti {
   font-size: 15.5px; font-weight: 620; letter-spacing: -.015em;
 }
+/* Collapsed, the sub line is capped at two lines: the summary row is the state
+   a reader scans, and one finding whose impact ran to eight lines destroyed the
+   rhythm of the whole list. Opening the finding releases the cap, so the text is
+   deferred rather than lost — nothing here is ever truncated away. */
 .disc > summary .ti small {
-  display: block; font-weight: 400; font-size: 13px;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-weight: 400; font-size: 13px;
   color: var(--muted); margin-top: 3px; line-height: 1.5;
 }
+.disc[open] > summary .ti small { -webkit-line-clamp: unset; }
 .disc > summary .rt {
   font-family: var(--mono); font-size: 11.5px; color: var(--faint);
   font-variant-numeric: tabular-nums; white-space: nowrap;
@@ -940,23 +1024,144 @@ a { color: var(--green); text-underline-offset: 3px; }
 /* ---- the five areas ----------------------------------------------------- */
 
 .areas { display: grid; gap: 11px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
-.area { padding: 18px 19px; }
-.area-h { display: flex; align-items: center; gap: 9px; margin-bottom: 3px; }
+/* Each card is a subgrid over the four rows it occupies — header, question, bar,
+   numbers — so every row is sized across the whole band of cards and the bars sit
+   on one line. Comparing the five areas by eye is the only reason to lay them out
+   as small multiples, and a bar that floats is a bar that cannot be compared.
+
+   Flexing the column with the question absorbing the slack is the obvious fix and
+   is the wrong one: it equalises the card bottoms, not the rows above them. The
+   numbers row varies in height (a wrapped "no verdict reached" against a one-line
+   percentage), so each question absorbed a different amount of slack and pushed
+   its own bar out of line by up to 17px — the defect, moved rather than fixed. */
+.area {
+  padding: 18px 19px;
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 6;
+  row-gap: 0;
+  /* A left edge toned by the worst thing open in the area, so the grid sorts
+     itself by eye before a single number is read. */
+  border-left: 3px solid var(--line);
+  /* It is a <button>, because opening the area is the point of the card and a
+     div with an onClick is not reachable by keyboard. Everything below is the
+     UA button style being undone; the card's own look is unchanged. */
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+}
+.area.critical { border-left-color: var(--sev-critical); }
+.area.high { border-left-color: var(--sev-high); }
+.area.medium { border-left-color: var(--sev-medium); }
+.area.low { border-left-color: var(--sev-low); }
+.area.clear { border-left-color: var(--pass-line); }
+.area.blank { border-left-color: var(--line); }
+.area:hover { border-color: var(--line-strong); box-shadow: var(--lift-2); transform: translateY(-1px); }
+.area.critical:hover { border-left-color: var(--sev-critical); }
+.area.high:hover { border-left-color: var(--sev-high); }
+.area.medium:hover { border-left-color: var(--sev-medium); }
+.area.low:hover { border-left-color: var(--sev-low); }
+.area.clear:hover { border-left-color: var(--pass); }
+.area:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.area:hover .area-go { opacity: 1; transform: none; }
+.area-go {
+  font-size: 12px; font-weight: 600; color: var(--ink-2);
+  opacity: 0; transform: translate(-3px, 2px);
+  transition: opacity var(--t-fast), transform var(--t-fast);
+}
+.area-open {
+  margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line-soft);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  font-size: 12px; color: var(--muted); align-self: end;
+  font-variant-numeric: tabular-nums;
+}
+/* Status sits above the name rather than beside it. Sharing the row cost the
+   title about 60px, which is the difference between "Trust & transparency" on
+   one line and on two — and it put the one word that answers "do I care about
+   this card" at the far right, last in the reading order instead of first. */
+.area-h { display: grid; justify-items: start; gap: 7px; margin-bottom: 5px; }
 .area-h i { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
-.area-h strong { font-size: 15.5px; font-weight: 640; letter-spacing: -.015em; }
-.area > p { font-size: 13px; color: var(--faint); line-height: 1.5; margin-bottom: 15px; }
+.area-h strong {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 16px; font-weight: 660; letter-spacing: -.02em;
+}
+.area-flag {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  border-radius: 100px; padding: 2px 8px;
+  background: var(--paper-3); color: var(--muted);
+}
+.area.critical .area-flag, .area.high .area-flag {
+  background: var(--fail-wash); color: var(--fail); box-shadow: inset 0 0 0 1px var(--fail-line);
+}
+.area.medium .area-flag, .area.low .area-flag {
+  background: var(--partial-wash); color: var(--partial);
+  box-shadow: inset 0 0 0 1px var(--partial-line);
+}
+.area.clear .area-flag {
+  background: var(--pass-wash); color: var(--pass); box-shadow: inset 0 0 0 1px var(--pass-line);
+}
+.area > p { font-size: 12.5px; color: var(--faint); line-height: 1.5; margin-bottom: 14px; }
+
+/* Three figures on one baseline. They are deliberately the same size: the card
+   is scanned across, not down, and a hierarchy here would imply one of the three
+   settles the question when none of them does alone. */
+.area-figs {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 14px; margin-bottom: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.area-figs span { display: grid; gap: 1px; min-width: 0; }
+.area-figs b { font-size: 18px; font-weight: 700; letter-spacing: -.03em; line-height: 1.15; }
+.area-figs em {
+  font-style: normal; font-size: 10.5px; color: var(--faint);
+  letter-spacing: .04em; text-transform: uppercase; white-space: nowrap;
+}
+
+.area-body { margin-top: 12px; }
+.area-sevs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 9px; }
+.area-sevc {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  background: var(--paper-2); border-radius: 100px; padding: 3px 9px 3px 7px;
+}
+.area-sevc i { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 auto; }
+.area-probs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.area-probs li {
+  display: grid; grid-template-columns: 7px minmax(0, 1fr); gap: 8px;
+  align-items: start;
+  font-size: 12.5px; line-height: 1.4; color: var(--ink-2);
+}
+.area-probs li i { width: 7px; height: 7px; border-radius: 2px; margin-top: 5px; }
+.area-probs li.more { grid-template-columns: minmax(0, 1fr); color: var(--faint); font-size: 11.5px; }
+.area-none { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
 .area-bar {
   height: 6px; border-radius: 100px; background: var(--paper-3);
   overflow: hidden; margin-bottom: 11px;
 }
 .area-bar i { display: block; height: 100%; border-radius: 100px; transition: width var(--t-slow); }
+/* An empty track and a track filled to zero render identically, and they mean
+   opposite things — nothing ran here versus everything that ran here failed.
+   The dashes are the difference. */
+.area-bar.void {
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 4px, transparent 4px 9px);
+}
 .area-nums {
-  display: flex; align-items: baseline; gap: 5px;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px;
   font-size: 13px; color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
+/* Only the caption that follows the percentage — "of 11 assessed passed". Held on
+   one line so that when the row runs out of width it is the open-findings marker
+   that drops to a second line, right-aligned under itself, rather than the phrase
+   splitting mid-sentence. The no-verdict text has no preceding <b>, is far longer,
+   and is left free to wrap. */
+.area-nums > b + span { white-space: nowrap; }
 .area-nums b { font-size: 19px; font-weight: 700; color: var(--ink); letter-spacing: -.03em; }
-.area-sev { margin-left: auto; display: flex; gap: 3px; align-items: center; }
+.area-sev { margin-left: auto; display: flex; gap: 3px; align-items: center; flex: 0 0 auto; }
+.area-sev.none { font-size: 12px; color: var(--faint); white-space: nowrap; }
 .area-sev span {
   width: 7px; height: 7px; border-radius: 2px;
 }
@@ -1054,6 +1259,240 @@ table.tbl td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 /* ============================================================================
+   MONITORING
+   A schedule, not a result. Every row here is a switch with a consequence
+   attached, so the consequence is on the row rather than in a legend.
+   ========================================================================== */
+
+.mon-group { margin-top: 24px; }
+
+.monitor-link-card {
+  margin-top: 24px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid var(--green-line);
+  border-radius: var(--r-l);
+  background: var(--green-wash);
+}
+.monitor-link-card strong { font-size: 15px; font-weight: 660; letter-spacing: -.01em; }
+.monitor-link-card p { margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.monitor-link-card .btn { flex: 0 0 auto; }
+
+.monitor-report-source {
+  max-width: 880px;
+  margin: 42px auto -8px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  background: var(--paper-2);
+}
+.monitor-report-source.current { border-color: var(--green-line); background: var(--green-wash); }
+.monitor-report-source > i {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 100px;
+  background: var(--paper-3);
+  color: var(--muted);
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .08em;
+}
+.monitor-report-source.current > i { background: var(--pass-wash); color: var(--pass); }
+.monitor-report-source > span { display: grid; gap: 3px; min-width: 0; }
+.monitor-report-source strong { font-size: 13.5px; font-weight: 650; }
+.monitor-report-source small { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+/* The shared report is deliberately embedded here: one component means pillar
+   and standard numbers cannot differ between Assessment and Monitoring. */
+.monitoring-coverage { padding-inline: 0; padding-bottom: 8px; }
+.monitoring-coverage .report-col { max-width: none; }
+.mon-group-h {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  padding: 0 2px 9px;
+  border-bottom: 1px solid var(--line);
+}
+.mon-group-h i { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.mon-group-h strong { font-size: 14.5px; font-weight: 660; letter-spacing: -.02em; }
+.mon-group-h span { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+.mon-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) minmax(0, 172px);
+  gap: 16px;
+  align-items: start;
+  padding: 16px 2px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.mon-row:last-child { border-bottom: 0; }
+.mon-row.on { background: var(--green-wash); border-radius: var(--r-m); padding-inline: 12px; }
+
+/* The switch primitive from the setup step, reduced to just its knob: here the
+   label lives in its own column because it carries four lines of consequence.
+   `.switch .knob` is written for a grid parent, where the knob is blockified as a
+   grid item — dropping it into a block button left it inline, contributing no
+   height, and the whole control collapsed to nothing and could not be clicked. */
+.mon-sw {
+  display: grid; place-items: start;
+  width: 40px; height: 23px; padding: 0; margin-top: 2px;
+  border: 0; border-bottom: 0; background: none; cursor: pointer;
+}
+.mon-sw .knob { display: block; justify-self: start; }
+.mon-sw:disabled { cursor: not-allowed; opacity: .5; }
+
+.mon-body { min-width: 0; }
+.mon-t { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.mon-t strong { font-size: 14.5px; font-weight: 640; letter-spacing: -.01em; }
+.mon-t em {
+  font-style: normal; font-size: 11px; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase;
+  color: var(--muted);
+  background: var(--paper-3); border-radius: 100px; padding: 2px 8px;
+}
+.mon-body > p { font-size: 13px; color: var(--faint); line-height: 1.5; margin-top: 4px; }
+.mon-body > p.mono { color: var(--green); font-size: 11.5px; margin-top: 3px; }
+
+.mon-meta {
+  display: flex; flex-wrap: wrap; gap: 4px 14px;
+  margin-top: 8px;
+  font-size: 11.5px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+/* An overdue monitor is a fact about the schedule, not a countdown. */
+.mon-meta .due { color: var(--partial); font-weight: 620; }
+
+.mon-more {
+  margin-top: 9px; padding: 0;
+  border: 0; background: none;
+  font: inherit; font-size: 12px; font-weight: 620;
+  color: var(--green); cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+  text-decoration-color: var(--green-line);
+}
+.mon-more:hover { text-decoration-color: var(--green); }
+
+.mon-int { display: block; }
+.mon-int > span {
+  display: block; margin-bottom: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--faint);
+}
+.mon-int select {
+  display: block; width: 100%;
+  padding: 8px 34px 8px 11px;
+  background: var(--white);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-s);
+  font: inherit; font-size: 13px; color: var(--ink);
+  appearance: none; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.mon-int select:focus {
+  outline: 0; border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-wash);
+}
+.mon-int select:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---- the rules a monitor re-runs ---------------------------------------- */
+
+.mon-rules { display: grid; gap: 4px; margin-top: 11px; }
+.mon-rule {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px;
+  align-items: baseline;
+  padding: 9px 12px;
+  background: var(--white);
+  border: 1px solid var(--line-soft);
+  border-left: 2px solid var(--line);
+  border-radius: var(--r-s);
+}
+.mon-rule.fail { border-left-color: var(--fail); }
+.mon-rule.partial { border-left-color: var(--partial); }
+.mon-rule.pass { border-left-color: var(--pass); }
+.mon-rule > span { min-width: 0; }
+.mon-rule b { display: block; font-size: 13px; font-weight: 620; line-height: 1.45; }
+.mon-rule small {
+  display: block; margin-top: 3px;
+  font-size: 11.5px; color: var(--faint); line-height: 1.5;
+}
+.mon-rule small.mono { color: var(--green); font-size: 11px; }
+
+/* ---- the continuous report --------------------------------------------- */
+
+.mon-h3 {
+  margin: 30px 0 12px;
+  font-size: 16px; font-weight: 660; letter-spacing: -.02em;
+}
+
+.mon-cyc { display: grid; gap: 5px; }
+.mon-cyc > span {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  font-size: 12.5px; color: var(--ink-2);
+}
+.mon-cyc i { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.mon-cyc em {
+  font-style: normal; font-size: 11px; color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* One movement in one rule. The left edge carries the direction, because a
+   regression and a recovery are the same shape and the opposite news. */
+.mon-drift {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: var(--r-m);
+  padding: 14px 16px;
+}
+.mon-drift.regression { border-left-color: var(--fail); background: var(--fail-wash); }
+.mon-drift.improvement { border-left-color: var(--pass); background: var(--pass-wash); }
+.mon-drift.evidence_changed { border-left-color: var(--line-strong); }
+
+.mon-drift-h { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.mon-drift-h i { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.mon-drift-h strong { font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+.mon-drift-w {
+  margin-left: auto;
+  font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted);
+}
+.mon-drift.regression .mon-drift-w { color: var(--fail); }
+.mon-drift.improvement .mon-drift-w { color: var(--pass); }
+
+.mon-drift-move {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 9px;
+  font-size: 12.5px; color: var(--muted);
+}
+.mon-drift-move em { font-style: normal; font-size: 11.5px; color: var(--faint); }
+.mon-drift > p { font-size: 13px; color: var(--ink-2); line-height: 1.55; margin-top: 9px; }
+
+.mon-drift-ev {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 9px;
+  margin-top: 11px;
+}
+.mon-drift-ev > div {
+  background: var(--white); border: 1px solid var(--line-soft);
+  border-radius: var(--r-s); padding: 9px 11px;
+}
+.mon-drift-ev em {
+  display: block; font-style: normal;
+  font-size: 10px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--faint);
+  margin-bottom: 4px;
+}
+.mon-drift-ev span { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+
+/* ============================================================================
    PRINT — the report only
    ========================================================================== */
 
@@ -1064,3 +1503,430 @@ table.tbl td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .chapter { break-inside: avoid; padding-top: 26px; }
   .disc:not([open]) .disc-body { display: block; }
 }
+
+/* ---- depth step: picks on the left, the actual rule list on the right ----
+   Choosing a depth is choosing a set of rules. The reach bar said how many;
+   the rail says which, because "37 controls" is not a thing anyone can check. */
+.depth-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 26px; align-items: start; }
+@media (max-width: 900px) { .depth-split { grid-template-columns: minmax(0, 1fr); } }
+
+.depth-rail {
+  border: 1px solid var(--line); border-radius: var(--r-m);
+  background: var(--paper-2);
+  max-height: 520px; overflow-y: auto; scrollbar-width: thin;
+  position: sticky; top: 16px;
+}
+.dr-head { padding: 15px 16px 13px; border-bottom: 1px solid var(--line); }
+.dr-tier {
+  display: inline-block; font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: .07em; text-transform: uppercase; color: var(--faint);
+}
+.dr-head strong { display: block; margin-top: 3px; font-size: 15px; }
+.dr-head p { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.dr-head p b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.dr-group { padding: 13px 16px; border-bottom: 1px solid var(--line-soft); }
+.dr-group:last-child { border-bottom: 0; }
+.dr-group.locked { background: color-mix(in srgb, var(--na) 6%, transparent); }
+.dr-group-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.dr-group-h b { font-size: 13px; }
+.dr-group-h span {
+  font-family: var(--mono); font-size: 11px; color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.dr-blurb { margin: 3px 0 9px; font-size: 12px; color: var(--faint); line-height: 1.5; }
+
+.dr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.dr-list li { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 8px; font-size: 12.5px; line-height: 1.45; }
+.dr-list small { display: block; color: var(--faint); font-size: 11px; margin-top: 1px; word-break: break-word; }
+.dr-dot { color: var(--green); font-size: 8px; line-height: 1.9; }
+.dr-dot.lock { color: var(--na); }
+
+/* ---- the area sheet ------------------------------------------------------
+   Chapter IV's five cards summarise; this is what opens behind one of them.
+   A scrim sheet rather than a route: the reader is mid-report, the area is a
+   detour, and losing the scroll position of a document this long to read one
+   area would be a worse trade than the modal costs. ------------------------ */
+
+.sheet-scrim {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: 4vh 20px;
+  animation: sheet-in var(--t-base) both;
+}
+.sheet-back {
+  position: absolute; inset: 0; border: 0; padding: 0; cursor: default;
+  background: rgba(15, 21, 17, .42);
+  backdrop-filter: blur(2px);
+}
+.sheet {
+  position: relative;
+  width: min(920px, 100%);
+  max-height: 92vh;
+  display: flex; flex-direction: column;
+  background: var(--paper);
+  border-radius: var(--r-xl);
+  box-shadow: var(--lift-3);
+  overflow: hidden;
+  animation: sheet-rise var(--t-slow) both;
+}
+@keyframes sheet-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes sheet-rise { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
+
+.sheet-h {
+  padding: 20px 26px 0;
+  background: var(--white);
+  border-top: 3px solid var(--green);
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.sheet-h-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.sheet-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 620; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint);
+}
+.sheet-eyebrow i { width: 8px; height: 8px; border-radius: 50%; }
+.sheet-x {
+  margin-left: auto; border: 1px solid var(--line); background: var(--white);
+  border-radius: 100px; padding: 5px 13px; font: inherit; font-size: 12.5px;
+  color: var(--muted); cursor: pointer; transition: all var(--t-fast);
+}
+.sheet-x:hover { border-color: var(--line-strong); color: var(--ink); }
+.sheet-h h3 { font-size: 24px; font-weight: 660; letter-spacing: -.03em; margin-bottom: 5px; }
+.sheet-h > p { font-size: 13.5px; color: var(--muted); line-height: 1.55; max-width: 68ch; }
+
+.sheet-nums {
+  display: flex; flex-wrap: wrap; gap: 26px; margin: 17px 0 3px;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-nums span { display: grid; gap: 2px; }
+.sheet-nums em {
+  font-style: normal; font-size: 11px; color: var(--faint);
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.sheet-nums b { font-size: 20px; font-weight: 700; letter-spacing: -.03em; }
+
+.sheet-tabs { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 16px; }
+.sheet-tabs button {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 0; background: none; font: inherit; font-size: 12.5px;
+  color: var(--faint); cursor: pointer;
+  padding: 8px 11px; border-bottom: 2px solid transparent;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.sheet-tabs button i { width: 7px; height: 7px; border-radius: 50%; opacity: .45; }
+.sheet-tabs button:hover { color: var(--ink-2); }
+.sheet-tabs button.on { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+.sheet-tabs button.on i { opacity: 1; }
+
+.sheet-body { overflow-y: auto; padding: 24px 26px 30px; display: grid; gap: 28px; }
+
+.sh-sec > h4 {
+  font-size: 16px; font-weight: 640; letter-spacing: -.02em; margin-bottom: 6px;
+}
+.sh-lede { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; max-width: 74ch; }
+.sh-empty {
+  font-size: 13px; color: var(--muted); line-height: 1.6;
+  background: var(--paper-2); border: 1px solid var(--line-soft);
+  border-radius: var(--r-m); padding: 14px 16px;
+}
+.sh-lbl {
+  display: block; font-size: 10.5px; font-weight: 620; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--faint); margin-bottom: 3px;
+}
+
+.sh-packs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.sh-pack {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  background: var(--white); border: 1px solid var(--line);
+  border-radius: 100px; padding: 4px 12px; font-size: 12px; color: var(--muted);
+}
+.sh-pack b { font-size: 12.5px; font-weight: 640; color: var(--ink); }
+
+.sh-domains {
+  display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(228px, 1fr));
+  margin-bottom: 18px;
+}
+.sh-domain {
+  background: var(--white); border: 1px solid var(--line);
+  border-radius: var(--r-m); padding: 12px 14px;
+}
+/* Stacked, not side by side — see the note on .area-h. At this column width a
+   verdict pill beside the name left "Supply chain & dependencies" three lines
+   tall with the pill wedged into the middle of it. */
+.sh-domain-h { display: grid; justify-items: start; gap: 6px; margin-bottom: 5px; }
+.sh-domain-h strong { font-size: 13.5px; font-weight: 620; }
+.sh-domain p { font-size: 12px; color: var(--faint); line-height: 1.5; margin-bottom: 7px; }
+.sh-domain small { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.sh-rules { display: grid; gap: 5px; }
+.sh-rule {
+  background: var(--white); border: 1px solid var(--line);
+  border-radius: var(--r-m); overflow: hidden;
+}
+.sh-rule[open] { border-color: var(--line-strong); box-shadow: var(--lift-1); }
+.sh-rule summary {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 14px; cursor: pointer; list-style: none;
+}
+.sh-rule summary::-webkit-details-marker { display: none; }
+.sh-rule summary:hover { background: var(--paper-2); }
+.sh-rule-t { display: block; font-size: 13.5px; line-height: 1.4; min-width: 0; }
+.sh-rule-t small {
+  display: block; font-size: 11.5px; color: var(--faint); margin-top: 3px;
+  line-height: 1.45; word-break: break-word;
+}
+.sh-rule-d {
+  padding: 0 14px 14px; display: grid; gap: 12px;
+  border-top: 1px dashed var(--line); margin-top: 2px; padding-top: 12px;
+}
+.sh-intent { font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.sh-facts { display: grid; gap: 9px; }
+.sh-facts p { font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+.sh-facts .mono { font-size: 11.5px; color: var(--ink-2); word-break: break-all; }
+
+.sh-clauses { display: grid; gap: 4px; }
+.sh-clause {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; align-items: baseline;
+  font-size: 12px; color: var(--muted);
+  background: var(--paper-2); border-radius: var(--r-s); padding: 6px 10px;
+}
+.sh-clause b { font-size: 11px; font-weight: 640; color: var(--ink); white-space: nowrap; }
+.sh-clause .mono { font-size: 11px; color: var(--green); white-space: nowrap; }
+
+/* ---- a problem, with its fix nested inside it ---------------------------- */
+
+.sh-finds { display: grid; gap: 12px; }
+.sh-find {
+  background: var(--white); border: 1px solid var(--line);
+  border-left: 3px solid var(--sev-low);
+  border-radius: var(--r-m); padding: 15px 17px;
+}
+.sh-find.critical { border-left-color: var(--sev-critical); }
+.sh-find.high { border-left-color: var(--sev-high); }
+.sh-find.medium { border-left-color: var(--sev-medium); }
+.sh-find-h { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+.sh-find-h strong { font-size: 15px; font-weight: 640; letter-spacing: -.015em; }
+.sh-sevword {
+  margin-left: auto; font-size: 10.5px; font-weight: 620; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--faint);
+}
+.sh-detail { font-size: 13px; line-height: 1.6; color: var(--ink-2); margin-bottom: 10px; }
+.sh-impact { font-size: 12.5px; line-height: 1.55; color: var(--muted); margin-bottom: 11px; }
+.sh-blast {
+  display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 12px;
+  font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+.sh-blast b { color: var(--ink); font-weight: 640; }
+
+.sh-fix {
+  margin-top: 13px; background: var(--green-wash);
+  border: 1px solid var(--green-line); border-radius: var(--r-m); padding: 14px 16px;
+}
+.sh-fix-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.sh-fix-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--white); background: var(--green); border-radius: 100px; padding: 3px 9px;
+}
+.sh-fix-h strong { font-size: 14px; font-weight: 640; letter-spacing: -.015em; }
+.sh-fix-meta {
+  display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 12px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--green-line);
+}
+.sh-fix-meta span { display: grid; gap: 1px; }
+.sh-fix-meta em {
+  font-style: normal; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted);
+}
+.sh-fix-meta b { font-size: 13px; font-weight: 640; }
+.sh-steps { list-style: none; margin: 0 0 12px; padding: 0; counter-reset: step; display: grid; gap: 9px; }
+.sh-steps li {
+  counter-increment: step;
+  display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px;
+  font-size: 13px; line-height: 1.55;
+}
+.sh-steps li::before {
+  content: counter(step);
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  color: var(--green); background: var(--white); border: 1px solid var(--green-line);
+  border-radius: 50%; width: 20px; height: 20px;
+  display: grid; place-items: center; margin-top: 1px;
+}
+.sh-steps small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; word-break: break-word; }
+.sh-verify { font-size: 12.5px; line-height: 1.55; color: var(--ink-2); }
+
+.sh-blocked { display: grid; gap: 4px; }
+.sh-block {
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr) auto;
+  gap: 14px; align-items: baseline;
+  background: var(--paper-2); border: 1px solid var(--line-soft);
+  border-radius: var(--r-s); padding: 9px 12px; font-size: 12.5px;
+}
+.sh-block-t { color: var(--ink-2); }
+.sh-block-t small { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; }
+.sh-block-r { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.sh-block-n { font-size: 11.5px; color: var(--faint); white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .sheet-scrim { padding: 0; }
+  .sheet { max-height: 100vh; border-radius: 0; width: 100%; }
+  .sheet-h, .sheet-body { padding-left: 18px; padding-right: 18px; }
+  .sh-block { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+
+  /* At this width the header alone is taller than the phone, so a fixed header
+     over a scrolling body left roughly one card visible. The whole sheet scrolls
+     instead and the header goes with it — only the close row is pinned, because
+     there is no Escape key to fall back on. */
+  .sheet { overflow-y: auto; }
+  .sheet-body { overflow: visible; padding-top: 20px; }
+  .sheet-h { padding-top: 14px; }
+  .sheet-h-top { margin-bottom: 8px; }
+  /* Sticky would ride the header out of view, since a sticky box cannot outlive
+     its own parent's scroll. The sheet is the full screen at this width, so the
+     close control is pinned to the viewport instead — which needs the rise
+     animation dropped first: an animation naming `transform` makes .sheet a
+     containing block in Chromium even once the computed transform is none, and
+     the "fixed" button then scrolled away with the content. */
+  .sheet { animation-name: sheet-in; }
+  /* Once it floats over the scrolling content it is icon-only: the word cost
+     40px of width and sat on top of a word of whatever had scrolled under it. */
+  .sheet-x {
+    position: fixed; top: 12px; right: 14px; z-index: 5;
+    box-shadow: var(--lift-2);
+    display: grid; place-items: center;
+    width: 34px; height: 34px; padding: 0; font-size: 15px; line-height: 1;
+  }
+  .sheet-x > span { display: none; }
+  .sheet-h h3 { font-size: 21px; }
+  .sheet-nums { gap: 13px 22px; margin-top: 14px; }
+  .sheet-nums b { font-size: 17px; }
+  .sheet-tabs {
+    flex-wrap: nowrap; overflow-x: auto; margin-top: 12px;
+    scrollbar-width: none;
+  }
+  .sheet-tabs::-webkit-scrollbar { display: none; }
+  .sheet-tabs button { white-space: nowrap; flex: 0 0 auto; }
+
+  /* ---- monitoring on a phone -------------------------------------------
+     The interval select cannot sit in a third column at this width without
+     squeezing the row's own text to about six characters, so it drops under the
+     body and the switch keeps its own column — the switch is the control the
+     row exists for and it must stay reachable with a thumb. */
+  .mon-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .mon-int { grid-column: 2; margin-top: 4px; }
+  .mon-row.on { padding-inline: 10px; }
+  .mon-drift-w { margin-left: 0; }
+
+  /* The rail is the one band that cannot wrap, and at this width the mark, both
+     tabs and the note do not fit. The note is the thing a reader can also get
+     from the screen itself, so it is what goes. */
+  .rail { gap: 12px; padding: 0 14px; }
+  .rail-note { display: none; }
+  .tabs button { padding: 5px 10px; font-size: 12px; }
+}
+
+/* ---- the sheet's folded working ------------------------------------------
+   The failures and their fixes are the sheet. The rules that ran and the rules
+   that could not are the working behind them — kept, because a verdict that
+   cannot be checked is not worth much, but closed, because the reader opened
+   the area to find out what to do. ---------------------------------------- */
+
+.sh-sec.lead > h4 { font-size: 18px; }
+
+/* No `overflow: hidden` here, deliberately. These sit in the sheet-body grid,
+   and a grid item that is also a scroll container takes an automatic minimum
+   size of zero — the closed <details> collapsed to its two border pixels and
+   clipped its own summary out of sight. The summary carries the corner radius
+   instead, which is all the clipping was ever doing. */
+.sh-fold { background: var(--white); border: 1px solid var(--line); border-radius: var(--r-m); }
+.sh-fold > summary {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding: 13px 16px; cursor: pointer; list-style: none;
+  border-radius: 11px;
+  transition: background var(--t-fast);
+}
+.sh-fold > summary::-webkit-details-marker { display: none; }
+.sh-fold > summary:hover { background: var(--paper-2); }
+.sh-fold > summary span { font-size: 14px; font-weight: 620; letter-spacing: -.015em; }
+.sh-fold > summary small {
+  font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums;
+}
+.sh-fold > summary::after {
+  content: "Show"; margin-left: auto;
+  font-size: 11px; font-weight: 620; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--green);
+}
+.sh-fold[open] > summary::after { content: "Hide"; }
+.sh-fold[open] > summary { border-bottom: 1px solid var(--line); border-radius: 11px 11px 0 0; }
+.sh-fold > :not(summary) { margin-left: 16px; margin-right: 16px; }
+.sh-fold > :nth-child(2) { margin-top: 15px; }
+.sh-fold > :last-child { margin-bottom: 16px; }
+
+/* The problems-open figure is the one a reader looks for first, so it is toned
+   when it is not zero. The others stay neutral — they are context, not verdicts. */
+.sheet-nums span.hot b { color: var(--fail); }
+
+/* ---- pack by pack -------------------------------------------------------
+   The pack cards reuse .area wholesale: same grid, same subgrid rows, same
+   footer. They are two cuts of one result and reading as two different objects
+   would suggest otherwise. Only the two things a pack has and an area does not
+   are new. -------------------------------------------------------------- */
+
+.area-readiness {
+  font-size: 12px; font-weight: 620; color: var(--ink-2);
+  margin-bottom: 9px;
+}
+.area.critical .area-readiness, .area.high .area-readiness { color: var(--fail); }
+
+/* Coverage per area, inside one pack. Small enough to sit five across and be
+   read as a shape rather than five numbers. */
+.sh-cells {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 9px; margin-bottom: 18px;
+}
+.sh-cell {
+  background: var(--white); border: 1px solid var(--line);
+  border-radius: var(--r-m); padding: 10px 12px;
+  display: grid; gap: 5px;
+}
+.sh-cell-h {
+  display: flex; align-items: start; gap: 7px;
+  font-size: 11.5px; color: var(--muted); line-height: 1.4;
+}
+/* Aligned to the first line, not to the middle of the block — at narrow widths
+   "Trust & transparency" wraps and a centred dot floats between the two lines. */
+.sh-cell-h i { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; margin-top: 4px; }
+.sh-cell b { font-size: 15px; font-weight: 680; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.sh-cell .area-bar { margin-bottom: 0; }
+
+/* One clause, one row. The verdict leads because the list is scanned for the
+   fails, and the id is monospaced because it is the thing a reader copies into
+   whatever tracker they keep. */
+.sh-clist { display: grid; gap: 4px; }
+.sh-crow {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px;
+  align-items: baseline;
+  background: var(--paper-2); border-radius: var(--r-s); padding: 9px 12px;
+  border-left: 2px solid var(--line);
+}
+.sh-crow.fail { border-left-color: var(--fail); }
+.sh-crow.partial { border-left-color: var(--partial); }
+.sh-crow.pass { border-left-color: var(--pass); }
+.sh-crow-t { font-size: 13px; color: var(--ink-2); line-height: 1.5; min-width: 0; }
+.sh-crow-id { font-size: 11px; color: var(--green); margin-right: 7px; white-space: nowrap; }
+.sh-crow-t small {
+  display: block; margin-top: 3px;
+  font-size: 11.5px; color: var(--faint); line-height: 1.5;
+}
+
+/* The clause a finding actually breaks, marked where it sits among the packs it
+   also touches — without it the reader lines two id lists up by hand. */
+.sh-clause.on {
+  background: var(--fail-wash);
+  box-shadow: inset 0 0 0 1px var(--fail-line);
+}
+.sh-clause.on b { color: var(--fail); }

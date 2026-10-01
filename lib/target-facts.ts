@@ -1200,7 +1200,7 @@ export const TARGET_RULES: TargetRuleSpec[] = [
       passWhen: "A manifest endpoint and a schema version are both advertised",
       partialWhen: "An endpoint is advertised without a schema version",
       failWhen: "No evidence endpoint is advertised",
-      thresholds: [{ key: "schema", value: "GovernAI evidence manifest 1.0" }],
+      thresholds: [{ key: "schema", value: "ARQ Governance evidence manifest 1.0" }],
     },
     judge: (facts) => {
       if (!facts.evidenceManifestEndpoint) return NOT_EXPOSED("an evidence manifest endpoint");

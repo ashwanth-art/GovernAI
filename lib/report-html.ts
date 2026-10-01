@@ -190,17 +190,6 @@ export function createReportHtml(result: AssessmentResult, report?: StandardRepo
     <div class="honest">A digest is a content hash of the observation recorded here. It detects a changed record; it is not a signature and does not bind the record to the assessed infrastructure. An adapter read is the target system's own declaration.</div>
     </section>`;
 
-  const monitorSection = `<section><h2>Ongoing checks</h2>
-    <p class="lede">The re-verification schedule this run implies. Each monitor re-runs the rules listed against the live system on its cadence; arming and disarming happen in the app, and this report states the plan rather than the current armed state at the time you read it.</p>
-    <table><thead><tr><th>Monitor</th><th>Area</th><th>Cadence</th><th>Rules</th><th>Requests / month</th><th>What arming costs</th></tr></thead><tbody>
-    ${analysis.monitorPlan
-      .map(
-        (entry) =>
-          `<tr><td><code>${esc(entry.id)}</code></td><td>${esc(entry.pillar)}</td><td>${esc(entry.cadence)}</td><td class="mono">${esc(entry.checkIds.join(", "))}</td><td>${entry.requestsPerMonth}</td><td>${esc(entry.armingCost)}</td></tr>`,
-      )
-      .join("")}
-    </tbody></table></section>`;
-
   const reportsHtml = selected
     .map(
       (item) => `<section>
@@ -225,17 +214,18 @@ export function createReportHtml(result: AssessmentResult, report?: StandardRepo
       <tbody>${controlRows(result.owasp)}</tbody></table></section>`;
 
   const notesHtml = `<section><h2>Limits of this assessment</h2><ul>${analysis.notes
+    .filter((note) => !note.startsWith("Monitors re-run"))
     .map((note) => `<li>${esc(note)}</li>`)
     .join("")}</ul></section>`;
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"/>
     <title>${esc(result.scope.systemName)} — governance assessment${scopeNote}</title>
     <style>${STYLE}</style></head><body>
-    <h1>GovernAI assessment${scopeNote}</h1>
+    <h1>ARQ Governance assessment${scopeNote}</h1>
     <p><strong>${esc(result.scope.organization)}</strong> · ${esc(result.scope.systemName)} · ${esc(result.scope.industry)}<br/>
     Assessment <code>${esc(result.assessmentId)}</code> · Tier ${result.scope.tier} · ${esc(new Date(result.generatedAt).toLocaleString())}<br/>
     Frameworks: ${esc(result.scope.selectedStandards.join(", "))}</p>
-    ${postureSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${evidenceSection}${monitorSection}${notesHtml}
+    ${postureSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${evidenceSection}${notesHtml}
     <script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250))</script>
     </body></html>`;
 }

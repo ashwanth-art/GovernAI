@@ -669,7 +669,25 @@ const DEPTH: Record<AccessTier, { needs: string; gain: string }> = {
   },
 };
 
+/* How a rule gets its evidence, said plainly. The engine's own word for this is
+   `method`; these are the same four values written for a reader. */
+/* Keyed on CheckMethod exactly. Inventing shorthand ids here ("probe",
+   "adapter") silently matched nothing, every group returned zero rows, and the
+   whole rail rendered blank — the failure looked like "no data" rather than
+   "wrong key", which is why it survived a clean type-check. */
+const METHOD_GROUP: Array<{ id: string; label: string; blurb: string }> = [
+  { id: "live_probe", label: "Live probes", blurb: "Bounded questions sent to your assistant." },
+  { id: "adapter_read", label: "Configuration reads", blurb: "Read-only facts from your own adapters." },
+  { id: "provider_api", label: "Provider reads", blurb: "Read-only calls to your cloud or monitoring provider." },
+  { id: "named_artifact", label: "Evidence records", blurb: "Named procedure verdicts you publish." },
+  { id: "declared_scope", label: "Scoping answers", blurb: "Decisions you recorded during setup." },
+];
+
 function DepthStep({ input, patch, plan }: StepProps) {
+  const checks = plan?.checks ?? [];
+  const willRun = checks.filter((check) => check.tierMinimum <= input.tier);
+  const outOfReach = checks.filter((check) => check.tierMinimum > input.tier);
+
   return (
     <>
       <p className="q-sub">
@@ -677,37 +695,114 @@ function DepthStep({ input, patch, plan }: StepProps) {
         credentials — nothing else changes.
       </p>
       <div className="q-body">
-        <div className="picks">
-          {([1, 2, 3] as AccessTier[]).map((tier) => {
-            const forecast = plan?.forecast.find((entry) => entry.tier === tier);
-            const on = input.tier === tier;
-            return (
-              <button
-                key={tier}
-                type="button"
-                className={`pick deep${on ? " on" : ""}`}
-                onClick={() => patch({ tier })}
-              >
-                <span className="pick-head">
-                  <span className="n">{tierLabel(tier).replace(" · ", " · ")}</span>
-                  <strong>{tierPlain[tier]}</strong>
-                </span>
-                <p style={{ fontSize: 13.5, color: "var(--muted)" }}>{DEPTH[tier].needs}</p>
-                {forecast ? (
-                  <span className="reach">
-                    <span className="bar">
-                      <i style={{ width: `${forecast.percent}%` }} />
-                    </span>
-                    <span className="num">
-                      {forecast.reachable}/{forecast.applicable} controls
-                    </span>
+        <div className="depth-split">
+          <div className="picks">
+            {([1, 2, 3] as AccessTier[]).map((tier) => {
+              const forecast = plan?.forecast.find((entry) => entry.tier === tier);
+              const on = input.tier === tier;
+              return (
+                <button
+                  key={tier}
+                  type="button"
+                  className={`pick deep${on ? " on" : ""}`}
+                  onClick={() => patch({ tier })}
+                >
+                  <span className="pick-head">
+                    <span className="n">{tierLabel(tier).replace(" · ", " · ")}</span>
+                    <strong>{tierPlain[tier]}</strong>
                   </span>
-                ) : null}
-                <span className="gain">{DEPTH[tier].gain}</span>
-              </button>
-            );
-          })}
+                  <p style={{ fontSize: 13.5, color: "var(--muted)" }}>{DEPTH[tier].needs}</p>
+                  {forecast ? (
+                    <span className="reach">
+                      <span className="bar">
+                        <i style={{ width: `${forecast.percent}%` }} />
+                      </span>
+                      <span className="num">
+                        {forecast.reachable}/{forecast.applicable} controls
+                      </span>
+                    </span>
+                  ) : null}
+                  <span className="gain">{DEPTH[tier].gain}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* The right rail: the actual rule list for whichever depth is selected.
+              A reader choosing a depth is choosing a set of rules, so the set is
+              what the screen should show — not only how many of them there are. */}
+          <aside className="depth-rail" aria-live="polite">
+            <div className="dr-head">
+              <span className="dr-tier">{tierLabel(input.tier)}</span>
+              <strong>What runs at this depth</strong>
+              {plan ? (
+                <p>
+                  <b>{willRun.length}</b> of {checks.length} rules run, closing{" "}
+                  <b>{plan.reachableControls}</b> of {plan.applicableControls} in-scope controls.
+                </p>
+              ) : (
+                <p>Working out what this depth can reach…</p>
+              )}
+            </div>
+
+            {METHOD_GROUP.map((group) => {
+              const rows = willRun.filter((check) => check.method === group.id);
+              if (!rows.length) return null;
+              return (
+                <div className="dr-group" key={group.id}>
+                  <div className="dr-group-h">
+                    <b>{group.label}</b>
+                    <span>{rows.length}</span>
+                  </div>
+                  <p className="dr-blurb">{group.blurb}</p>
+                  <ul className="dr-list">
+                    {rows.map((check) => (
+                      <li key={check.id}>
+                        <span className="dr-dot" aria-hidden="true">
+                          ●
+                        </span>
+                        <span>
+                          {check.title}
+                          <small>
+                            {check.controlCount} control{check.controlCount === 1 ? "" : "s"}
+                            {check.request ? ` · ${check.request.method} ${check.request.endpoint}` : ""}
+                          </small>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+
+            {outOfReach.length ? (
+              <div className="dr-group locked">
+                <div className="dr-group-h">
+                  <b>Still out of reach</b>
+                  <span>{outOfReach.length}</span>
+                </div>
+                <p className="dr-blurb">
+                  These report <span className="mono">not_assessed</span> at this depth — never a
+                  pass, never a fail. Each names the depth that would unlock it.
+                </p>
+                <ul className="dr-list">
+                  {outOfReach.map((check) => (
+                    <li key={check.id}>
+                      <span className="dr-dot lock" aria-hidden="true">
+                        ○
+                      </span>
+                      <span>
+                        {check.title}
+                        <small>needs {tierLabel(check.tierMinimum)}</small>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </aside>
         </div>
+
         <div className="because">
           <i>◆</i>
           <span>

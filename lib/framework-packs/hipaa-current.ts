@@ -519,7 +519,7 @@ export const hipaaCurrentPack: FrameworkPack = validateFrameworkPack({
     sourceVersion: "45 CFR Parts 160 and 164 — current rules",
     publishedAt: "2026-07-28",
     contentHash: contentHashForControls(controls),
-    note: "Initial GovernAI-authored HIPAA readiness pack. It is not legal advice or an OCR compliance determination.",
+    note: "Initial ARQ Governance-authored HIPAA readiness pack. It is not legal advice or an OCR compliance determination.",
   },
   standard: {
     id: "hipaa",

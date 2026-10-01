@@ -215,7 +215,7 @@ server.headersTimeout = 60_000;
 server.keepAliveTimeout = 75_000;
 
 server.listen(PORT, HOST, () => {
-  console.log(`GovernAI listening on http://${HOST}:${PORT}`);
+  console.log(`ARQ Governance listening on http://${HOST}:${PORT}`);
 });
 
 for (const signal of ["SIGTERM", "SIGINT"]) {

@@ -31,7 +31,10 @@ export const sevHue: Record<Severity, string> = {
 
 /** Severity as a filled square. Four sizes of the same shape, so rank reads at a glance. */
 export function Sev({ severity }: { severity: Severity }) {
-  const size = { critical: 11, high: 10, medium: 8.5, low: 7 }[severity];
+  /* The ramp has to carry rank on its own, since the two top hues are both dark
+     reds. At 11/10 the critical-vs-high step was a single pixel and invisible at
+     glyph size; these steps are 2px+ so the ordering reads without a legend. */
+  const size = { critical: 12.5, high: 10, medium: 8, low: 6 }[severity];
   return (
     <span
       aria-label={severity}
@@ -52,7 +55,11 @@ export function Sev({ severity }: { severity: Severity }) {
 export function SevRow({ counts }: { counts: Record<string, number> }) {
   const order: Severity[] = ["critical", "high", "medium", "low"];
   const present = order.filter((key) => (counts[key] ?? 0) > 0);
-  if (!present.length) return <span className="faint" style={{ fontSize: 12 }}>none open</span>;
+  /* The empty state keeps the same class as the squares so it lands in the same
+     place on the row. Styled as a bare `.faint` span it was neither pushed right
+     nor held on one line, and "none open" broke across two lines in any card
+     whose count text ran long. */
+  if (!present.length) return <span className="area-sev none">none open</span>;
   return (
     <span className="area-sev">
       {present.map((key) => (

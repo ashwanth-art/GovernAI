@@ -1,7 +1,7 @@
 import type { AccessTier, Control, Pillar, Severity } from "./types";
 
 /**
- * The verification library: every control GovernAI can actually verify, and how.
+ * The verification library: every control ARQ Governance can actually verify, and how.
  *
  * One entry per verifiable capability, not one per standard. A standard's control
  * set is a selection from this library plus that standard's own identifiers and

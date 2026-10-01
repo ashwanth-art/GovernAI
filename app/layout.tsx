@@ -12,12 +12,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol =
     requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const title = "GovernAI — RAG Compliance Assessment";
+  const title = "ARQ Governance — RAG Compliance Assessment";
   const description =
     "Dynamic, standard-driven AI governance evaluation for retrieval-augmented chatbots.";
   return {
     metadataBase: new URL(origin),
-    title: { default: title, template: "%s · GovernAI" },
+    title: { default: title, template: "%s · ARQ Governance" },
     description,
     icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
     openGraph: {
@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       type: "website",
       url: origin,
-      images: [{ url: `${origin}/og.png`, width: 1792, height: 936, alt: "GovernAI — Evaluate only what matters." }],
+      images: [{ url: `${origin}/og.png`, width: 1792, height: 936, alt: "ARQ Governance — Evaluate only what matters." }],
     },
     twitter: {
       card: "summary_large_image",

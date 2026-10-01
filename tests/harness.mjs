@@ -367,6 +367,15 @@ globalThis.fetch = async (input, init = {}) => {
     if (url.pathname === "/repos/northstar/clinical-assistant/actions/permissions") {
       return Response.json({ enabled: true, allowed_actions: "selected" });
     }
+    if (url.pathname === "/repos/northstar/public-assistant") {
+      return Response.json({ default_branch: "main" });
+    }
+    if (
+      url.pathname === "/repos/northstar/public-assistant/branches/main/protection" ||
+      url.pathname === "/repos/northstar/public-assistant/actions/permissions"
+    ) {
+      return Response.json({ message: "Requires repository administration access" }, { status: 401 });
+    }
   }
   if (url.hostname === "ci.target.test") return new Response(null, { status: 204 });
   return nativeFetch(request);

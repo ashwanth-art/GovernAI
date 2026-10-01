@@ -770,6 +770,10 @@ test("an armed monitor re-runs its checks and reports drift the target actually 
 
     const first = await command({ action: "cycle" });
     assert.equal(first.cyclesRun, 1);
+    assert.ok(first.latestResult, "a successful cycle must retain its complete report");
+    assert.equal(first.latestResult.analysis.pillars.length, 5);
+    assert.equal(first.latestResult.analysis.matrix.length, run.analysis.matrix.length);
+    assert.doesNotMatch(JSON.stringify(first.latestResult), /test-only-monitoring-key/);
     assert.equal(first.cycles[0].sequence, 1);
     assert.ok(first.cycles[0].readings.length > 0, "a cycle must read the checks it covers");
     assert.equal(first.alerts.length, 0, "the first cycle has nothing to compare against");
@@ -847,8 +851,125 @@ test("an armed monitor re-runs its checks and reports drift the target actually 
     const cleared = await command({ action: "clear_history" });
     assert.equal(cleared.cycles.length, 0);
     assert.equal(cleared.alerts.length, 0);
+    assert.equal(cleared.latestResult, null);
   } finally {
     targetState.injectionGuardrail = true;
+    await live("/api/monitors", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "disarm_all" }),
+    });
+  }
+});
+
+test("each monitor is read on its own interval, not the tightest one on the board", async () => {
+  const run = await runAuthored(2);
+  const plan = run.analysis.monitorPlan;
+  assert.ok(plan.length >= 2, "this test needs two monitors to tell two intervals apart");
+  const [first, second] = plan;
+
+  const live = await session();
+  const command = async (body, expected = 200) => {
+    const response = await live("/api/monitors", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    assert.equal(response.status, expected, await response.clone().text());
+    return response.json();
+  };
+  const read = async () => {
+    const response = await live("/api/monitors");
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+  const input = { ...baseInput, standardIds: AUTHORED, tier: 2 };
+  const find = (state, id) => state.armed.find((entry) => entry.monitorId === id);
+
+  try {
+    // An interval can only be changed on something that has a schedule.
+    await command({ action: "set_cadence", monitorId: first.id, cadenceSeconds: 60 }, 422);
+
+    const armed = await command({
+      action: "arm",
+      monitorId: first.id,
+      input,
+      plan,
+      cadenceSeconds: 86_400,
+    });
+    const one = find(armed, first.id);
+    assert.equal(one.cadenceSeconds, 86_400);
+    assert.equal(one.lastReadAt, null, "a monitor that has never run has not been read");
+    // Never read means due now, so the first reading — the baseline every later
+    // comparison needs — is not held back by a full interval.
+    assert.ok(Date.parse(one.nextDueAt) <= Date.now() + 1000);
+
+    const cycled = await command({ action: "cycle" });
+    const read1 = find(cycled, first.id);
+    assert.ok(read1.lastReadAt, "a cycle that read a monitor must record when");
+    assert.equal(
+      Date.parse(read1.nextDueAt) - Date.parse(read1.lastReadAt),
+      86_400_000,
+      "next due is measured from this monitor's own last reading",
+    );
+    assert.ok(read1.checksRead > 0);
+
+    // The second monitor has never been read, so it is due immediately while the
+    // first is 24 hours away. A due cycle must read exactly one of them.
+    await command({ action: "arm", monitorId: second.id, input, plan, cadenceSeconds: 86_400 });
+    const afterDue = await read();
+    assert.equal(afterDue.cyclesRun, 2, "a monitor falling due must produce a cycle on read");
+    const dueCycle = afterDue.cycles[0];
+    assert.equal(dueCycle.trigger, "due");
+    assert.deepEqual(
+      dueCycle.monitors.map((entry) => entry.monitorId),
+      [second.id],
+      "a due cycle reads the monitors that are due and no others",
+    );
+    assert.equal(
+      find(afterDue, first.id).lastReadAt,
+      read1.lastReadAt,
+      "a monitor left out of a cycle keeps its own clock instead of slipping an interval",
+    );
+
+    // Tightening an interval moves that monitor's own due time and nothing else.
+    const tightened = await command({
+      action: "set_cadence",
+      monitorId: first.id,
+      cadenceSeconds: 60,
+    });
+    const tight = find(tightened, first.id);
+    assert.equal(tight.cadenceSeconds, 60);
+    assert.equal(Date.parse(tight.nextDueAt) - Date.parse(tight.lastReadAt), 60_000);
+    assert.equal(
+      find(tightened, second.id).cadenceSeconds,
+      86_400,
+      "one row's interval is not every row's interval",
+    );
+
+    // The floor is the store's, not the caller's: a monitor is not a load generator.
+    const floored = await command({
+      action: "set_cadence",
+      monitorId: second.id,
+      cadenceSeconds: 1,
+    });
+    assert.equal(find(floored, second.id).cadenceSeconds, floored.minCadenceSeconds);
+
+    // Arming the board in one call keeps each row's configured interval rather than
+    // flattening them, and does not erase what an already-armed monitor has read.
+    const cadences = Object.fromEntries(plan.map((entry, index) => [entry.id, 3600 * (index + 1)]));
+    const all = await command({ action: "arm_all", input, plan, cadences });
+    assert.equal(all.armed.length, plan.length);
+    for (const [index, entry] of plan.entries()) {
+      assert.equal(find(all, entry.id).cadenceSeconds, 3600 * (index + 1));
+    }
+    assert.equal(
+      find(all, first.id).lastReadAt,
+      read1.lastReadAt,
+      "re-arming changes a monitor's settings; it does not throw away its baseline",
+    );
+    assert.equal(JSON.stringify(all).includes(baseInput.credentials.chatbotApiKey), false);
+  } finally {
     await live("/api/monitors", {
       method: "POST",
       headers: { "content-type": "application/json" },

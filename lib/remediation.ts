@@ -736,7 +736,7 @@ export function fallbackSeed(checkId: string, checkTitle: string): PlaybookSeed 
         where: "Evidence Manifest 1.0",
       },
       {
-        action: "Point GovernAI at the manifest URL so the procedure verdict is read on the next run.",
+        action: "Point ARQ Governance at the manifest URL so the procedure verdict is read on the next run.",
         where: "Access & depth settings",
       },
     ],

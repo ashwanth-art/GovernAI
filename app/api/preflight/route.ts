@@ -1,5 +1,6 @@
 import { credentialFields } from "@/lib/assessment";
 import { safeDisplayUrl, writeExecutionLog } from "@/lib/execution-log";
+import { resolveServerCredentialRecord } from "@/lib/server-credentials";
 import type { AccessTier } from "@/lib/types";
 
 export const runtime = "edge";
@@ -54,7 +55,7 @@ const REACHABLE: Record<
     label: "Audit configuration",
     resolve: (value) => new URL("/api/audit/config", new URL(value).origin),
     method: "GET",
-    authFrom: "monitoringApiKey",
+    authFrom: "cloudApiKey",
     expectation: "an authorized read of the audit adapter",
   },
   cicdUrl: { label: "Pipeline URL", resolve: (value) => new URL(value), method: "HEAD" },
@@ -65,6 +66,7 @@ const REACHABLE: Record<
     label: "Evidence manifest",
     resolve: (value) => new URL(value),
     method: "GET",
+    authFrom: "evidenceManifestToken",
     expectation: "a JSON manifest listing named procedures",
   },
 };
@@ -190,7 +192,7 @@ export async function POST(request: Request) {
   const tier = ([1, 2, 3] as AccessTier[]).includes(body.tier as AccessTier)
     ? (body.tier as AccessTier)
     : 1;
-  const credentials = body.credentials ?? {};
+  const credentials = resolveServerCredentialRecord(body.credentials ?? {});
   const chatbotBase = credentials.chatbotEndpoint?.trim() ?? "";
 
   /* The tier's own field list decides what gets checked, so the pre-flight can

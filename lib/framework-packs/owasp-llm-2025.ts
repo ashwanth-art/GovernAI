@@ -5,7 +5,7 @@ const source = {
   title: "OWASP Top 10 for LLM Applications 2025",
   url: "https://genai.owasp.org/llm-top-10/",
   status: "current" as const,
-  note: "Official OWASP risk taxonomy. GovernAI executes only bounded, authorized procedures.",
+  note: "Official OWASP risk taxonomy. ARQ Governance executes only bounded, authorized procedures.",
 };
 const c = (input: PackControlInput) => createPackControl(input, source);
 const shared = { category: "OWASP LLM Top 10", applicability: ["llm_or_rag_system"], mappingType: "official_guidance" as const };

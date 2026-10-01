@@ -9,7 +9,7 @@ test("server-renders the first step of the track, and nothing that comes after i
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /GovernAI/);
+  assert.match(html, /ARQ Governance/);
 
   // The rail: a fill, the mark, one dot per step, and a note. It is not navigation
   // to a set of destinations — it reports position on a track this run computed.
@@ -89,7 +89,7 @@ test("server-renders the first step of the track, and nothing that comes after i
   assert.doesNotMatch(html, /Design prototype · sample data/);
 });
 
-test("client bundle carries the track, the run, and the six-chapter report", async () => {
+test("client bundle carries the track, the run, and the five-chapter report", async () => {
   const assetsDirectory = new URL("../dist/client/assets/", import.meta.url);
   const assets = await readdir(assetsDirectory);
   const workspaceAsset = assets.find(
@@ -138,15 +138,32 @@ test("client bundle carries the track, the run, and the six-chapter report", asy
   assert.match(bundle, /The run stopped before it reached a verdict/);
   assert.match(bundle, /no half-assessment/);
 
-  // The report: six chapters, in the order a reader asks the questions.
+  // The report: five chapters, in the order a reader asks the questions. Two of
+  // them are the same result cut two ways — by area, which is how a reader thinks
+  // about risk, and by pack, which is how an auditor asks the question.
   assert.match(bundle, /Where you stand/);
-  assert.match(bundle, /What is broken/);
-  assert.match(bundle, /What to fix first/);
   assert.match(bundle, /Area by area/);
+  assert.match(bundle, /Pack by pack/);
   assert.match(bundle, /What we could not see/);
   assert.match(bundle, /The full trace/);
   // The chapter most products leave out is the one that says what was not seen.
   assert.match(bundle, /The most important chapter/);
+
+  // Problems and fixes are not chapters. They live inside whichever cut you
+  // opened, with the fix nested under the problem it closes, and survive as flat
+  // run-wide lists only at the bottom of the trace.
+  assert.match(bundle, /What failed here, and the fix for each/);
+  assert.match(bundle, /What fails this pack, and the fix for each/);
+  assert.match(bundle, /What this pack covers/);
+  assert.match(bundle, /What this pack does not cover yet/);
+  assert.match(bundle, /Every problem we raised/);
+    assert.match(bundle, /Every fix, ranked by what it closes/);
+    assert.match(bundle, /Open Monitoring/);
+    assert.match(bundle, /Five pillars now/);
+    assert.match(bundle, /Standards now/);
+    assert.match(bundle, /Latest complete cycle/);
+    assert.doesNotMatch(bundle, /Keeping it true/);
+  assert.doesNotMatch(bundle, /Chapter II<\/em>.{0,80}What is broken/s);
 
   // Health is a rate over what was assessed, and the card says which denominator it
   // used instead of printing its own figure back at the reader a second time.
@@ -263,7 +280,7 @@ test("evaluation generates exactly one native report per selected standard plus 
   assert.equal(result.liveEvidence.chatEndpoint, "https://target.test/v1/web-chat");
   assert.equal(result.liveEvidence.probes.length, 8);
   assert.equal(result.liveEvidence.probes.filter((probe) => probe.status === "pass").length, 8);
-  assert.equal(result.liveEvidence.execution.runner, "GovernAI assessment backend");
+  assert.equal(result.liveEvidence.execution.runner, "ARQ Governance assessment backend");
   assert.equal(result.liveEvidence.execution.officialStandardsPagesFetched, false);
   assert.equal(result.liveEvidence.traces.length, 3);
   assert.ok(
@@ -496,6 +513,39 @@ test("Tier 3 GitHub collector supplies named read-only provider evidence", async
   );
   assert.equal(reproducibility.status, "partial");
   assert.match(reproducibility.evidence, /default branch main/i);
+});
+
+test("an unavailable optional provider read does not erase settled manifest evidence", async () => {
+  const response = await request("/api/assessments", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      ...baseInput,
+      standardIds: ["iso42001", "soc2", "mas_ai"],
+      tier: 3,
+      credentials: {
+        ...baseInput.credentials,
+        repoUrl: "https://github.com/northstar/public-assistant",
+        stagingUrl: "https://ci.target.test/staging",
+        modelRegistryUrl: "https://ci.target.test/models",
+        evidenceManifestUrl: "https://evidence.target.test/manifest.json",
+        evidenceManifestToken: "test-only-manifest-token",
+        githubToken: "",
+      },
+    }),
+  });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  const collector = result.liveEvidence.execution.collectors.find(
+    (item) => item.id === "github",
+  );
+  assert.ok(
+    ["partial", "not_assessed"].includes(collector.status),
+    `expected the optional provider read to remain unsettled, got ${collector.status}`,
+  );
+  assert.equal(result.analysis.posture.coveragePercent, 100);
+  assert.equal(result.analysis.posture.notAssessed, 0);
+  assert.ok(result.analysis.matrix.every((row) => row.coveragePercent === 100));
 });
 
 test("HIPAA applicability excludes controls for a non-regulated organization", async () => {

@@ -94,6 +94,14 @@ export interface ArmedMonitor {
   declaredCadence: string;
   checkIds: string[];
   armedAt: string;
+  /** When this monitor was last actually read. Null until its first reading. */
+  lastReadAt: string | null;
+  /** When it is next due on its own interval — not the run's, not the tightest one. */
+  nextDueAt: string;
+  /** Worst status across its checks as of `lastReadAt`. Null until then. */
+  status: ControlStatus | null;
+  /** How many of its checks the last reading actually reached. */
+  checksRead: number;
 }
 
 export interface MonitorState {
@@ -104,19 +112,45 @@ export interface MonitorState {
   nextDueAt: string | null;
   lastCycleAt: string | null;
   cyclesRun: number;
+  /** The floor the store clamps every interval to. The UI offers nothing below it. */
+  minCadenceSeconds: number;
   /** Every regression still standing, newest first. Improvements are not alerts. */
   alerts: DriftEntry[];
+  /** The complete deterministic report produced by the newest successful cycle. */
+  latestResult: AssessmentResult | null;
   note: string;
+}
+
+/**
+ * An armed monitor as the store holds it.
+ *
+ * `lastReadMs` is the whole reason this is a separate shape from `ArmedMonitor`: a
+ * monitor's interval is meaningless unless the interval is measured from the last
+ * time *that* monitor was read. Measuring from the last cycle instead makes every
+ * interval collapse to the tightest one on the board.
+ */
+interface ArmedRecord {
+  monitorId: string;
+  label: string;
+  pillar: Pillar;
+  cadenceSeconds: number;
+  declaredCadence: string;
+  checkIds: string[];
+  armedAt: string;
+  lastReadMs: number | null;
+  status: ControlStatus | null;
+  checksRead: number;
 }
 
 interface Store {
   input: AssessmentInput | null;
   plan: MonitorPlanEntry[];
-  armed: Map<string, ArmedMonitor>;
+  armed: Map<string, ArmedRecord>;
   cycles: MonitorCycle[];
   cyclesRun: number;
   running: boolean;
   lastCycleAt: number | null;
+  latestResult: AssessmentResult | null;
 }
 
 const store: Store = {
@@ -127,6 +161,7 @@ const store: Store = {
   cyclesRun: 0,
   running: false,
   lastCycleAt: null,
+  latestResult: null,
 };
 
 /** Worse is higher. Used only to decide whether a change is a regression. */
@@ -143,11 +178,43 @@ function cadenceFor(entry: MonitorPlanEntry, requested?: number): number {
   return Math.max(MIN_CADENCE_SECONDS, Math.round(asked));
 }
 
+/**
+ * When a single monitor is next due.
+ *
+ * A monitor that has never been read is due immediately: the first reading is the
+ * baseline every later comparison is made against, and delaying it by a full
+ * interval would mean the first drift report could not arrive for two intervals.
+ */
+function dueAtMs(entry: ArmedRecord): number {
+  if (entry.lastReadMs === null) return Date.parse(entry.armedAt);
+  return entry.lastReadMs + entry.cadenceSeconds * 1000;
+}
+
+/** The earliest moment any armed monitor wants attention. */
 function nextDueMs(): number | null {
   if (!store.armed.size) return null;
-  const tightest = Math.min(...[...store.armed.values()].map((entry) => entry.cadenceSeconds));
-  if (store.lastCycleAt === null) return Date.now();
-  return store.lastCycleAt + tightest * 1000;
+  return Math.min(...[...store.armed.values()].map(dueAtMs));
+}
+
+/** The monitors whose own interval has elapsed as of `nowMs`. */
+function dueMonitors(nowMs: number): ArmedRecord[] {
+  return [...store.armed.values()].filter((entry) => dueAtMs(entry) <= nowMs);
+}
+
+function publicView(entry: ArmedRecord): ArmedMonitor {
+  return {
+    monitorId: entry.monitorId,
+    label: entry.label,
+    pillar: entry.pillar,
+    cadenceSeconds: entry.cadenceSeconds,
+    declaredCadence: entry.declaredCadence,
+    checkIds: entry.checkIds,
+    armedAt: entry.armedAt,
+    lastReadAt: entry.lastReadMs === null ? null : new Date(entry.lastReadMs).toISOString(),
+    nextDueAt: new Date(dueAtMs(entry)).toISOString(),
+    status: entry.status,
+    checksRead: entry.checksRead,
+  };
 }
 
 /**
@@ -221,6 +288,10 @@ export function armMonitor(
   // Held only while something is armed. Replaced on every arm so a re-armed monitor
   // uses the credentials the operator most recently supplied, not a stale copy.
   store.input = input;
+  // Re-arming an already-armed monitor changes its settings; it does not erase what
+  // it has already read. Resetting the clock here would make `arm_all` silently
+  // destroy the baseline of every monitor that was already running.
+  const existing = store.armed.get(monitorId);
   store.armed.set(monitorId, {
     monitorId,
     label: entry.label,
@@ -228,8 +299,28 @@ export function armMonitor(
     cadenceSeconds: cadenceFor(entry, cadenceSeconds),
     declaredCadence: entry.cadence,
     checkIds: entry.checkIds,
-    armedAt: new Date().toISOString(),
+    armedAt: existing?.armedAt ?? new Date().toISOString(),
+    lastReadMs: existing?.lastReadMs ?? null,
+    status: existing?.status ?? null,
+    checksRead: existing?.checksRead ?? 0,
   });
+  return { ok: true };
+}
+
+/**
+ * Change an armed monitor's interval without re-arming it.
+ *
+ * Re-arming would work, but it needs the credentials in the request body, which
+ * means changing a dropdown would put tokens back on the wire for no reason.
+ */
+export function setCadence(
+  monitorId: string,
+  cadenceSeconds: number,
+): { ok: boolean; error?: string } {
+  const record = store.armed.get(monitorId);
+  if (!record) return { ok: false, error: `Monitor ${monitorId} is not armed.` };
+  if (!Number.isFinite(cadenceSeconds)) return { ok: false, error: "The interval must be a number of seconds." };
+  record.cadenceSeconds = Math.max(MIN_CADENCE_SECONDS, Math.round(cadenceSeconds));
   return { ok: true };
 }
 
@@ -247,6 +338,9 @@ export function armAll(
   plan: MonitorPlanEntry[],
   cadenceSeconds?: number,
   monitorIds?: string[],
+  /** Per-monitor intervals, so arming the board in one call keeps each row's own
+   *  setting instead of flattening nine configured intervals into one. */
+  cadences?: Record<string, number>,
 ): { ok: boolean; error?: string; armed: number } {
   const wanted = monitorIds?.length
     ? plan.filter((entry) => monitorIds.includes(entry.id))
@@ -254,7 +348,7 @@ export function armAll(
   if (!wanted.length) return { ok: false, error: "No monitor in the plan to arm.", armed: 0 };
   const alreadyArmed = new Set(store.armed.keys());
   for (const entry of wanted) {
-    const armed = armMonitor(entry.id, input, plan, cadenceSeconds);
+    const armed = armMonitor(entry.id, input, plan, cadences?.[entry.id] ?? cadenceSeconds);
     if (!armed.ok) {
       // All or nothing for this call, without disturbing whatever was armed before it.
       for (const id of wanted.map((item) => item.id)) {
@@ -287,6 +381,7 @@ export function clearHistory(): { ok: boolean } {
   store.cycles = [];
   store.cyclesRun = 0;
   store.lastCycleAt = null;
+  store.latestResult = null;
   return { ok: true };
 }
 
@@ -297,13 +392,26 @@ export async function runCycle(
   if (!store.input) return { ok: false, error: "No credentials are held; re-arm the monitor." };
   if (store.running) return { ok: false, error: "A cycle is already running." };
 
-  store.running = true;
   const startedMs = Date.now();
+  /*
+   * Who this cycle is for, decided before the assessment starts rather than after.
+   *
+   * A manual cycle is an operator asking for a reading now, so it reads everything
+   * armed. A due cycle reads only the monitors whose own interval has elapsed —
+   * that is the whole difference between per-monitor intervals meaning something
+   * and every interval collapsing to the tightest one on the board. Deciding the
+   * set up front also stops a monitor becoming due *during* the run and then being
+   * marked read against evidence collected before it was due.
+   */
+  const reading = trigger === "manual" ? [...store.armed.values()] : dueMonitors(startedMs);
+  if (!reading.length) return { ok: false, error: "No monitor is due yet." };
+
+  store.running = true;
   const at = new Date().toISOString();
   const sequence = store.cyclesRun + 1;
   try {
     const result = await runAssessment(store.input, () => undefined, { eventDelayMs: 0 });
-    const watched = new Set([...store.armed.values()].flatMap((entry) => entry.checkIds));
+    const watched = new Set(reading.flatMap((entry) => entry.checkIds));
     const readings: MonitorCheckReading[] = result.analysis.checks
       .filter((check) => watched.has(check.id))
       .map((check) => ({
@@ -314,18 +422,26 @@ export async function runCycle(
         confidence: check.confidence,
       }));
     const drift = driftFor(readings, result, at);
-    const monitors = [...store.armed.values()].map((entry) => {
-      const mine = readings.filter((reading) => entry.checkIds.includes(reading.checkId));
+    const readMs = Date.now();
+    const monitors = reading.map((entry) => {
+      const mine = readings.filter((item) => entry.checkIds.includes(item.checkId));
       const worst = mine.reduce<ControlStatus>(
-        (acc, reading) =>
-          SEVERITY_OF_STATUS[reading.status] > SEVERITY_OF_STATUS[acc] ? reading.status : acc,
+        (acc, item) =>
+          SEVERITY_OF_STATUS[item.status] > SEVERITY_OF_STATUS[acc] ? item.status : acc,
         "pass",
       );
+      const status = mine.length ? worst : ("not_assessed" as ControlStatus);
+      /* A monitor's clock advances only when the monitor was actually read, so a
+         monitor left out of this cycle stays due instead of silently slipping an
+         interval. */
+      entry.lastReadMs = readMs;
+      entry.status = status;
+      entry.checksRead = mine.length;
       return {
         monitorId: entry.monitorId,
         label: entry.label,
         pillar: entry.pillar,
-        status: mine.length ? worst : ("not_assessed" as ControlStatus),
+        status,
         checksRead: mine.length,
       };
     });
@@ -345,6 +461,11 @@ export async function runCycle(
     ].slice(0, MAX_CYCLES);
     store.cyclesRun = sequence;
     store.lastCycleAt = Date.now();
+    /* AssessmentResult deliberately contains collected evidence and verdicts but
+       never the input credentials. Keeping it lets the monitoring surface show
+       the same five-pillar and pack report as the assessment instead of reducing
+       a full run to nine monitor badges. */
+    store.latestResult = result;
     return { ok: true };
   } catch (error) {
     // A failed cycle is recorded, not swallowed. A monitor that cannot reach the
@@ -401,17 +522,21 @@ export function monitorState(): MonitorState {
   }
   const due = nextDueMs();
   return {
-    armed: [...store.armed.values()],
+    armed: [...store.armed.values()].map(publicView),
     cycles: store.cycles,
     running: store.running,
     credentialsHeld: Boolean(store.input),
     nextDueAt: due === null ? null : new Date(due).toISOString(),
     lastCycleAt: store.lastCycleAt === null ? null : new Date(store.lastCycleAt).toISOString(),
     cyclesRun: store.cyclesRun,
+    minCadenceSeconds: MIN_CADENCE_SECONDS,
     alerts,
+    latestResult: store.latestResult,
     note:
       "Cycles run in this server process while the app is reachable, and history is held in " +
-      "memory only. A restart resets it, which is reported as a reset rather than a gap.",
+      "memory only. A restart resets it, which is reported as a reset rather than a gap. Each " +
+      "monitor is read on its own interval, but a cycle re-runs the whole assessment — so the " +
+      "tightest interval armed sets how often your system is contacted, for every monitor.",
   };
 }
 
@@ -424,4 +549,5 @@ export function resetMonitorStore(): void {
   store.cyclesRun = 0;
   store.running = false;
   store.lastCycleAt = null;
+  store.latestResult = null;
 }

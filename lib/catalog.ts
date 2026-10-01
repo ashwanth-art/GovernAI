@@ -292,7 +292,7 @@ const officialReferences: Record<string, StandardDefinition["officialReference"]
     title: "Regulation (EU) 2016/679 — General Data Protection Regulation",
     url: "https://eur-lex.europa.eu/eli/reg/2016/679/oj?locale=en",
     status: "current",
-    note: "Official Journal consolidated text. Territorial scope and controller/processor role are declared by the operator, not determined by GovernAI.",
+    note: "Official Journal consolidated text. Territorial scope and controller/processor role are declared by the operator, not determined by ARQ Governance.",
   },
   nis2: {
     authority: "EUR-Lex",
@@ -853,7 +853,7 @@ export const standards: StandardDefinition[] = standardSeeds.map((seed) => {
         section: sections[index % sections.length],
         url: reference.url,
         mappingType: "governai_evidence_mapping" as const,
-        note: "GovernAI evidence check mapped to this official section; it is not a verbatim official questionnaire or certification control.",
+        note: "ARQ Governance evidence check mapped to this official section; it is not a verbatim official questionnaire or certification control.",
       },
     })),
   };
