@@ -89,31 +89,25 @@ const controlTemplates: Array<{
   },
 ];
 
-function buildControls(prefix: string, total: number, coverage: [number, number, number]): Control[] {
+/** Tier 1 probes, then Tier 2 configuration checks — the templates have no Tier 3 evidence path. */
+function buildControls(prefix: string, tierOne: number, total: number): Control[] {
   return Array.from({ length: total }, (_, index) => {
     const template = controlTemplates[index % controlTemplates.length];
     const ordinal = index + 1;
-    const tierMinimum: AccessTier =
-      ordinal <= coverage[0] ? 1 : ordinal <= coverage[1] ? 2 : 3;
+    const tierMinimum: AccessTier = ordinal <= tierOne ? 1 : 2;
     return {
       id: `${prefix}-${String(ordinal).padStart(2, "0")}`,
       name: template.name,
       category: template.category,
       pillars: template.pillars,
       tierMinimum,
-      testType:
-        tierMinimum === 1
-          ? "adversarial_probe"
-          : tierMinimum === 2
-            ? "config_check"
-            : "document_verify",
+      testType: tierMinimum === 1 ? "adversarial_probe" : "config_check",
       remediation: template.remediation,
     };
   });
 }
 
 type StandardSeed = Omit<StandardDefinition, "controls" | "coverage" | "officialReference"> & {
-  total: number;
   coverage: [number, number, number];
   prefix: string;
 };
@@ -382,7 +376,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "HIPAA Safeguard Assessment",
     scoringMethod: "Equal weight per safeguard category",
     passThreshold: "100% required for regulatory compliance",
-    total: 12,
     coverage: [7, 10, 12],
     prefix: "164",
   },
@@ -397,7 +390,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "ISO 42001 Conformity Assessment",
     scoringMethod: "Conforms / Minor NC / Major NC / Not Assessed",
     passThreshold: "Zero major non-conformities",
-    total: 38,
     coverage: [22, 32, 38],
     prefix: "A",
   },
@@ -412,7 +404,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "NIST AI RMF Maturity Profile",
     scoringMethod: "Maturity level 1–5 per function",
     passThreshold: "Level 3 or higher recommended",
-    total: 27,
     coverage: [15, 23, 27],
     prefix: "RMF",
   },
@@ -427,7 +418,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "MAS FEAT Assurance Report",
     scoringMethod: "Principle effectiveness with exceptions",
     passThreshold: "All material principles effective",
-    total: 12,
     coverage: [7, 10, 12],
     prefix: "FEAT",
   },
@@ -442,7 +432,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "Model Risk Management Review",
     scoringMethod: "Effective / Needs improvement / Deficient",
     passThreshold: "No deficient material controls",
-    total: 12,
     coverage: [6, 10, 12],
     prefix: "MRM",
   },
@@ -457,7 +446,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "SOC 2 Control Effectiveness Report",
     scoringMethod: "Effective / Not effective with exceptions",
     passThreshold: "All controls effective",
-    total: 17,
     coverage: [8, 15, 17],
     prefix: "CC",
   },
@@ -472,7 +460,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "NAIC Insurer AI Governance Report",
     scoringMethod: "Expectation met / gap / not assessed",
     passThreshold: "All adopted regulatory expectations met",
-    total: 10,
     coverage: [6, 8, 10],
     prefix: "NAIC",
   },
@@ -487,7 +474,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "EU AI Act Requirements Checklist",
     scoringMethod: "Mandatory requirement pass/fail",
     passThreshold: "100% for applicable high-risk requirements",
-    total: 22,
     coverage: [12, 18, 22],
     prefix: "ART",
   },
@@ -502,7 +488,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "NYC LL144 Bias Audit Readiness Report",
     scoringMethod: "Four-fifths rule plus disclosures",
     passThreshold: "Selection-rate threshold and all notices met",
-    total: 8,
     coverage: [6, 7, 8],
     prefix: "LL144",
   },
@@ -517,7 +502,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "Colorado High-Risk AI Impact Report",
     scoringMethod: "Duty met / gap / not applicable",
     passThreshold: "All applicable deployer and developer duties met",
-    total: 10,
     coverage: [6, 8, 10],
     prefix: "CO",
   },
@@ -532,7 +516,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "FERPA Education Records Safeguard Report",
     scoringMethod: "Requirement met / unmet",
     passThreshold: "All applicable privacy requirements met",
-    total: 10,
     coverage: [6, 8, 10],
     prefix: "FERPA",
   },
@@ -547,7 +530,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "UNECE ADS Safety Case",
     scoringMethod: "Safety requirement conformity",
     passThreshold: "No unresolved safety-critical non-conformities",
-    total: 12,
     coverage: [6, 10, 12],
     prefix: "ADS",
   },
@@ -562,7 +544,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "SOTIF Safety Assessment",
     scoringMethod: "Hazard control conformity",
     passThreshold: "Residual risk acceptable",
-    total: 12,
     coverage: [6, 10, 12],
     prefix: "SOTIF",
   },
@@ -577,7 +558,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "UK AV Authorisation Readiness Report",
     scoringMethod: "Authorisation requirement met / gap",
     passThreshold: "All safety-critical duties met",
-    total: 10,
     coverage: [5, 8, 10],
     prefix: "UKAV",
   },
@@ -592,7 +572,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "CEPEJ Ethical Principles Assessment",
     scoringMethod: "Principle maturity assessment",
     passThreshold: "Mature implementation across five principles",
-    total: 10,
     coverage: [6, 8, 10],
     prefix: "CEPEJ",
   },
@@ -607,7 +586,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "Canada Algorithmic Impact Assessment",
     scoringMethod: "Impact-level requirement checklist",
     passThreshold: "All requirements for the assessed impact level met",
-    total: 12,
     coverage: [7, 10, 12],
     prefix: "AIA",
   },
@@ -622,7 +600,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "EU Machinery Conformity Report",
     scoringMethod: "Essential requirement conformity",
     passThreshold: "All applicable essential requirements met",
-    total: 12,
     coverage: [6, 10, 12],
     prefix: "MR",
   },
@@ -637,7 +614,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "IEC 62443 Security Level Assessment",
     scoringMethod: "Foundational requirement and security-level conformity",
     passThreshold: "Target security level achieved",
-    total: 50,
     coverage: [4, 25, 50],
     prefix: "SR",
   },
@@ -652,7 +628,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "ISO 13849 Performance Level Report",
     scoringMethod: "Required vs achieved performance level",
     passThreshold: "Achieved PL meets or exceeds required PL",
-    total: 10,
     coverage: [5, 8, 10],
     prefix: "PL",
   },
@@ -667,7 +642,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "Deep Synthesis Service Compliance Report",
     scoringMethod: "Provision conformity checklist",
     passThreshold: "All applicable provider duties met",
-    total: 10,
     coverage: [6, 8, 10],
     prefix: "DS",
   },
@@ -682,7 +656,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "C2PA Conformance and Provenance Report",
     scoringMethod: "Manifest and validation conformance",
     passThreshold: "Valid, complete, and durable provenance chain",
-    total: 10,
     coverage: [5, 8, 10],
     prefix: "C2PA",
   },
@@ -697,7 +670,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "OMB M-24-10 Agency AI Governance Report",
     scoringMethod: "Minimum-practice conformity",
     passThreshold: "All applicable minimum practices met",
-    total: 12,
     coverage: [7, 10, 12],
     prefix: "OMB",
   },
@@ -712,7 +684,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "IAMA Human Rights Impact Report",
     scoringMethod: "Impact and safeguard maturity",
     passThreshold: "No unmitigated high human-rights impact",
-    total: 10,
     coverage: [6, 8, 10],
     prefix: "IAMA",
   },
@@ -727,7 +698,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "ISO 27001 Conformity Assessment",
     scoringMethod: "Conforms / Minor NC / Major NC / Not Assessed",
     passThreshold: "Zero major non-conformities",
-    total: 50,
     coverage: [3, 24, 50],
     prefix: "A",
   },
@@ -742,7 +712,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "GDPR Processing Assessment",
     scoringMethod: "Article obligation coverage with evidence confidence",
     passThreshold: "100% required for regulatory compliance",
-    total: 56,
     coverage: [5, 26, 56],
     prefix: "Art",
   },
@@ -757,7 +726,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "NIS2 Risk-Management Measure Assessment",
     scoringMethod: "Article 21(2) measure coverage with evidence confidence",
     passThreshold: "All Article 21(2) measures effective",
-    total: 49,
     coverage: [4, 25, 49],
     prefix: "NIS2",
   },
@@ -772,7 +740,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "NERC CIP Compliance Assessment",
     scoringMethod: "Requirement and part conformity with exceptions",
     passThreshold: "No open requirement violations",
-    total: 50,
     coverage: [4, 25, 50],
     prefix: "CIP",
   },
@@ -787,7 +754,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "PCI DSS Readiness Assessment",
     scoringMethod: "Requirement conformity — In Place / Not in Place / Not Applicable",
     passThreshold: "All in-scope requirements in place",
-    total: 51,
     coverage: [4, 25, 51],
     prefix: "PCI",
   },
@@ -802,7 +768,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "GxP Computerised System Validation Assessment",
     scoringMethod: "Validated / Gap / Not Assessed per record and lifecycle control",
     passThreshold: "No open record-integrity or validation gaps",
-    total: 56,
     coverage: [5, 26, 56],
     prefix: "GXP",
   },
@@ -817,7 +782,6 @@ const standardSeeds: StandardSeed[] = [
     reportFormat: "CMMC Level 2 Readiness Assessment",
     scoringMethod: "Practice conformity — Met / Not Met / Not Applicable",
     passThreshold: "All applicable Level 2 practices met",
-    total: 50,
     coverage: [4, 25, 50],
     prefix: "CMMC",
   },
@@ -826,7 +790,7 @@ const standardSeeds: StandardSeed[] = [
 export const standards: StandardDefinition[] = standardSeeds.map((seed) => {
   const pilot = pilotStandardsById.get(seed.id);
   if (pilot) return pilot;
-  const { total, coverage, prefix, ...definition } = seed;
+  const { coverage, prefix, ...definition } = seed;
   const reference = officialReferences[seed.id];
   const sections = officialSectionLocators[seed.id] ?? [reference.title];
 
@@ -844,8 +808,11 @@ export const standards: StandardDefinition[] = standardSeeds.map((seed) => {
   return {
     ...definition,
     officialReference: reference,
-    coverage: { 1: coverage[0], 2: coverage[1], 3: coverage[2] },
-    controls: buildControls(prefix, total, coverage).map((control, index) => ({
+    // The screening catalog has no evidence path for its Tier 3 templates, so
+    // those controls are not generated: a standard lists only what a run can
+    // reach, and Tier 3 assesses every control it lists.
+    coverage: { 1: coverage[0], 2: coverage[1], 3: coverage[1] },
+    controls: buildControls(prefix, coverage[0], coverage[1]).map((control, index) => ({
       ...control,
       sourceCitation: {
         authority: reference.authority,

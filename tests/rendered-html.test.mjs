@@ -239,7 +239,7 @@ test("catalog exposes all industries, standards, and tier-specific fields", asyn
   const hipaa = catalog.standards.find((standard) => standard.id === "hipaa");
   assert.equal(hipaa.pack.status, "draft");
   assert.equal(hipaa.pack.assuranceLevel, "readiness");
-  assert.equal(hipaa.totalControls, 30);
+  assert.equal(hipaa.totalControls, 21);
 });
 
 test("backend rejects invalid scope, selection count, non-RAG architecture, and missing tier inputs", async () => {
@@ -320,13 +320,13 @@ test("evaluation generates exactly one native report per selected standard plus 
   assert.match(result.reports[1].nativeSections[2], /Annex A/);
   assert.match(result.reports[2].nativeSections[1], /Govern/);
   assert.equal(result.reports[0].assessedControls, 8);
-  assert.equal(result.reports[0].totalControls, 30);
-  assert.equal(result.reports[0].coveragePercent, 27);
+  assert.equal(result.reports[0].totalControls, 21);
+  assert.equal(result.reports[0].coveragePercent, 38);
   assert.equal(result.reports[0].assuranceLevel, "readiness");
   assert.match(result.reports[0].packRelease, /draft/);
   assert.equal(
     result.reports[0].controls.filter((control) => control.status === "not_assessed").length,
-    22,
+    13,
   );
   assert.ok(
     result.reports[0].controls.every(
@@ -351,7 +351,7 @@ test("evaluation accepts more than three selected standards", async () => {
   assert.deepEqual(result.reports.map((report) => report.standardId), selectedStandardIds);
   assert.equal(result.reports.length, selectedStandardIds.length);
   const euReport = result.reports.find((report) => report.standardId === "eu_ai_act");
-  assert.equal(euReport.totalControls, 24);
+  assert.equal(euReport.totalControls, 11);
   assert.equal(euReport.unknownApplicabilityControls, 0);
 });
 
@@ -546,6 +546,37 @@ test("an unavailable optional provider read does not erase settled manifest evid
   assert.equal(result.analysis.posture.coveragePercent, 100);
   assert.equal(result.analysis.posture.notAssessed, 0);
   assert.ok(result.analysis.matrix.every((row) => row.coveragePercent === 100));
+});
+
+test("Tier 3 reaches a verdict on every control of every standard", async () => {
+  // A standard lists only controls a run can judge, so with a full evidence
+  // manifest the whole catalogue is covered — whatever the selection.
+  const catalog = await (await request("/api/catalog")).json();
+  const response = await request("/api/assessments", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      ...baseInput,
+      standardIds: catalog.standards.map((standard) => standard.id),
+      tier: 3,
+      credentials: {
+        ...baseInput.credentials,
+        repoUrl: "https://ci.target.test/source",
+        stagingUrl: "https://ci.target.test/staging",
+        modelRegistryUrl: "https://ci.target.test/models",
+        evidenceManifestUrl: "https://evidence.target.test/manifest.json",
+        evidenceManifestToken: "test-only-manifest-token",
+      },
+    }),
+  });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.equal(result.analysis.posture.notAssessed, 0);
+  assert.equal(result.analysis.posture.assessed, result.analysis.posture.applicable);
+  assert.deepEqual(
+    result.reports.filter((report) => report.coveragePercent !== 100).map((report) => report.shortName),
+    [],
+  );
 });
 
 test("stream route returns detailed validation errors before execution", async () => {

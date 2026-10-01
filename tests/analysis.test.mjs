@@ -113,12 +113,12 @@ test("scope route assesses every HIPAA and EU AI Act control without scope quest
   });
   assert.equal(response.status, 200);
   const scope = await response.json();
-  assert.equal(scope.applicable, 54);
+  assert.equal(scope.applicable, 32);
   assert.equal(scope.notApplicable, 0);
   assert.equal(scope.unknown, 0);
   assert.deepEqual(
     scope.byStandard.map((row) => [row.shortName, row.applicable, row.exclusions.length]),
-    [["HIPAA", 30, 0], ["EU AI Act", 24, 0]],
+    [["HIPAA", 21, 0], ["EU AI Act", 11, 0]],
   );
   assert.equal(scope.byPillar.length, 5);
   assert.equal("openQuestions" in scope, false);
@@ -224,13 +224,16 @@ test("a check that could not run is never reported as a pass", async () => {
     "HIPAA has no AI-disclosure control, so that rule must not be listed.",
   );
 
-  // Where a framework does depend on an unsupported rule, it stays visible and can never pass.
-  const euResult = await runAssessment({ standardIds: ["eu_ai_act"], tier: 1 });
-  const unsupported = euResult.analysis.checks.find((check) => check.method === "not_supported");
-  assert.ok(unsupported, "The unsupported AI-disclosure rule must stay visible, not be hidden.");
-  assert.equal(unsupported.status, "not_assessed");
-  assert.match(unsupported.rule.passWhen, /never/i);
-  assert.match(unsupported.closedBy, /No tier closes this/i);
+  // No framework lists a control whose rule no tier can close.
+  const catalog = await (await request("/api/catalog")).json();
+  const plan = await (
+    await request("/api/plan", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ standardIds: catalog.standards.map((s) => s.id), tier: 3, access: {} }),
+    })
+  ).json();
+  assert.ok(!plan.checks.some((check) => check.method === "not_supported"));
 });
 
 test("findings exist only for failing checks and each names the check that closes it", async () => {
@@ -1025,29 +1028,29 @@ test("PCI DSS is a versioned pack and retail suggests it first", async () => {
   const catalog = await (await request("/api/catalog")).json();
   const pci = catalog.standards.find((standard) => standard.id === "pci_dss");
   assert.equal(pci.version, "PCI DSS v4.0.1");
-  assert.equal(pci.pack.release, "2026.10-draft.2");
+  assert.equal(pci.pack.release, "2026.10-draft.3");
   assert.equal(pci.pack.status, "draft");
   assert.equal(pci.pack.assuranceLevel, "readiness");
   assert.match(pci.pack.contentHash, /^fnv1a32:[0-9a-f]{8}$/);
-  assert.equal(pci.totalControls, 49);
-  assert.deepEqual(pci.coverage, { 1: 3, 2: 18, 3: 49 });
+  assert.equal(pci.totalControls, 38);
+  assert.deepEqual(pci.coverage, { 1: 3, 2: 18, 3: 38 });
 
   const retail = catalog.industries.find((industry) => industry.id === "retail");
   assert.equal(retail.recommendations[0].standardId, "pci_dss");
 });
 
-test("PCI DSS asks no scope questions and assesses every requirement", async () => {
-  // Every requirement applies: payment-page and multi-tenant requirements are
-  // reported, never ruled out.
+test("PCI DSS asks no scope questions and lists only requirements Tier 3 can reach", async () => {
+  // Every listed requirement applies, and none is listed that no run could judge.
   const scope = await pciScope();
-  assert.equal(scope.applicable, 49);
+  assert.equal(scope.applicable, 38);
   assert.equal(scope.notApplicable, 0);
   assert.equal(scope.unknown, 0);
 
   const result = await runAssessment({ standardIds: ["pci_dss"], tier: 2 });
   const pci = result.reports.find((report) => report.standardId === "pci_dss");
-  for (const id of ["3.3.1", "6.4.3", "11.6.1", "A1.1.2", "A1.1.4"]) {
-    assert.notEqual(pci.controls.find((control) => control.id === id).status, "not_applicable");
+  assert.notEqual(pci.controls.find((control) => control.id === "A1.1.2").status, "not_applicable");
+  for (const id of ["3.3.1", "6.4.3", "11.6.1", "A1.1.4"]) {
+    assert.equal(pci.controls.find((control) => control.id === id), undefined);
   }
 });
 
