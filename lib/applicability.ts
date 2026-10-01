@@ -11,6 +11,9 @@ export const defaultApplicabilityProfile: ApplicabilityProfile = {
   euRiskClass: "unknown",
   euArticle27Deployer: false,
   directHumanInteraction: true,
+  pciScope: "unknown",
+  pciPaymentPageWidget: false,
+  pciMultiTenantProvider: false,
 };
 
 type ConditionResult = {
@@ -39,6 +42,10 @@ const supportedApplicabilityConditions = new Set([
   "eu_importer",
   "eu_distributor",
   "gpai_provider",
+  "pci_dss_in_scope",
+  "pci_account_data_environment",
+  "pci_payment_page_scripts",
+  "pci_multi_tenant_service_provider",
 ]);
 
 export function validateApplicabilityCondition(condition: string): boolean {
@@ -74,6 +81,10 @@ export const applicabilityKeysByCondition: Record<string, Array<keyof Applicabil
   eu_importer: ["euRole"],
   eu_distributor: ["euRole"],
   gpai_provider: ["euRole"],
+  pci_dss_in_scope: ["pciScope"],
+  pci_account_data_environment: ["pciScope"],
+  pci_payment_page_scripts: ["pciPaymentPageWidget"],
+  pci_multi_tenant_service_provider: ["pciMultiTenantProvider"],
 };
 
 function hipaaRoleCondition(
@@ -97,6 +108,30 @@ function euInScope(profile: ApplicabilityProfile): ConditionResult {
     return { status: "not_applicable", reason: "The supplied profile places the system outside EU AI Act scope." };
   }
   return { status: "applicable", reason: `EU role is ${profile.euRole.replaceAll("_", " ")}.` };
+}
+
+/* Read with a fallback: a request built before these answers existed omits them,
+   and an omitted scope answer is undetermined, not out of scope. */
+function pciScopeCondition(
+  profile: ApplicabilityProfile,
+  allowed: ApplicabilityProfile["pciScope"][],
+): ConditionResult {
+  const scope = profile.pciScope ?? "unknown";
+  if (scope === "unknown") {
+    return { status: "unknown", reason: "PCI DSS scope has not been determined." };
+  }
+  if (scope === "out_of_scope") {
+    return { status: "not_applicable", reason: "The supplied profile places the assistant outside PCI DSS scope." };
+  }
+  if (!allowed.includes(scope)) {
+    return {
+      status: "not_applicable",
+      reason: "The assistant is connected to the cardholder data environment but does not store, process, or transmit account data.",
+    };
+  }
+  return scope === "cardholder_data_environment"
+    ? { status: "applicable", reason: "Account data passes through the assistant, so it is in the cardholder data environment." }
+    : { status: "applicable", reason: "The assistant is connected to, or can affect the security of, the cardholder data environment." };
 }
 
 function evaluateCondition(
@@ -192,6 +227,18 @@ function evaluateCondition(
       return profile.euRole === "gpai_provider"
         ? { status: "applicable", reason: "The organization is a GPAI provider." }
         : { status: "not_applicable", reason: "The organization is not a GPAI provider." };
+    case "pci_dss_in_scope":
+      return pciScopeCondition(profile, ["cardholder_data_environment", "connected_or_security_impacting"]);
+    case "pci_account_data_environment":
+      return pciScopeCondition(profile, ["cardholder_data_environment"]);
+    case "pci_payment_page_scripts":
+      return profile.pciPaymentPageWidget
+        ? { status: "applicable", reason: "The assistant's widget loads on a page that captures card payments." }
+        : { status: "not_applicable", reason: "The assistant's widget is not declared on any payment page." };
+    case "pci_multi_tenant_service_provider":
+      return profile.pciMultiTenantProvider
+        ? { status: "applicable", reason: "The organization hosts the assistant for multiple merchant customers." }
+        : { status: "not_applicable", reason: "The organization is not a multi-tenant service provider for this assistant." };
     default:
       return { status: "unknown", reason: `Unsupported applicability condition: ${condition}.` };
   }
@@ -234,6 +281,12 @@ export function validateApplicability(input: AssessmentInput): string[] {
     ) {
       errors.push("Select the system’s EU AI Act risk classification.");
     }
+  }
+  if (
+    input.standardIds.includes("pci_dss") &&
+    (input.applicability.pciScope ?? "unknown") === "unknown"
+  ) {
+    errors.push("Determine whether the assistant is in PCI DSS scope before assessing PCI DSS.");
   }
   return errors;
 }

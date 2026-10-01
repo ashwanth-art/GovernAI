@@ -1689,7 +1689,7 @@ const nativeSectionsByStandard: Record<string, string[]> = {
     "Network, Configuration, and Storage Requirements (1–4)",
     "Secure Software and Access Control (6–8)",
     "Logging, Monitoring, and Testing (10–11)",
-    "Organizational Policies and Programs (12)",
+    "Organizational Policies and Programs (12) + Appendix A1",
     "Readiness Conclusion + Compensating Controls",
   ],
   gxp_part11: [

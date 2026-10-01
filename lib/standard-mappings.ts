@@ -494,79 +494,7 @@ const nerc_cip: MappedControl[] = [
   { key: "continuity-and-recovery", controlId: "CIP-009 R2.1", section: CIP_009 },
 ];
 
-/* ---------------------------------------------------------- PCI DSS 4.0.1 -- */
-/* Requirement 9 (physical access) has no remote evidence path and is absent      */
-/* rather than permanently not_assessed, in line with the library's own policy.   */
-
-const PCI_NETWORK = "Requirement 1 Install and maintain network security controls";
-const PCI_CONFIG = "Requirement 2 Apply secure configurations to all system components";
-const PCI_STORED = "Requirement 3 Protect stored account data";
-const PCI_TRANSIT = "Requirement 4 Protect cardholder data with strong cryptography during transmission";
-const PCI_SOFTWARE = "Requirement 6 Develop and maintain secure systems and software";
-const PCI_ACCESS = "Requirement 7 Restrict access by business need to know";
-const PCI_IDENTITY = "Requirement 8 Identify users and authenticate access";
-const PCI_LOGGING = "Requirement 10 Log and monitor all access";
-const PCI_TESTING = "Requirement 11 Test security of systems and networks regularly";
-const PCI_POLICY = "Requirement 12 Support information security with organizational policies";
-
-const pci_dss: MappedControl[] = [
-  // Tier 1
-  { key: "instruction-boundary", controlId: "6.2.4", section: PCI_SOFTWARE },
-  { key: "sensitive-disclosure", controlId: "3.3.1", section: PCI_STORED },
-  { key: "combined-rag-safety", controlId: "6.4.1", section: PCI_SOFTWARE },
-  { key: "service-availability", controlId: "12.10.1", section: PCI_POLICY },
-
-  // Tier 2
-  { key: "deployment-hardening", controlId: "2.2.1", section: PCI_CONFIG },
-  { key: "credential-hygiene", controlId: "8.3.1", section: PCI_IDENTITY },
-  { key: "consumption-ceilings", controlId: "1.4.1", section: PCI_NETWORK },
-  { key: "retention-schedule", controlId: "3.1.1", section: PCI_STORED },
-  { key: "corpus-integrity", controlId: "11.5.2", section: PCI_TESTING },
-  { key: "tenant-isolation", controlId: "1.3.1", section: PCI_NETWORK },
-  { key: "output-contract", controlId: "6.2.4.1", section: PCI_SOFTWARE },
-  { key: "agency-boundary", controlId: "7.2.1", section: PCI_ACCESS },
-  { key: "model-provenance", controlId: "6.3.2", section: PCI_SOFTWARE },
-  { key: "transport-encryption", controlId: "4.2.1", section: PCI_TRANSIT },
-  { key: "response-redaction", controlId: "3.4.1", section: PCI_STORED },
-  { key: "guardrail-configuration", controlId: "6.4.2", section: PCI_SOFTWARE },
-  { key: "service-levels", controlId: "12.10.5", section: PCI_POLICY },
-  { key: "breach-alerting", controlId: "12.10.2", section: PCI_POLICY },
-  { key: "objective-coverage", controlId: "10.4.1", section: PCI_LOGGING },
-  { key: "trend-visibility", controlId: "10.4.2", section: PCI_LOGGING },
-  { key: "event-forensics", controlId: "10.7.2", section: PCI_LOGGING },
-  { key: "request-audit-trail", controlId: "10.2.1", section: PCI_LOGGING },
-  { key: "usage-accounting", controlId: "10.2.2", section: PCI_LOGGING },
-  { key: "evidence-surface", controlId: "12.4.2", section: PCI_POLICY },
-  { key: "system-inventory", controlId: "12.5.1", section: PCI_POLICY },
-
-  // Tier 3
-  { key: "management-mandate", controlId: "12.1.1", section: PCI_POLICY },
-  { key: "risk-management-cycle", controlId: "12.3.1", section: PCI_POLICY },
-  { key: "human-oversight-design", controlId: "12.10.3", section: PCI_POLICY },
-  { key: "incident-response-readiness", controlId: "12.10.4", section: PCI_POLICY },
-  { key: "supplier-assurance", controlId: "12.8.2", section: PCI_POLICY },
-  { key: "privacy-notice", controlId: "12.1.4", section: PCI_POLICY },
-  { key: "system-documentation", controlId: "12.5.2", section: PCI_POLICY },
-  { key: "change-control", controlId: "6.5.1", section: PCI_SOFTWARE },
-  { key: "workforce-competence", controlId: "12.6.1", section: PCI_POLICY },
-  { key: "evaluation-methodology", controlId: "11.3.1", section: PCI_TESTING },
-  { key: "privacy-testing", controlId: "11.3.2", section: PCI_TESTING },
-  { key: "threat-model", controlId: "12.3.3", section: PCI_POLICY },
-  { key: "encryption-configuration", controlId: "3.6.1", section: PCI_STORED },
-  { key: "entitlement-review", controlId: "7.2.4", section: PCI_ACCESS },
-  { key: "software-supply-chain", controlId: "6.3.1", section: PCI_SOFTWARE },
-  { key: "security-test-gate", controlId: "6.5.2", section: PCI_SOFTWARE },
-  { key: "corpus-provenance", controlId: "3.2.1", section: PCI_STORED },
-  { key: "vector-configuration", controlId: "2.2.6", section: PCI_CONFIG },
-  { key: "model-inventory-record", controlId: "12.5.3", section: PCI_POLICY },
-  { key: "resource-ceiling-record", controlId: "1.4.2", section: PCI_NETWORK },
-  { key: "output-handling-record", controlId: "3.5.1", section: PCI_STORED },
-  { key: "tool-permission-record", controlId: "7.3.1", section: PCI_ACCESS },
-  { key: "audit-log-evidence", controlId: "10.3.1", section: PCI_LOGGING },
-  { key: "monitoring-thresholds", controlId: "10.4.3", section: PCI_LOGGING },
-  { key: "records-retention-evidence", controlId: "10.5.1", section: PCI_LOGGING },
-  { key: "continuity-and-recovery", controlId: "12.10.6", section: PCI_POLICY },
-];
+/* PCI DSS 4.0.1 is a versioned framework pack — see lib/framework-packs/pci-dss-4.0.1.ts. */
 
 /* ------------------------------------------------- GxP / 21 CFR Part 11 --- */
 /* Validated-system expectations for AI used in a GxP process. Part 11 governs   */
@@ -795,7 +723,6 @@ export const mappedStandards: Record<string, MappedControl[]> = {
   gdpr,
   nis2,
   nerc_cip,
-  pci_dss,
   gxp_part11,
   cmmc,
   iec62443,

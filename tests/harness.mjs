@@ -42,6 +42,12 @@ const LIBRARY_PROCEDURE_IDS = [
   "document-privacy-notice", "document-record-retention", "document-risk-register",
   "document-risk-treatment", "document-role-assignment", "document-supplier-assessment",
   "document-system-card", "document-training-program", "document-vendor-contracts",
+  // The PCI DSS pack's own procedures, which the library does not use.
+  "artifact-cde-mfa-configuration", "artifact-chat-pan-detection", "artifact-pan-discovery-scan",
+  "artifact-payment-page-script-inventory", "artifact-payment-page-tamper-detection",
+  "artifact-penetration-test-report", "artifact-secret-scan", "artifact-tenant-separation-pentest",
+  "document-pan-messaging-policy", "document-pci-scope", "document-test-data-policy",
+  "document-tpsp-responsibility-matrix", "document-unexpected-pan-procedure",
 ];
 
 /** Mirrors the open items a real deployment carries, so Tier 3 is not all green. */
@@ -416,6 +422,9 @@ export const baseInput = {
     euRiskClass: "high_risk",
     euArticle27Deployer: false,
     directHumanInteraction: true,
+    pciScope: "cardholder_data_environment",
+    pciPaymentPageWidget: true,
+    pciMultiTenantProvider: true,
   },
   credentials: {
     chatbotEndpoint: "https://target.test/",

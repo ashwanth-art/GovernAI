@@ -150,6 +150,27 @@ const SCOPE_QUESTIONS: Array<{
     q: "Do people talk to it directly?",
     help: "If so, they have to be told they are talking to an AI system.",
   },
+  {
+    key: "pciScope",
+    q: "Is the assistant in scope for PCI DSS?",
+    help: "If customers can type a card number into the chat, card data passes through it — even if you never asked for one.",
+    options: [
+      ["unknown", "Not sure yet"],
+      ["cardholder_data_environment", "Yes — card data passes through it"],
+      ["connected_or_security_impacting", "Connected — it can reach or affect systems that handle card data"],
+      ["out_of_scope", "No — it is isolated from card data"],
+    ],
+  },
+  {
+    key: "pciPaymentPageWidget",
+    q: "Does the chat widget load on a page that takes card payments?",
+    help: "Its scripts then fall under the payment-page script and tamper-detection rules.",
+  },
+  {
+    key: "pciMultiTenantProvider",
+    q: "Do you host this assistant for several merchant customers?",
+    help: "Multi-tenant service providers also owe the customer-separation controls in Appendix A1.",
+  },
 ];
 
 /**

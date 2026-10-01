@@ -9,9 +9,22 @@ GovernAI framework packs separate official source requirements from GovernAI-aut
 | HIPAA current rules | `2026.07-draft.2` | 31 | Readiness | Draft |
 | NIST AI RMF 1.0 + GenAI Profile | `2026.07-draft.2` | 28 | Readiness | Draft |
 | EU AI Act | `2026.07-draft.2` | 26 | Readiness | Draft |
+| PCI DSS v4.0.1 | `2026.10-draft.1` | 50 | Readiness | Draft |
 | OWASP LLM Top 10 2025 | `2026.07-draft.2` | 10 risk families | Screening | Draft |
 
 The UI exposes each pilot pack's release, status, assurance level, coverage, and source mapping.
+
+## PCI DSS v4.0.1
+
+Suggested first for the Retail / E-commerce sector. Every control cites an exact requirement number, and 35 of the 50 reuse a verification-library check, so a PAN-masking or log-retention fix closes the PCI control and the matching control in every other selected standard. Tier coverage is 4 / 19 / 50.
+
+Selecting PCI DSS adds three scope questions, and a run is refused until the first is answered:
+
+- **Is the assistant in scope?** In the cardholder data environment, connected to it, or out of scope. If customers can type a card number into the chat, card data passes through it. Connected systems drop the storage, transmission, and query requirements (3.x, 4.2.x, 6.5.5, 7.2.6); out of scope leaves only the scope determination.
+- **Does the chat widget load on a payment page?** Brings in 6.4.3 (payment-page scripts) and 11.6.1 (tamper detection).
+- **Is it hosted for several merchant customers?** Brings in Appendix A1 tenant separation (A1.1.2, A1.1.4).
+
+The PCI-only controls name their own evidence procedures — for example `artifact-pan-discovery-scan` (card numbers in transcripts, logs, or the retrieval index), `document-pan-messaging-policy` (4.2.2, chat as end-user messaging), and `document-tpsp-responsibility-matrix` (12.8.5, model, vector-store, and hosting providers). Requirement 9 (physical access) has no remote evidence path and is excluded.
 
 ## Mapped standards
 
@@ -26,7 +39,6 @@ A second group selects its controls from the verification library rather than au
 | GDPR | 56 | 5 / 26 / 56 |
 | NIS2 | 49 | 4 / 25 / 49 |
 | NERC CIP | 50 | 4 / 25 / 50 |
-| PCI DSS 4.0.1 | 51 | 4 / 25 / 51 |
 | GxP / 21 CFR Part 11 | 56 | 5 / 26 / 56 |
 | CMMC 2.0 Level 2 | 50 | 4 / 25 / 50 |
 | IEC 62443 | 50 | 4 / 25 / 50 |

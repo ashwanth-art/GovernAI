@@ -3,6 +3,7 @@ import { euAiActPack } from "./eu-ai-act-2024";
 import { hipaaCurrentPack } from "./hipaa-current";
 import { nistAiRmfPack } from "./nist-ai-rmf-1.0";
 import { owaspLlm2025Pack } from "./owasp-llm-2025";
+import { pciDss401Pack } from "./pci-dss-4.0.1";
 import type { FrameworkPack } from "./schema";
 import { libraryProcedureIds } from "../verification-library";
 
@@ -11,6 +12,7 @@ export {
   hipaaCurrentPack,
   nistAiRmfPack,
   owaspLlm2025Pack,
+  pciDss401Pack,
 };
 export type { FrameworkPack, FrameworkPackControl } from "./schema";
 
@@ -18,6 +20,7 @@ export const pilotFrameworkPacks = [
   hipaaCurrentPack,
   nistAiRmfPack,
   euAiActPack,
+  pciDss401Pack,
 ] as const;
 
 /**
