@@ -29,10 +29,11 @@ const TESTING = "Requirement 11 — Test security regularly";
 const POLICY = "Requirement 12 — Organizational policies and programs";
 const A1 = "Appendix A1 — Multi-tenant service providers";
 
-const IN_SCOPE = ["pci_dss_in_scope"];
-const ACCOUNT_DATA = ["pci_dss_in_scope", "pci_account_data_environment"];
-const PAYMENT_PAGE = ["pci_dss_in_scope", "pci_payment_page_scripts"];
-const PROVIDER = ["pci_dss_in_scope", "pci_multi_tenant_service_provider"];
+/*
+ * Every requirement applies to every assessed assistant. There are no scope
+ * questions: an assistant that never touches card data, or is not a multi-tenant
+ * provider, will see those requirements reported against it rather than ruled out.
+ */
 
 /**
  * A requirement judged by an existing verification-library check.
@@ -67,28 +68,10 @@ function fromLibrary(
     testType: entry.testType,
     evaluationRuleId: entry.evaluationRuleId,
     evidenceProcedureIds: procedures,
-    applicability: input.applicability ?? IN_SCOPE,
   });
 }
 
 const controls = [
-  /* ---- Scope ---------------------------------------------------------------- */
-  control({
-    id: "SCOPE-01",
-    name: "Cardholder data environment scope determination",
-    objective: "The organization has determined whether the assistant stores, processes, or transmits account data — including card numbers customers type into chat — or is connected to or can affect the security of the cardholder data environment.",
-    category: "Scope",
-    tierMinimum: 1,
-    pillars: ["governance", "compliance"],
-    testType: "config_check",
-    evaluationRuleId: "questionnaire.pci-scope",
-    severity: "critical",
-    section: "Scope of PCI DSS Requirements",
-    evidenceProcedureIds: ["artifact-scope-questionnaire", "document-pci-scope"],
-    remediationId: "pci-scope-determination",
-    remediation: "Decide whether chat transcripts, logs, the retrieval index, or any tool the assistant calls can hold or reach account data, and record the resulting CDE boundary.",
-  }),
-
   /* ---- Requirement 1 -------------------------------------------------------- */
   fromLibrary("system-documentation", {
     id: "1.2.4",
@@ -114,7 +97,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-network-configuration"],
     remediationId: "pci-cde-inbound-traffic",
     remediation: "Restrict inbound connections from the assistant's hosting, model provider, and retrieval services to named CDE endpoints, and deny all other traffic by default.",
-    applicability: IN_SCOPE,
   }),
 
   /* ---- Requirement 2 -------------------------------------------------------- */
@@ -162,7 +144,6 @@ const controls = [
     section: "Requirement 3.2.1",
     remediationId: "pci-account-data-retention",
     remediation: "Set and enforce retention limits for transcripts, logs, and retrieval content that may contain account data, with secure deletion at expiry.",
-    applicability: ACCOUNT_DATA,
   }),
   control({
     id: "3.3.1",
@@ -178,7 +159,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-pan-discovery-scan"],
     remediationId: "pci-sad-retention",
     remediation: "Scrub card verification codes and other sensitive authentication data from chat input before it is logged or stored, and run discovery scans to prove none remains.",
-    applicability: ACCOUNT_DATA,
   }),
   fromLibrary("response-redaction", {
     id: "3.4.1",
@@ -189,7 +169,6 @@ const controls = [
     section: "Requirement 3.4.1",
     remediationId: "pci-pan-display-masking",
     remediation: "Apply output redaction that masks card numbers to BIN plus last four before any response is returned or rendered.",
-    applicability: ACCOUNT_DATA,
   }),
   control({
     id: "3.5.1",
@@ -205,7 +184,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-encryption-configuration", "artifact-pan-discovery-scan"],
     remediationId: "pci-pan-storage",
     remediation: "Tokenize or truncate card numbers before they are logged, embedded, or stored, and confirm with a discovery scan across every store the assistant writes to.",
-    applicability: ACCOUNT_DATA,
   }),
   fromLibrary("encryption-configuration", {
     id: "3.6.1",
@@ -216,7 +194,6 @@ const controls = [
     section: "Requirement 3.6.1",
     remediationId: "pci-key-management",
     remediation: "Document key custody, rotation, and access for every key protecting the assistant's stored data, and restrict key access to named custodians.",
-    applicability: ACCOUNT_DATA,
   }),
 
   /* ---- Requirement 4 -------------------------------------------------------- */
@@ -229,7 +206,6 @@ const controls = [
     section: "Requirement 4.2.1",
     remediationId: "pci-transport-encryption",
     remediation: "Enforce TLS 1.2 or later with valid certificates on every hop that can carry account data, and reject plaintext fallbacks.",
-    applicability: ACCOUNT_DATA,
   }),
   control({
     id: "4.2.2",
@@ -245,7 +221,6 @@ const controls = [
     evidenceProcedureIds: ["document-pan-messaging-policy", "artifact-chat-pan-detection"],
     remediationId: "pci-messaging-pan",
     remediation: "Detect card numbers in chat input, block or tokenize them before processing, and redirect customers to a PCI-validated payment flow instead.",
-    applicability: ACCOUNT_DATA,
   }),
 
   /* ---- Requirement 6 -------------------------------------------------------- */
@@ -316,7 +291,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-payment-page-script-inventory"],
     remediationId: "pci-payment-page-scripts",
     remediation: "Inventory and justify the widget's scripts, load them with subresource integrity or an equivalent control, or keep the widget off payment pages entirely.",
-    applicability: PAYMENT_PAGE,
   }),
   fromLibrary("change-control", {
     id: "6.5.1",
@@ -353,7 +327,6 @@ const controls = [
     evidenceProcedureIds: ["document-test-data-policy"],
     remediationId: "pci-preproduction-pan",
     remediation: "Build evaluation and staging data from synthetic or test card numbers only, and scan pre-production stores for live PANs.",
-    applicability: ACCOUNT_DATA,
   }),
 
   /* ---- Requirement 7 -------------------------------------------------------- */
@@ -386,7 +359,6 @@ const controls = [
     section: "Requirement 7.2.6",
     remediationId: "pci-query-restriction",
     remediation: "Enforce the requester's authorization at retrieval time and filter responses so the assistant cannot be used to query cardholder data.",
-    applicability: ACCOUNT_DATA,
   }),
 
   /* ---- Requirement 8 -------------------------------------------------------- */
@@ -404,7 +376,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-cde-mfa-configuration"],
     remediationId: "pci-cde-mfa",
     remediation: "Require multi-factor authentication for every administrative route into the assistant's CDE components, including consoles and cloud accounts.",
-    applicability: IN_SCOPE,
   }),
   control({
     id: "8.6.2",
@@ -420,7 +391,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-secret-scan"],
     remediationId: "pci-hardcoded-credentials",
     remediation: "Move every credential into a managed secret store, scan code, configuration, and prompts for secrets on each build, and rotate anything found.",
-    applicability: IN_SCOPE,
   }),
   fromLibrary("credential-hygiene", {
     id: "8.6.3",
@@ -511,7 +481,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-security-tests", "artifact-penetration-test-report"],
     remediationId: "pci-penetration-testing",
     remediation: "Extend the penetration-testing methodology to the assistant's application layer, with LLM-specific attack cases, and retain the reports.",
-    applicability: IN_SCOPE,
   }),
   fromLibrary("corpus-integrity", {
     id: "11.5.2",
@@ -538,7 +507,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-payment-page-tamper-detection"],
     remediationId: "pci-payment-page-tamper",
     remediation: "Deploy change- and tamper-detection on payment pages that load the widget, checking scripts and headers at least weekly.",
-    applicability: PAYMENT_PAGE,
   }),
 
   /* ---- Requirement 12 ------------------------------------------------------- */
@@ -598,7 +566,6 @@ const controls = [
     evidenceProcedureIds: ["document-pci-scope"],
     remediationId: "pci-scope-confirmation",
     remediation: "Record the assistant's place in the PCI DSS scope and reconfirm it annually and whenever a model, tool, or data source changes.",
-    applicability: IN_SCOPE,
   }),
   fromLibrary("workforce-competence", {
     id: "12.6.3",
@@ -634,7 +601,6 @@ const controls = [
     evidenceProcedureIds: ["document-tpsp-responsibility-matrix"],
     remediationId: "pci-tpsp-responsibility",
     remediation: "Build a responsibility matrix per provider from their attestation of compliance and agreements, and review it annually.",
-    applicability: IN_SCOPE,
   }),
   fromLibrary("incident-response-readiness", {
     id: "12.10.1",
@@ -671,7 +637,6 @@ const controls = [
     evidenceProcedureIds: ["document-unexpected-pan-procedure", "artifact-pan-discovery-scan"],
     remediationId: "pci-unexpected-pan",
     remediation: "Write a procedure for card numbers discovered in transcripts, logs, or the index — locate, purge, find the cause, and report — and run discovery scans to trigger it.",
-    applicability: IN_SCOPE,
   }),
 
   /* ---- Appendix A1 ---------------------------------------------------------- */
@@ -684,7 +649,6 @@ const controls = [
     section: "Appendix A1.1.2",
     remediationId: "pci-tenant-isolation",
     remediation: "Enforce per-customer namespaces and authorization in retrieval, and test that cross-tenant queries return nothing.",
-    applicability: PROVIDER,
   }),
   control({
     id: "A1.1.4",
@@ -700,14 +664,13 @@ const controls = [
     evidenceProcedureIds: ["artifact-tenant-separation-pentest"],
     remediationId: "pci-tenant-separation-test",
     remediation: "Penetration-test cross-tenant retrieval and access paths every six months and retain the results.",
-    applicability: PROVIDER,
   }),
 ];
 
 export const pciDss401Pack: FrameworkPack = validateFrameworkPack({
   manifest: {
     id: "pci_dss",
-    release: "2026.10-draft.1",
+    release: "2026.10-draft.2",
     status: "draft",
     assuranceLevel: "readiness",
     sourceVersion: "PCI DSS v4.0.1 (June 2024)",
@@ -722,7 +685,7 @@ export const pciDss401Pack: FrameworkPack = validateFrameworkPack({
     version: "PCI DSS v4.0.1",
     kind: "Certifiable",
     jurisdiction: "Global",
-    description: "Applicability-aware cardholder-data readiness for retail and e-commerce assistants: scope, card numbers in chat, payment-page scripts, logging, testing, and service-provider duties.",
+    description: "Full-scope cardholder-data readiness for retail and e-commerce assistants: card numbers in chat, payment-page scripts, logging, testing, and service-provider duties.",
     reportFormat: "PCI DSS v4.0.1 Readiness Assessment",
     scoringMethod: "Requirement conformity — In Place / Not in Place / Not Applicable, with critical-requirement overrides",
     passThreshold: "All applicable requirements in place; no failed critical requirement",

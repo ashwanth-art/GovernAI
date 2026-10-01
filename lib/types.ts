@@ -66,13 +66,6 @@ export interface ApplicabilityProfile {
     | "limited_or_minimal";
   euArticle27Deployer: boolean;
   directHumanInteraction: boolean;
-  pciScope:
-    | "unknown"
-    | "cardholder_data_environment"
-    | "connected_or_security_impacting"
-    | "out_of_scope";
-  pciPaymentPageWidget: boolean;
-  pciMultiTenantProvider: boolean;
 }
 
 export interface Control {

@@ -522,7 +522,7 @@ test("the stream emits the derived plan, check, pillar, finding and posture even
  *
  * PCI DSS is a framework pack rather than a mapping, but every one of its
  * controls is built from the library or names its own procedures, so it is held
- * to the same bar here (the harness profile puts all of its controls in scope).
+ * to the same bar here (it has no scope questions, so all of its controls apply).
  *
  * Every standard in `mappedStandards` belongs in this list. That is what stops a
  * new sector standard from shipping with a control nothing can ever close: if a
@@ -1042,13 +1042,6 @@ test("provenance survives two packs that share a clause identifier", async () =>
  * PCI DSS 4.0.1 framework pack.
  * ------------------------------------------------------------------------- */
 
-const PCI_FULL_SCOPE = {
-  ...baseInput.applicability,
-  pciScope: "cardholder_data_environment",
-  pciPaymentPageWidget: true,
-  pciMultiTenantProvider: true,
-};
-
 async function pciScope(applicability) {
   const response = await request("/api/scope", {
     method: "POST",
@@ -1063,60 +1056,31 @@ test("PCI DSS is a versioned pack and retail suggests it first", async () => {
   const catalog = await (await request("/api/catalog")).json();
   const pci = catalog.standards.find((standard) => standard.id === "pci_dss");
   assert.equal(pci.version, "PCI DSS v4.0.1");
-  assert.equal(pci.pack.release, "2026.10-draft.1");
+  assert.equal(pci.pack.release, "2026.10-draft.2");
   assert.equal(pci.pack.status, "draft");
   assert.equal(pci.pack.assuranceLevel, "readiness");
   assert.match(pci.pack.contentHash, /^fnv1a32:[0-9a-f]{8}$/);
-  assert.equal(pci.totalControls, 50);
-  assert.deepEqual(pci.coverage, { 1: 4, 2: 19, 3: 50 });
+  assert.equal(pci.totalControls, 49);
+  assert.deepEqual(pci.coverage, { 1: 3, 2: 18, 3: 49 });
 
   const retail = catalog.industries.find((industry) => industry.id === "retail");
   assert.equal(retail.recommendations[0].standardId, "pci_dss");
 });
 
-test("PCI DSS scope answers bring requirements in and rule them out with a reason", async () => {
-  const full = await pciScope(PCI_FULL_SCOPE);
-  assert.equal(full.applicable, 50);
-  assert.equal(full.unknown, 0);
+test("PCI DSS asks no scope questions and assesses every requirement", async () => {
+  // Even a profile that answers nothing leaves every requirement applicable:
+  // payment-page and multi-tenant requirements are reported, never ruled out.
+  const scope = await pciScope(baseInput.applicability);
+  assert.equal(scope.applicable, 49);
+  assert.equal(scope.notApplicable, 0);
+  assert.equal(scope.unknown, 0);
+  assert.equal(scope.openQuestions.length, 0);
 
-  // Connected but never touching card data: storage, transmission and query
-  // requirements fall away, and so do the payment-page and multi-tenant ones.
-  const connected = await pciScope({
-    ...PCI_FULL_SCOPE,
-    pciScope: "connected_or_security_impacting",
-    pciPaymentPageWidget: false,
-    pciMultiTenantProvider: false,
-  });
-  const excluded = connected.byStandard[0].exclusions.map((entry) => entry.controlId).sort();
-  assert.deepEqual(excluded, [
-    "11.6.1", "3.2.1", "3.3.1", "3.4.1", "3.5.1", "3.6.1", "4.2.1", "4.2.2",
-    "6.4.3", "6.5.5", "7.2.6", "A1.1.2", "A1.1.4",
-  ]);
-  assert.ok(connected.byStandard[0].exclusions.every((entry) => entry.reason.length > 10));
-
-  // Out of scope leaves only the scope determination itself.
-  const outside = await pciScope({ ...PCI_FULL_SCOPE, pciScope: "out_of_scope" });
-  assert.equal(outside.applicable, 1);
-  assert.equal(outside.notApplicable, 49);
-  assert.ok(
-    outside.byStandard[0].exclusions.every((entry) => /outside PCI DSS scope/.test(entry.reason)),
-  );
-});
-
-test("PCI DSS will not run until its scope is answered", async () => {
-  const unanswered = { ...PCI_FULL_SCOPE, pciScope: "unknown" };
-  const scope = await pciScope(unanswered);
-  assert.ok(scope.openQuestions.some((question) => /PCI DSS scope/.test(question)));
-  assert.equal(scope.unknown, 49);
-
-  const response = await request("/api/assessments", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ ...baseInput, standardIds: ["pci_dss"], applicability: unanswered }),
-  });
-  assert.equal(response.status, 422);
-  const body = await response.json();
-  assert.ok(body.errors.some((error) => /PCI DSS scope/.test(error)));
+  const result = await runAssessment({ standardIds: ["pci_dss"], tier: 2 });
+  const pci = result.reports.find((report) => report.standardId === "pci_dss");
+  for (const id of ["3.3.1", "6.4.3", "11.6.1", "A1.1.2", "A1.1.4"]) {
+    assert.notEqual(pci.controls.find((control) => control.id === id).status, "not_applicable");
+  }
 });
 
 test("PCI DSS controls share checks with the library, so one fix closes them everywhere", async () => {

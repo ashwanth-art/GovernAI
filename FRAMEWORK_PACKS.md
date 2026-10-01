@@ -9,20 +9,16 @@ GovernAI framework packs separate official source requirements from GovernAI-aut
 | HIPAA current rules | `2026.07-draft.2` | 31 | Readiness | Draft |
 | NIST AI RMF 1.0 + GenAI Profile | `2026.07-draft.2` | 28 | Readiness | Draft |
 | EU AI Act | `2026.07-draft.2` | 26 | Readiness | Draft |
-| PCI DSS v4.0.1 | `2026.10-draft.1` | 50 | Readiness | Draft |
+| PCI DSS v4.0.1 | `2026.10-draft.2` | 49 | Readiness | Draft |
 | OWASP LLM Top 10 2025 | `2026.07-draft.2` | 10 risk families | Screening | Draft |
 
 The UI exposes each pilot pack's release, status, assurance level, coverage, and source mapping.
 
 ## PCI DSS v4.0.1
 
-Suggested first for the Retail / E-commerce sector. Every control cites an exact requirement number, and 35 of the 50 reuse a verification-library check, so a PAN-masking or log-retention fix closes the PCI control and the matching control in every other selected standard. Tier coverage is 4 / 19 / 50.
+Suggested first for the Retail / E-commerce sector. Every control cites an exact requirement number, and 35 of the 49 reuse a verification-library check, so a PAN-masking or log-retention fix closes the PCI control and the matching control in every other selected standard. Tier coverage is 3 / 18 / 49.
 
-Selecting PCI DSS adds three scope questions, and a run is refused until the first is answered:
-
-- **Is the assistant in scope?** In the cardholder data environment, connected to it, or out of scope. If customers can type a card number into the chat, card data passes through it. Connected systems drop the storage, transmission, and query requirements (3.x, 4.2.x, 6.5.5, 7.2.6); out of scope leaves only the scope determination.
-- **Does the chat widget load on a payment page?** Brings in 6.4.3 (payment-page scripts) and 11.6.1 (tamper detection).
-- **Is it hosted for several merchant customers?** Brings in Appendix A1 tenant separation (A1.1.2, A1.1.4).
+The pack asks no scope questions: every requirement applies to every assessed assistant, so selecting PCI DSS never adds a question or blocks a run. The trade-off is deliberate — an assistant that never touches card data, has no widget on a payment page (6.4.3, 11.6.1), or is not a multi-tenant service provider (Appendix A1) still has those requirements reported against it rather than ruled out.
 
 The PCI-only controls name their own evidence procedures — for example `artifact-pan-discovery-scan` (card numbers in transcripts, logs, or the retrieval index), `document-pan-messaging-policy` (4.2.2, chat as end-user messaging), and `document-tpsp-responsibility-matrix` (12.8.5, model, vector-store, and hosting providers). Requirement 9 (physical access) has no remote evidence path and is excluded.
 

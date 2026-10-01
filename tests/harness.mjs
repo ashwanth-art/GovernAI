@@ -422,9 +422,6 @@ export const baseInput = {
     euRiskClass: "high_risk",
     euArticle27Deployer: false,
     directHumanInteraction: true,
-    pciScope: "cardholder_data_environment",
-    pciPaymentPageWidget: true,
-    pciMultiTenantProvider: true,
   },
   credentials: {
     chatbotEndpoint: "https://target.test/",
