@@ -1038,7 +1038,7 @@ a { color: var(--green); text-underline-offset: 3px; }
   padding: 18px 19px;
   display: grid;
   grid-template-rows: subgrid;
-  grid-row: span 7;
+  grid-row: span 6;
   row-gap: 0;
   /* A left edge toned by the worst thing open in the area, so the grid sorts
      itself by eye before a single number is read. */
@@ -1137,69 +1137,6 @@ a { color: var(--green); text-underline-offset: 3px; }
 .area-probs li i { width: 7px; height: 7px; border-radius: 2px; margin-top: 5px; }
 .area-probs li.more { grid-template-columns: minmax(0, 1fr); color: var(--faint); font-size: 11.5px; }
 .area-none { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
-
-/* High-stakes checks: one line on each card, a section in each sheet, and the
-   headline in chapter I. Caught reads red, verified green, not reached grey. */
-.stakes-strip {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
-  margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line);
-  font-size: 11px; font-variant-numeric: tabular-nums;
-}
-.stakes-strip span { border-radius: 100px; padding: 2px 8px; white-space: nowrap; }
-.stakes-strip .lbl {
-  padding-left: 0; font-weight: 640; letter-spacing: .05em; text-transform: uppercase;
-  font-size: 9.5px; color: var(--muted);
-}
-.stakes-strip .caught { background: var(--fail-wash); color: var(--fail); box-shadow: inset 0 0 0 1px var(--fail-line); font-weight: 620; }
-.stakes-strip .held { background: var(--pass-wash); color: var(--pass); box-shadow: inset 0 0 0 1px var(--pass-line); }
-.stakes-strip .unreached { background: var(--paper-2); color: var(--muted); }
-.stakes-strip.empty { border-top: 0; padding-top: 0; margin-top: 0; }
-
-.stakes-head {
-  margin-top: 14px; padding: 18px 20px; border-radius: var(--r-m);
-  background: var(--pass-wash); border: 1px solid var(--pass-line);
-}
-.stakes-head.hot { background: var(--fail-wash); border-color: var(--fail-line); }
-.stakes-head > em {
-  display: block; font-style: normal; font-size: 10.5px; font-weight: 640;
-  letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
-}
-.stakes-head > strong { display: block; font-size: 19px; font-weight: 680; letter-spacing: -.02em; color: var(--ink); }
-.stakes-head.hot > strong { color: var(--fail); }
-.stakes-head > p { margin-top: 6px; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); max-width: 78ch; }
-.stakes-head ul { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 7px; }
-.stakes-head li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 9px; align-items: start; }
-.stakes-head li > span:first-child { margin-top: 3px; }
-.stakes-head li b { display: block; font-size: 13.5px; font-weight: 620; line-height: 1.4; color: var(--ink); }
-.stakes-head li small { font-size: 11.5px; color: var(--muted); }
-.stakes-head li.more { grid-template-columns: minmax(0, 1fr); font-size: 12px; color: var(--muted); }
-
-.stakes-group + .stakes-group { margin-top: 16px; }
-.stakes-group .sh-lbl { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
-.stakes-group .sh-lbl i { width: 7px; height: 7px; border-radius: 2px; }
-.stakes-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
-.stake {
-  display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; align-items: start;
-  padding: 11px 13px; border-radius: var(--r-s);
-  background: var(--white); border: 1px solid var(--line); border-left: 3px solid var(--line-strong);
-}
-.stake > span:first-child { margin-top: 4px; }
-.stake.caught { border-left-color: var(--fail); background: var(--fail-wash); border-color: var(--fail-line); }
-.stake.held { border-left-color: var(--pass); }
-.stake.unreached { opacity: .82; }
-.stake-t { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 9px; }
-.stake-t strong { font-size: 13.5px; font-weight: 640; line-height: 1.4; min-width: 0; }
-.stake-t .mono { font-size: 11px; color: var(--green); }
-.stake-o {
-  margin-left: auto; font-size: 9.5px; font-weight: 700; letter-spacing: .06em;
-  text-transform: uppercase; border-radius: 100px; padding: 2px 8px; white-space: nowrap;
-}
-.stake-o.caught { background: var(--fail); color: var(--white); }
-.stake-o.held { background: var(--pass-wash); color: var(--pass); box-shadow: inset 0 0 0 1px var(--pass-line); }
-.stake-o.unreached { background: var(--paper-3); color: var(--muted); }
-.stake p { margin-top: 4px; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
-.stake .stake-f { color: var(--fail); font-weight: 600; }
-.stake .stake-r { font-size: 11.5px; color: var(--faint); }
 .area-bar {
   height: 6px; border-radius: 100px; background: var(--paper-3);
   overflow: hidden; margin-bottom: 11px;

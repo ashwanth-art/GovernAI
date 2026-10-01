@@ -2,16 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Disc, Meter, Pill, Sev, sevHue, Tag } from "@/components/kit";
-import {
-  caughtPhrase,
-  stakesForPillar,
-  stakesForStandard,
-  stakesOverall,
-  type StakeItem,
-  type StakeSummary,
-} from "@/lib/high-stakes";
 import { duration, measuredPercent, rulePhrase } from "@/lib/metrics";
-import { pillarHue, pillarLabel, pillarOrder } from "@/lib/pillars";
+import { pillarHue, pillarLabel } from "@/lib/pillars";
 import { verdictLabels } from "@/lib/posture";
 import { methodLabel, methodPlain, statusMeaning, tierLabel } from "@/lib/terms";
 import type {
@@ -114,7 +106,6 @@ export function Report({
   );
 
   const ranChecks = useMemo(() => analysis.checks.filter((check) => check.ran), [analysis.checks]);
-  const overall = useMemo(() => stakesOverall(result), [result]);
   const assessmentNotes = useMemo(
     () => analysis.notes.filter((note) => !note.startsWith("Monitors re-run")),
     [analysis.notes],
@@ -303,8 +294,6 @@ export function Report({
               thing that tested it was written for the job.
             </span>
           </div>
-
-          <CaughtHeadline summary={overall} tier={scope.tier} />
         </section>
         ) : null}
 
@@ -415,8 +404,6 @@ export function Report({
                       </p>
                     )}
                   </div>
-
-                  <StakesStrip summary={stakesForPillar(result, pillar.pillar)} />
 
                   <div className="area-open">
                     <span>
@@ -541,8 +528,6 @@ export function Report({
                       </p>
                     )}
                   </div>
-
-                  <StakesStrip summary={stakesForStandard(result, row.standardId)} />
 
                   <div className="area-open">
                     <span>
@@ -1288,12 +1273,6 @@ function PillarSheet({
         </header>
 
         <div className="sheet-body" ref={bodyRef}>
-          <StakesSection
-            summary={stakesForPillar(result, pillar)}
-            subject="area"
-            tier={result.scope.tier}
-          />
-
           {/* ---- what we found, with the fix under each ---------------- */}
           <section className="sh-sec lead">
             <h4>What failed here, and the fix for each</h4>
@@ -1655,13 +1634,6 @@ function StandardSheet({
         </header>
 
         <div className="sheet-body" ref={bodyRef}>
-          <StakesSection
-            summary={stakesForStandard(result, standardId)}
-            subject={row.shortName}
-            tier={result.scope.tier}
-            byPillar
-          />
-
           {/* ---- what failed, with the fix under each ------------------ */}
           <section className="sh-sec lead">
             <h4>What fails this pack, and the fix for each</h4>
@@ -1806,155 +1778,6 @@ function StandardSheet({
       </div>
     </div>
   );
-}
-
-/* ============================================================================
-   High-stakes checks
-   ----------------------------------------------------------------------------
-   The critical- and high-severity checks, shown with what each one guards
-   against and what the run found. This is where a reader sees what the
-   assessment is capable of catching — and every outcome is the engine's own
-   status, so a "caught" is a failing rule and a "held" is a passing one.
-   ========================================================================== */
-
-const OUTCOME_LABEL: Record<StakeItem["outcome"], string> = {
-  caught: "Caught",
-  held: "Verified",
-  unreached: "Not reached",
-};
-
-function CaughtHeadline({ summary, tier }: { summary: StakeSummary; tier: number }) {
-  if (!summary.items.length) return null;
-  const caught = summary.items.filter((item) => item.outcome === "caught");
-  return (
-    <div className={`stakes-head${summary.caught ? " hot" : ""}`}>
-      <em>High-stakes checks</em>
-      <strong>
-        {summary.caught
-          ? `${caughtPhrase(summary)} caught`
-          : `Every high-stakes check we reached held`}
-      </strong>
-      <p>
-        {summary.items.length} critical and high-severity checks were in play across the five
-        areas. {summary.caught} caught a live weakness, {summary.held} verified that the safeguard
-        holds
-        {summary.unreached
-          ? `, and ${summary.unreached} wait on access deeper than ${tierLabel(tier)}`
-          : ""}
-        . Each one is a rule with a written pass condition — none is an opinion.
-      </p>
-      {caught.length ? (
-        <ul>
-          {caught.slice(0, 6).map((item) => (
-            <li key={item.key}>
-              <Sev severity={item.severity} />
-              <span>
-                <b>{item.finding ?? item.title}</b>
-                <small>
-                  {pillarLabel(item.pillar)} · {item.severity}
-                </small>
-              </span>
-            </li>
-          ))}
-          {caught.length > 6 ? <li className="more">+{caught.length - 6} more</li> : null}
-        </ul>
-      ) : null}
-    </div>
-  );
-}
-
-/** One line on a card: how many high-stakes checks this cut carries, and what they found. */
-function StakesStrip({ summary }: { summary: StakeSummary }) {
-  /* The card is a subgrid with a row per child, so an empty strip still renders
-     — dropping it would shift every row below it out of line with its neighbours. */
-  if (!summary.items.length) return <div className="stakes-strip empty" />;
-  return (
-    <div className="stakes-strip">
-      <span className="lbl">{summary.items.length} high-stakes</span>
-      {summary.caught ? <span className="caught">{summary.caught} caught</span> : null}
-      {summary.held ? <span className="held">{summary.held} verified</span> : null}
-      {summary.unreached ? <span className="unreached">{summary.unreached} not reached</span> : null}
-    </div>
-  );
-}
-
-function StakesRow({ item }: { item: StakeItem }) {
-  return (
-    <li className={`stake ${item.outcome}`}>
-      <Sev severity={item.severity} />
-      <div>
-        <div className="stake-t">
-          <strong>{item.title}</strong>
-          {item.clause ? <span className="mono">{item.clause}</span> : null}
-          <span className={`stake-o ${item.outcome}`}>{OUTCOME_LABEL[item.outcome]}</span>
-        </div>
-        <p>{item.why}</p>
-        {item.outcome === "caught" && item.finding ? (
-          <p className="stake-f">Found: {item.finding}</p>
-        ) : null}
-        {item.outcome === "unreached" && item.reach ? (
-          <p className="stake-r">{item.reach}</p>
-        ) : null}
-      </div>
-    </li>
-  );
-}
-
-function StakesSection({
-  summary,
-  subject,
-  tier,
-  byPillar = false,
-}: {
-  summary: StakeSummary;
-  subject: string;
-  tier: number;
-  byPillar?: boolean;
-}) {
-  if (!summary.items.length) return null;
-  const where = subject === "area" ? "this area" : subject;
-  const groups = byPillar
-    ? pillarOrderOf(summary.items).map((pillar) => ({
-        pillar,
-        items: summary.items.filter((item) => item.pillar === pillar),
-      }))
-    : [{ pillar: null, items: summary.items }];
-  return (
-    <section className="sh-sec stakes">
-      <h4>
-        {summary.caught
-          ? `${caughtPhrase(summary)} caught in ${where}`
-          : `The high-stakes checks in ${where}`}
-      </h4>
-      <p className="sh-lede">
-        {summary.items.length} critical and high-severity {byPillar ? "clauses" : "checks"} —
-        the ones a breach, a regulator, or an auditor goes to first. {summary.caught} caught a
-        live weakness, {summary.held} verified the safeguard holds
-        {summary.unreached ? `, and ${summary.unreached} need more access than ${tierLabel(tier)}` : ""}.
-      </p>
-      {groups.map((group) => (
-        <div className="stakes-group" key={group.pillar ?? "all"}>
-          {group.pillar ? (
-            <span className="sh-lbl">
-              <i style={{ background: pillarHue(group.pillar) }} />
-              {pillarLabel(group.pillar)}
-            </span>
-          ) : null}
-          <ul className="stakes-list">
-            {group.items.map((item) => (
-              <StakesRow key={item.key} item={item} />
-            ))}
-          </ul>
-        </div>
-      ))}
-    </section>
-  );
-}
-
-/** The five areas in registry order, keeping only those this list touches. */
-function pillarOrderOf(items: StakeItem[]): Pillar[] {
-  const present = new Set(items.map((item) => item.pillar));
-  return pillarOrder.filter((pillar) => present.has(pillar));
 }
 
 function ClauseRow({ control, note }: { control: ControlResult; note?: string }) {
