@@ -13,7 +13,6 @@ import {
   type ScopeResult,
   type StepId,
 } from "@/components/steps";
-import { defaultApplicabilityProfile, validateApplicability } from "@/lib/applicability";
 import { credentialFields } from "@/lib/assessment";
 import { estimate } from "@/lib/metrics";
 import { accessSignalsFromCredentials } from "@/lib/plan";
@@ -53,14 +52,6 @@ const startingInput: AssessmentInput = {
   industryId: "finance",
   standardIds: ["mas_ai", "soc2", "iso42001"],
   tier: 1,
-  applicability: {
-    ...defaultApplicabilityProfile,
-    hipaaRole: "not_regulated",
-    euTerritorialScope: "out_of_scope",
-    euRole: "provider",
-    euRiskClass: "limited_or_minimal",
-    directHumanInteraction: true,
-  },
   credentials: { ...DEMO_CREDENTIALS },
   architecture: {
     modelProvider: "OpenAI",
@@ -154,7 +145,7 @@ export function AssessmentWorkspace() {
      button that only hides the screen is not a stop button. */
   const abortRef = useRef<AbortController | null>(null);
 
-  const track = useMemo(() => trackFor(input), [input]);
+  const track = useMemo(() => trackFor(), []);
   const step: StepId = track[Math.min(at, track.length - 1)] ?? "system";
 
   /* Mounted here, not inside the monitoring screen: this build runs a due cycle when
@@ -224,7 +215,6 @@ export function AssessmentWorkspace() {
         body: JSON.stringify({
           standardIds: body.standardIds,
           tier: body.tier,
-          applicability: body.applicability,
         }),
       });
       if (!response.ok) return;
@@ -243,7 +233,6 @@ export function AssessmentWorkspace() {
         body: JSON.stringify({
           standardIds: body.standardIds,
           tier: body.tier,
-          applicability: body.applicability,
           access: accessSignalsFromCredentials(body.credentials),
         }),
       });
@@ -322,10 +311,6 @@ export function AssessmentWorkspace() {
       }
       return null;
     }
-    if (step === "ready") {
-      const issues = validateApplicability(input);
-      return issues.length ? issues[0] : null;
-    }
     return null;
   }, [step, input]);
 
@@ -356,11 +341,6 @@ export function AssessmentWorkspace() {
   const cancelRun = useCallback(() => abortRef.current?.abort(), []);
 
   const start = useCallback(async () => {
-    const issues = validateApplicability(input);
-    if (issues.length) {
-      setErrors(issues);
-      return;
-    }
     const controller = new AbortController();
     abortRef.current = controller;
     setRunning(true);
@@ -546,7 +526,7 @@ export function AssessmentWorkspace() {
     phase === "setup"
       ? track
           .slice(0, at)
-          .map((id) => ({ id, r: receiptFor(id, input, scope) }))
+          .map((id) => ({ id, r: receiptFor(id, input) }))
           .filter((entry): entry is { id: StepId; r: { em: string; s: string } } => entry.r !== null)
       : [];
 

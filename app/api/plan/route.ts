@@ -1,15 +1,13 @@
-import { defaultApplicabilityProfile } from "@/lib/applicability";
 import { standardById } from "@/lib/catalog";
 import { buildCheckPlan, type AccessSignals } from "@/lib/plan";
 import { writeExecutionLog } from "@/lib/execution-log";
-import type { AccessTier, ApplicabilityProfile } from "@/lib/types";
+import type { AccessTier } from "@/lib/types";
 
 export const runtime = "edge";
 
 interface PlanRequest {
   standardIds?: string[];
   tier?: AccessTier;
-  applicability?: ApplicabilityProfile;
   access?: AccessSignals;
 }
 
@@ -40,7 +38,6 @@ export async function POST(request: Request) {
   const plan = buildCheckPlan({
     standardIds,
     tier,
-    applicability: { ...defaultApplicabilityProfile, ...(body.applicability ?? {}) },
     access: body.access,
   });
 

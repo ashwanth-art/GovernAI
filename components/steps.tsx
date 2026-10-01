@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { applicabilityKeysByCondition } from "@/lib/applicability";
 import { credentialFields } from "@/lib/assessment";
 import { industries, industryById, standardById, standards } from "@/lib/catalog";
 import { estimate, reachPhrase, requestPhrase } from "@/lib/metrics";
@@ -9,7 +8,6 @@ import { pillarLabel } from "@/lib/pillars";
 import { tierLabel, tierPlain } from "@/lib/terms";
 import type {
   AccessTier,
-  ApplicabilityProfile,
   AssessmentInput,
   CheckPlan,
   Pillar,
@@ -18,14 +16,11 @@ import type {
 /* ============================================================================
    The track
    ----------------------------------------------------------------------------
-   Seven steps at most, one decision each, and the fourth only exists when a
-   selected pack actually needs it. The list is derived from the input rather
-   than declared, which is what makes the flow dynamic: choosing HIPAA grows the
-   track by one step, deselecting it shrinks it again, and no screen is ever shown
-   that has nothing to ask.
+   Six steps, one decision each. No pack asks scope questions — every selected
+   pack is assessed in full — so the track is the same whatever is selected.
    ========================================================================== */
 
-export type StepId = "system" | "industry" | "packs" | "scope" | "depth" | "connect" | "ready";
+export type StepId = "system" | "industry" | "packs" | "depth" | "connect" | "ready";
 
 export interface ScopeResult {
   applicable: number;
@@ -40,7 +35,6 @@ export interface ScopeResult {
     unknown: number;
     exclusions: Array<{ controlId: string; controlName: string; reason: string }>;
   }>;
-  openQuestions: string[];
 }
 
 /** One field's reachability verdict, as returned by `POST /api/preflight`. */
@@ -62,121 +56,9 @@ export interface PreflightState {
   checkedAt: string;
 }
 
-/* ---- the profile answers, and which packs actually consume them ---------- */
-
-type ProfileKey = keyof ApplicabilityProfile;
-
-const SCOPE_QUESTIONS: Array<{
-  key: ProfileKey;
-  q: string;
-  help: string;
-  options?: Array<[string, string]>;
-}> = [
-  {
-    key: "hipaaRole",
-    q: "What is your organization's role under HIPAA?",
-    help: "Decides which of the HIPAA safeguards apply to you at all.",
-    options: [
-      ["unknown", "Not sure yet"],
-      ["covered_entity", "Covered entity — we provide care or coverage"],
-      ["business_associate", "Business associate — we handle PHI for someone else"],
-      ["not_regulated", "Neither — HIPAA does not reach us"],
-    ],
-  },
-  {
-    key: "handlesPhi",
-    q: "Does the assistant handle protected health information?",
-    help: "Anything a patient could be identified from.",
-  },
-  {
-    key: "handlesEphi",
-    q: "Is any of that health information stored electronically?",
-    help: "Triggers the HIPAA Security Rule's technical safeguards.",
-  },
-  {
-    key: "usesPhiSubprocessors",
-    q: "Do other companies process that health data on your behalf?",
-    help: "Each one needs a business associate agreement.",
-  },
-  {
-    key: "maintainsDesignatedRecordSet",
-    q: "Does it hold records a patient could ask to see or correct?",
-    help: "Triggers the access and amendment obligations.",
-  },
-  {
-    key: "euTerritorialScope",
-    q: "Does the EU AI Act reach this system?",
-    help: "It applies if you place it on the EU market or its output is used in the EU — wherever you are based.",
-    options: [
-      ["unknown", "Not sure yet"],
-      ["in_scope", "Yes — EU market or EU-used output"],
-      ["out_of_scope", "No — neither applies"],
-    ],
-  },
-  {
-    key: "euRole",
-    q: "What is your role under the EU AI Act?",
-    help: "Providers carry the most obligations; deployers carry fewer but different ones.",
-    options: [
-      ["unknown", "Not sure yet"],
-      ["provider", "Provider — we built it or put our name on it"],
-      ["deployer", "Deployer — we use someone else's system"],
-      ["importer", "Importer"],
-      ["distributor", "Distributor"],
-      ["product_manufacturer", "Product manufacturer"],
-      ["gpai_provider", "General-purpose AI model provider"],
-      ["not_in_scope", "None of these"],
-    ],
-  },
-  {
-    key: "euRiskClass",
-    q: "How is the system classified for risk?",
-    help: "High-risk classification is what turns on the heaviest obligations.",
-    options: [
-      ["unknown", "Not sure yet"],
-      ["prohibited", "Prohibited practice"],
-      ["high_risk", "High risk"],
-      ["transparency", "Transparency obligations only"],
-      ["limited_or_minimal", "Limited or minimal risk"],
-    ],
-  },
-  {
-    key: "euArticle27Deployer",
-    q: "Do you owe a fundamental-rights impact assessment?",
-    help: "Article 27 — certain public-body and essential-service deployers.",
-  },
-  {
-    key: "directHumanInteraction",
-    q: "Do people talk to it directly?",
-    help: "If so, they have to be told they are talking to an AI system.",
-  },
-];
-
-/**
- * Which profile answers the selected packs actually consume.
- *
- * Asked rather than assumed: a pack whose every control applies to all assessed
- * AI systems consumes nothing, so selecting it adds no questions. This is why
- * most runs never see the scope step at all.
- */
-export function neededProfileKeys(standardIds: string[]): ProfileKey[] {
-  const needed = new Set<ProfileKey>();
-  for (const id of standardIds) {
-    for (const control of standardById.get(id)?.controls ?? []) {
-      for (const condition of control.applicability ?? []) {
-        for (const key of applicabilityKeysByCondition[condition] ?? []) needed.add(key);
-      }
-    }
-  }
-  return SCOPE_QUESTIONS.filter((question) => needed.has(question.key)).map((q) => q.key);
-}
-
-/** The track, derived. The scope step exists only when something asks for it. */
-export function trackFor(input: AssessmentInput): StepId[] {
-  const track: StepId[] = ["system", "industry", "packs"];
-  if (neededProfileKeys(input.standardIds).length) track.push("scope");
-  track.push("depth", "connect", "ready");
-  return track;
+/** The track. The same six steps for every selection. */
+export function trackFor(): StepId[] {
+  return ["system", "industry", "packs", "depth", "connect", "ready"];
 }
 
 /**
@@ -188,7 +70,6 @@ export function trackFor(input: AssessmentInput): StepId[] {
 export function receiptFor(
   id: StepId,
   input: AssessmentInput,
-  scope: ScopeResult | null,
 ): { em: string; s: string } | null {
   switch (id) {
     case "system":
@@ -202,8 +83,6 @@ export function receiptFor(
           ? input.standardIds.map((id) => standardById.get(id)?.shortName ?? id).join(", ")
           : "none selected",
       };
-    case "scope":
-      return { em: "scope", s: scope ? `${scope.applicable} controls apply` : "answered" };
     case "depth":
       return { em: "depth", s: tierLabel(input.tier) };
     case "connect": {
@@ -225,7 +104,6 @@ export const STEP_TITLE: Record<StepId, string> = {
   system: "What are we assessing?",
   industry: "What kind of business runs it?",
   packs: "Which rulebooks should it be held to?",
-  scope: "A few questions your rulebooks need answered",
   depth: "How much of the system can we see?",
   connect: "Where is it, and what may we use?",
   ready: "This is exactly what will run",
@@ -260,7 +138,6 @@ export function Step(props: StepProps) {
       {id === "system" ? <SystemStep {...props} /> : null}
       {id === "industry" ? <IndustryStep {...props} /> : null}
       {id === "packs" ? <PacksStep {...props} /> : null}
-      {id === "scope" ? <ScopeStep {...props} /> : null}
       {id === "depth" ? <DepthStep {...props} /> : null}
       {id === "connect" ? <ConnectStep {...props} /> : null}
       {id === "ready" ? <ReadyStep {...props} /> : null}
@@ -532,18 +409,8 @@ function PacksStep({ input, patch, scope }: StepProps) {
               <b>{input.standardIds.length}</b> packs · <b>{total}</b> controls between them.{" "}
               {scope ? (
                 <>
-                  Of those, <b>{scope.applicable}</b> apply to you.{" "}
-                  {scope.notApplicable > 0 ? (
-                    <>
-                      <b>{scope.notApplicable}</b> are ruled out, each with a stated reason.{" "}
-                    </>
-                  ) : null}
-                  {scope.unknown > 0 ? (
-                    <>
-                      <b>{scope.unknown}</b> cannot be decided until the next screen&rsquo;s
-                      questions are answered.
-                    </>
-                  ) : null}
+                  All <b>{scope.applicable}</b> are assessed — no pack asks scope questions, so
+                  nothing is ruled out.
                 </>
               ) : (
                 "Working out which of them apply to you…"
@@ -556,103 +423,7 @@ function PacksStep({ input, patch, scope }: StepProps) {
   );
 }
 
-/* ---- 4 · scope (conditional) -------------------------------------------- */
-
-function ScopeStep({ input, patch, scope }: StepProps) {
-  const needed = useMemo(() => neededProfileKeys(input.standardIds), [input.standardIds]);
-  const questions = SCOPE_QUESTIONS.filter((question) => needed.includes(question.key));
-  const profile = input.applicability;
-  const set = (key: ProfileKey, value: string | boolean) =>
-    patch({ applicability: { ...profile, [key]: value } as ApplicabilityProfile });
-
-  const unanswered = questions.filter(
-    (question) => question.options && profile[question.key] === "unknown",
-  ).length;
-
-  return (
-    <>
-      <p className="q-sub">
-        Only the packs you selected are asking. Each answer removes controls from the run or brings
-        them in — nothing here is scored.
-      </p>
-      <div className="q-body">
-        <div className="fields">
-          {questions
-            .filter((question) => question.options)
-            .map((question) => (
-              <label className="field" key={question.key}>
-                <span>{question.q}</span>
-                <select
-                  value={String(profile[question.key])}
-                  onChange={(event) => set(question.key, event.target.value)}
-                >
-                  {question.options?.map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                <small>{question.help}</small>
-              </label>
-            ))}
-        </div>
-
-        {questions.some((question) => !question.options) ? (
-          <div className="switches" style={{ marginTop: 22 }}>
-            {questions
-              .filter((question) => !question.options)
-              .map((question) => {
-                const on = Boolean(profile[question.key]);
-                return (
-                  <button
-                    key={question.key}
-                    type="button"
-                    className={`switch${on ? " on" : ""}`}
-                    onClick={() => set(question.key, !on)}
-                    aria-pressed={on}
-                  >
-                    <span>
-                      <strong>{question.q}</strong>
-                      <p>{question.help}</p>
-                    </span>
-                    <span className="knob" aria-hidden="true" />
-                  </button>
-                );
-              })}
-          </div>
-        ) : null}
-
-        {unanswered > 0 ? (
-          <div className="because warn">
-            <i>▲</i>
-            <span>
-              <b>{unanswered}</b> still say &ldquo;not sure yet&rdquo;. Left that way, the controls
-              that depend on them are <b>neither scored nor excluded</b> — they report unknown
-              applicability, which is honest but proves nothing.
-            </span>
-          </div>
-        ) : (
-          <div className="because">
-            <i>◆</i>
-            <span>
-              All answered.{" "}
-              {scope ? (
-                <>
-                  <b>{scope.applicable}</b> controls apply, <b>{scope.notApplicable}</b> are ruled
-                  out with a reason, and <b>{scope.unknown}</b> are undecided.
-                </>
-              ) : (
-                "Re-scoping…"
-              )}
-            </span>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-
-/* ---- 5 · depth ---------------------------------------------------------- */
+/* ---- 4 · depth ---------------------------------------------------------- */
 
 const DEPTH: Record<AccessTier, { needs: string; gain: string }> = {
   1: {
@@ -680,7 +451,6 @@ const METHOD_GROUP: Array<{ id: string; label: string; blurb: string }> = [
   { id: "adapter_read", label: "Configuration reads", blurb: "Read-only facts from your own adapters." },
   { id: "provider_api", label: "Provider reads", blurb: "Read-only calls to your cloud or monitoring provider." },
   { id: "named_artifact", label: "Evidence records", blurb: "Named procedure verdicts you publish." },
-  { id: "declared_scope", label: "Scoping answers", blurb: "Decisions you recorded during setup." },
 ];
 
 function DepthStep({ input, patch, plan }: StepProps) {
@@ -822,7 +592,7 @@ function DepthStep({ input, patch, plan }: StepProps) {
   );
 }
 
-/* ---- 6 · connect -------------------------------------------------------- */
+/* ---- 5 · connect -------------------------------------------------------- */
 
 const STATE_GLYPH: Record<PreflightRow["state"], string> = {
   ok: "●",
@@ -931,7 +701,7 @@ function ConnectStep({
   );
 }
 
-/* ---- 7 · ready ---------------------------------------------------------- */
+/* ---- 6 · ready ---------------------------------------------------------- */
 
 function ReadyStep({ input, plan, scope }: StepProps) {
   const blocked = useMemo(() => {

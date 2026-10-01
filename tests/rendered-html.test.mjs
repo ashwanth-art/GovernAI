@@ -106,9 +106,8 @@ test("client bundle carries the track, the run, and the five-chapter report", as
   assert.match(bundle, /How much of the system can we see\?/);
   assert.match(bundle, /Where is it, and what may we use\?/);
   assert.match(bundle, /This is exactly what will run/);
-  // The scope step exists only when a selected pack's controls consume a profile
-  // answer, which is what makes the track a computed length rather than a fixed one.
-  assert.match(bundle, /A few questions your rulebooks need answered/);
+  // No pack asks scope questions, so there is no scope step.
+  assert.doesNotMatch(bundle, /A few questions your rulebooks need answered/);
   // Navigation is the reader's own answers, docked as receipts.
   assert.match(bundle, /className:`trail`/);
   assert.match(bundle, /receipt/);
@@ -240,7 +239,7 @@ test("catalog exposes all industries, standards, and tier-specific fields", asyn
   const hipaa = catalog.standards.find((standard) => standard.id === "hipaa");
   assert.equal(hipaa.pack.status, "draft");
   assert.equal(hipaa.pack.assuranceLevel, "readiness");
-  assert.equal(hipaa.totalControls, 31);
+  assert.equal(hipaa.totalControls, 30);
 });
 
 test("backend rejects invalid scope, selection count, non-RAG architecture, and missing tier inputs", async () => {
@@ -320,9 +319,9 @@ test("evaluation generates exactly one native report per selected standard plus 
   assert.match(result.reports[0].nativeSections[1], /Administrative Safeguards/);
   assert.match(result.reports[1].nativeSections[2], /Annex A/);
   assert.match(result.reports[2].nativeSections[1], /Govern/);
-  assert.equal(result.reports[0].assessedControls, 9);
-  assert.equal(result.reports[0].totalControls, 31);
-  assert.equal(result.reports[0].coveragePercent, 29);
+  assert.equal(result.reports[0].assessedControls, 8);
+  assert.equal(result.reports[0].totalControls, 30);
+  assert.equal(result.reports[0].coveragePercent, 27);
   assert.equal(result.reports[0].assuranceLevel, "readiness");
   assert.match(result.reports[0].packRelease, /draft/);
   assert.equal(
@@ -352,7 +351,7 @@ test("evaluation accepts more than three selected standards", async () => {
   assert.deepEqual(result.reports.map((report) => report.standardId), selectedStandardIds);
   assert.equal(result.reports.length, selectedStandardIds.length);
   const euReport = result.reports.find((report) => report.standardId === "eu_ai_act");
-  assert.equal(euReport.totalControls, 26);
+  assert.equal(euReport.totalControls, 24);
   assert.equal(euReport.unknownApplicabilityControls, 0);
 });
 
@@ -374,7 +373,8 @@ test("single-standard assessment omits cross-standard report and respects Tier 1
   assert.equal(response.status, 200);
   const result = await response.json();
   assert.equal(result.reports.length, 1);
-  assert.equal(result.reports[0].assessedControls, 1);
+  // The only Tier 1 HIPAA control was the scope questionnaire, which no longer exists.
+  assert.equal(result.reports[0].assessedControls, 0);
   assert.equal(result.reports[0].readiness, "Insufficient evidence");
   assert.equal(result.crossInsights, null);
   assert.equal(result.owasp.length, 10);
@@ -546,32 +546,6 @@ test("an unavailable optional provider read does not erase settled manifest evid
   assert.equal(result.analysis.posture.coveragePercent, 100);
   assert.equal(result.analysis.posture.notAssessed, 0);
   assert.ok(result.analysis.matrix.every((row) => row.coveragePercent === 100));
-});
-
-test("HIPAA applicability excludes controls for a non-regulated organization", async () => {
-  const response = await request("/api/assessments", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      ...baseInput,
-      standardIds: ["hipaa"],
-      applicability: {
-        ...baseInput.applicability,
-        hipaaRole: "not_regulated",
-        handlesPhi: false,
-        handlesEphi: false,
-        usesPhiSubprocessors: false,
-        maintainsDesignatedRecordSet: false,
-      },
-    }),
-  });
-  assert.equal(response.status, 200);
-  const result = await response.json();
-  assert.ok(result.reports[0].notApplicableControls >= 30);
-  assert.equal(
-    result.reports[0].controls.find((control) => control.id === "HIPAA-S-01").status,
-    "not_applicable",
-  );
 });
 
 test("stream route returns detailed validation errors before execution", async () => {

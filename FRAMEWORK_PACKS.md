@@ -6,13 +6,15 @@ GovernAI framework packs separate official source requirements from GovernAI-aut
 
 | Pack | Release | Controls | Assurance | Status |
 |---|---|---:|---|---|
-| HIPAA current rules | `2026.07-draft.2` | 31 | Readiness | Draft |
+| HIPAA current rules | `2026.10-draft.1` | 30 | Readiness | Draft |
 | NIST AI RMF 1.0 + GenAI Profile | `2026.07-draft.2` | 28 | Readiness | Draft |
-| EU AI Act | `2026.07-draft.2` | 26 | Readiness | Draft |
+| EU AI Act | `2026.10-draft.1` | 24 | Readiness | Draft |
 | PCI DSS v4.0.1 | `2026.10-draft.2` | 49 | Readiness | Draft |
 | OWASP LLM Top 10 2025 | `2026.07-draft.2` | 10 risk families | Screening | Draft |
 
 The UI exposes each pilot pack's release, status, assurance level, coverage, and source mapping.
+
+No pack asks scope questions. Every control of a selected pack applies to every assessed assistant, so the setup flow has no questions step and a role-, data- or risk-class-specific requirement (a HIPAA covered-entity rule, an EU AI Act high-risk provider obligation) is reported against the system rather than ruled out. The HIPAA and EU AI Act scope controls that only recorded those answers (HIPAA-APP-01, EUAIA-APP-01, EUAIA-APP-02) were removed, since without a question they could only pass by default.
 
 ## PCI DSS v4.0.1
 
@@ -49,7 +51,7 @@ Every pilot control contains:
 
 - `id`: stable identity across releases and reports;
 - `objective`: concise statement of what must be true;
-- `applicability`: conditions that determine whether the control applies;
+- `applicability`: always `all_assessed_ai_systems` (or `llm_or_rag_system`) — no pack carries a scope condition;
 - `sourceCitation`: official authority, document, section, and mapping type;
 - `evidenceProcedureIds`: reusable collection or review procedures;
 - `evaluationRuleId`: deterministic rule that converts evidence into a result;
@@ -61,7 +63,7 @@ Framework name, framework version, release status, assurance level, source versi
 ## Result boundaries
 
 - Missing evidence produces `not_assessed`, not pass.
-- Applicability answers produce `applicable`, `not_applicable`, or `unknown` before scoring.
+- Every control of a selected pack is applicable; nothing is excluded by a scope answer.
 - Coverage is assessed controls divided by applicable controls; excluded controls do not depress the score.
 - Document-review controls remain `not_assessed` until artifact collectors inspect content.
 - Reachability does not count as content review.
@@ -73,7 +75,7 @@ Framework name, framework version, release status, assurance level, source versi
 
 - HIPAA scoring uses the currently effective rules; the 2025 Security Rule NPRM is not mixed into current-rule conclusions.
 - NIST AI RMF 1.0 is marked under revision.
-- EU AI Act applicability must be determined using the organization's role, system classification, assessment date, and applicable transition rules.
+- EU AI Act obligations are all reported; whether a given article binds the organization (role, classification, assessment date, transition rules) is a legal review outside the run.
 - OWASP procedures are bounded; denial-of-service and other invasive tests are excluded from production probing.
 
 ## Evidence manifest and provider collectors

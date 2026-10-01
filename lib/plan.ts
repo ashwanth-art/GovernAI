@@ -4,7 +4,6 @@ import { resolveCheck, unblockedBy } from "./checks";
 import { pillarLabel, pillarOrder } from "./pillars";
 import type {
   AccessTier,
-  ApplicabilityProfile,
   AssessmentInput,
   CheckDefinition,
   CheckPlan,
@@ -33,7 +32,6 @@ const SECONDS_PER_CHECK: Record<string, number> = {
   adapter_read: 1.5,
   provider_api: 2,
   named_artifact: 0.2,
-  declared_scope: 0.05,
   not_supported: 0,
 };
 
@@ -116,7 +114,6 @@ export const packProvenance = new Map<string, { direct: number; proxy: number }>
 export interface PlanInput {
   standardIds: string[];
   tier: AccessTier;
-  applicability: ApplicabilityProfile;
   access?: AccessSignals;
 }
 
@@ -133,7 +130,7 @@ function scopeControls(input: PlanInput): Scoped[] {
     const standard = standardById.get(standardId);
     if (!standard) return [];
     return standard.controls.map((control) => {
-      const verdict = evaluateControlApplicability(control, input.applicability);
+      const verdict = evaluateControlApplicability(control);
       return {
         control,
         standardId,
@@ -311,7 +308,7 @@ export function scopeSummary(input: PlanInput): {
           .map((entry) => ({
             controlId: entry.control.id,
             controlName: entry.control.name,
-            reason: evaluateControlApplicability(entry.control, input.applicability).reason,
+            reason: evaluateControlApplicability(entry.control).reason,
           })),
       };
     })

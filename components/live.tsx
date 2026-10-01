@@ -100,7 +100,6 @@ const METHOD_LABEL: Record<string, string> = {
   adapter_read: "config read",
   provider_api: "provider read",
   named_artifact: "evidence record",
-  declared_scope: "scoping answer",
   not_supported: "not testable",
 };
 

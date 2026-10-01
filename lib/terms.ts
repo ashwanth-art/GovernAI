@@ -102,7 +102,6 @@ export const methodNames: Record<string, string> = {
   adapter_read: "adapter_read",
   provider_api: "provider_api",
   named_artifact: "named_artifact",
-  declared_scope: "declared_scope",
   not_supported: "not_supported",
 };
 
@@ -112,7 +111,6 @@ export const methodPlain: Record<string, string> = {
   adapter_read: "a read of your own configuration endpoint",
   provider_api: "a read-only call to your cloud or monitoring provider",
   named_artifact: "a named procedure verdict from your evidence manifest",
-  declared_scope: "an answer you gave during setup",
   not_supported: "cannot be tested safely at any depth",
 };
 

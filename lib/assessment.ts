@@ -1,11 +1,7 @@
 import { buildAnalysis } from "./analysis";
 import { industries, industryById, standardById } from "./catalog";
 import { accessSignalsFromCredentials, buildCheckPlan, expectedLiveChecks } from "./plan";
-import {
-  defaultApplicabilityProfile,
-  evaluateControlApplicability,
-  validateApplicability,
-} from "./applicability";
+import { evaluateControlApplicability } from "./applicability";
 import {
   combineProcedureEvidence,
   parseEvidenceManifest,
@@ -264,7 +260,6 @@ function localTargetsAllowed() {
 
 export function validateAssessmentInput(input: AssessmentInput): string[] {
   const errors: string[] = [];
-  input.applicability ??= { ...defaultApplicabilityProfile };
   if (!input.organization?.trim()) errors.push("Organization is required.");
   if (!input.systemName?.trim()) errors.push("AI system name is required.");
   if (!industryById.has(input.industryId)) errors.push("Select a supported industry.");
@@ -278,7 +273,6 @@ export function validateAssessmentInput(input: AssessmentInput): string[] {
   input.standardIds?.forEach((id) => {
     if (!standardById.has(id)) errors.push(`Unknown compliance standard: ${id}.`);
   });
-  errors.push(...validateApplicability(input));
 
   const architecture = input.architecture ?? ({} as AssessmentInput["architecture"]);
   if (!architecture.modelProvider?.trim()) errors.push("Model provider is required.");
@@ -1316,9 +1310,8 @@ function controlResult(
   control: Control,
   tier: AccessTier,
   signals: LiveSignals,
-  applicabilityProfile = defaultApplicabilityProfile,
 ): ControlResult {
-  const applicability = evaluateControlApplicability(control, applicabilityProfile);
+  const applicability = evaluateControlApplicability(control);
   const resultBase = {
     ...control,
     applicabilityStatus: applicability.status,
@@ -1349,16 +1342,6 @@ function controlResult(
       score: 0,
       confidence: 0,
       evidence: `Not assessed — requires Tier ${control.tierMinimum} access.`,
-    };
-  }
-
-  if (control.evaluationRuleId?.startsWith("questionnaire.")) {
-    return {
-      ...resultBase,
-      status: "pass",
-      score: 1,
-      confidence: 1,
-      evidence: `Applicability questionnaire completed. ${applicability.reason}`,
     };
   }
 
@@ -1724,7 +1707,7 @@ function buildStandardReport(
   signals: LiveSignals,
 ): StandardReport {
   const controls = definition.controls.map((control) =>
-    controlResult(control, input.tier, signals, input.applicability),
+    controlResult(control, input.tier, signals),
   );
   const applicable = controls.filter(
     (control) => control.applicabilityStatus === "applicable",
@@ -1918,15 +1901,13 @@ export async function runAssessment(
   const totalSteps = expectedLiveCheckCount + totalControlSteps + input.standardIds.length + 1;
   const inputSummary = `assessment=${id}; tier=${input.tier}; standards=${input.standardIds.length}; targetConfigured=true`;
 
-  /* The plan is pure computation over the selected packs, the tier and the
-     applicability answers, so it can be built before anything is emitted. Doing
+  /* The plan is pure computation over the selected packs and the tier, so it can be built before anything is emitted. Doing
      it first lets the opening event carry the whole shape of the run — every
      stage, every rule, every denominator — so a client can draw the finished
      frame before the first request leaves. */
   const plan = buildCheckPlan({
     standardIds: input.standardIds,
     tier: input.tier,
-    applicability: input.applicability ?? defaultApplicabilityProfile,
     access: accessSignalsFromCredentials(input.credentials),
   });
 
@@ -2378,7 +2359,6 @@ export async function runAssessment(
         tier: input.tier,
         selectedStandards: reports.map((report) => report.shortName),
         architecture: input.architecture,
-        applicability: input.applicability,
       },
       reports,
       owasp,

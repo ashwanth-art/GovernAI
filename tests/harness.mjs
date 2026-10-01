@@ -411,18 +411,6 @@ export const baseInput = {
   industryId: "healthcare",
   standardIds: ["hipaa", "iso42001", "nist_ai_rmf"],
   tier: 2,
-  applicability: {
-    hipaaRole: "covered_entity",
-    handlesPhi: true,
-    handlesEphi: true,
-    usesPhiSubprocessors: true,
-    maintainsDesignatedRecordSet: true,
-    euTerritorialScope: "in_scope",
-    euRole: "provider",
-    euRiskClass: "high_risk",
-    euArticle27Deployer: false,
-    directHumanInteraction: true,
-  },
   credentials: {
     chatbotEndpoint: "https://target.test/",
     tenantId: "aci-infotech",

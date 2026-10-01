@@ -42,32 +42,6 @@ export type EvidenceSourceType =
   | "artifact_manifest"
   | "provider_api";
 
-export interface ApplicabilityProfile {
-  hipaaRole: "unknown" | "covered_entity" | "business_associate" | "not_regulated";
-  handlesPhi: boolean;
-  handlesEphi: boolean;
-  usesPhiSubprocessors: boolean;
-  maintainsDesignatedRecordSet: boolean;
-  euTerritorialScope: "unknown" | "in_scope" | "out_of_scope";
-  euRole:
-    | "unknown"
-    | "provider"
-    | "deployer"
-    | "importer"
-    | "distributor"
-    | "product_manufacturer"
-    | "gpai_provider"
-    | "not_in_scope";
-  euRiskClass:
-    | "unknown"
-    | "prohibited"
-    | "high_risk"
-    | "transparency"
-    | "limited_or_minimal";
-  euArticle27Deployer: boolean;
-  directHumanInteraction: boolean;
-}
-
 export interface Control {
   id: string;
   name: string;
@@ -126,7 +100,6 @@ export interface AssessmentInput {
   industryId: string;
   standardIds: string[];
   tier: AccessTier;
-  applicability: ApplicabilityProfile;
   credentials: Record<string, string>;
   architecture: {
     modelProvider: string;
@@ -239,7 +212,6 @@ export interface AssessmentResult {
     tier: AccessTier;
     selectedStandards: string[];
     architecture: AssessmentInput["architecture"];
-    applicability: ApplicabilityProfile;
   };
   reports: StandardReport[];
   owasp: ControlResult[];
@@ -287,7 +259,6 @@ export type CheckMethod =
   | "adapter_read"
   | "provider_api"
   | "named_artifact"
-  | "declared_scope"
   | "not_supported";
 
 export type Severity = "critical" | "high" | "medium" | "low";

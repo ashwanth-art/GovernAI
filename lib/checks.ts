@@ -44,25 +44,6 @@ interface CheckSeed {
 
 const SEEDS: CheckSeed[] = [
   {
-    id: "chk.scope.declared",
-    ruleId: "questionnaire.*",
-    title: "Scope answer recorded",
-    intent:
-      "Confirms the scoping questionnaire holds a definite answer for the question this control depends on.",
-    pillar: "compliance",
-    domainId: "comp.scoping",
-    method: "declared_scope",
-    tierMinimum: 1,
-    rule: {
-      statement:
-        "Passes when the applicability profile records a definite value for the scoping question this control depends on. This check verifies that a decision was made and recorded — it does not independently verify that the answer is factually correct.",
-      passWhen: "A definite scope value is recorded.",
-      partialWhen: "Not used by this rule.",
-      failWhen: "Not used by this rule; an unrecorded answer resolves to not_assessed instead.",
-      thresholds: [{ key: "unresolved answers allowed", value: "0" }],
-    },
-  },
-  {
     id: "chk.trust.grounding",
     ruleId: "probe.grounding",
     title: "Retrieval grounding and source evidence",
@@ -487,8 +468,6 @@ export function resolveCheck(
 ): CheckDefinition {
   const ruleId = control.evaluationRuleId ?? "";
 
-  if (ruleId.startsWith("questionnaire.")) return checkById.get("chk.scope.declared")!;
-
   // Live adapter readings outrank named-procedure evidence, so this branch comes
   // first here exactly as it does in controlResult().
   const targetCheckId = targetCheckIdByRuleId.get(ruleId);
@@ -523,8 +502,6 @@ export function unblockedBy(check: CheckDefinition): string {
       return "Grant a read-only provider API token (Tier 3).";
     case "not_supported":
       return "Requires a target-side disclosure signal that does not exist yet. No tier closes this.";
-    case "declared_scope":
-      return "Answer the outstanding scoping question.";
     default:
       return "Confirm the target endpoint is reachable and accepts a bounded request.";
   }

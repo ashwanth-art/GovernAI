@@ -12,22 +12,9 @@ const control = (
   input: Parameters<typeof createPackControl>[0],
 ) => createPackControl(input, source);
 
+/* Every safeguard applies to every assessed system: the pack asks no scope
+   questions, so role- and PHI-specific rules are reported rather than ruled out. */
 const controls = [
-  control({
-    id: "HIPAA-APP-01",
-    name: "Regulated-entity applicability",
-    objective: "The organization has documented whether it is a covered entity, business associate, or neither for the assessed system.",
-    category: "Applicability",
-    tierMinimum: 1,
-    pillars: ["governance", "compliance"],
-    testType: "config_check",
-    evaluationRuleId: "questionnaire.hipaa-scope",
-    severity: "critical",
-    section: "45 CFR §§160.102, 160.103 and 164.104",
-    evidenceProcedureIds: ["artifact-scope-questionnaire", "document-regulatory-scope"],
-    remediationId: "hipaa-scope-determination",
-    remediation: "Document the regulated role, covered functions, business-associate relationships, and systems that create, receive, maintain, or transmit PHI.",
-  }),
   control({
     id: "HIPAA-APP-02",
     name: "PHI and ePHI data-flow inventory",
@@ -42,7 +29,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-data-flow", "artifact-rag-corpus-manifest"],
     remediationId: "phi-data-flow",
     remediation: "Create and approve a PHI/ePHI data-flow and RAG corpus inventory, including subprocessors and storage locations.",
-    applicability: ["covered_entity_or_business_associate", "handles_phi_or_ephi"],
   }),
   control({
     id: "HIPAA-PR-01",
@@ -58,7 +44,6 @@ const controls = [
     evidenceProcedureIds: ["document-phi-use-policy", "artifact-rag-access-policy"],
     remediationId: "phi-use-controls",
     remediation: "Map every PHI use and disclosure to a permitted purpose and enforce it through retrieval authorization and response filtering.",
-    applicability: ["covered_entity_or_business_associate", "handles_phi"],
   }),
   control({
     id: "HIPAA-PR-02",
@@ -74,7 +59,6 @@ const controls = [
     evidenceProcedureIds: ["adapter-audit-configuration", "artifact-rag-access-policy"],
     remediationId: "minimum-necessary-rag",
     remediation: "Apply purpose-scoped retrieval filters, field-level minimization, prompt redaction, and output controls for PHI.",
-    applicability: ["covered_entity_or_business_associate", "handles_phi"],
   }),
   control({
     id: "HIPAA-PR-03",
@@ -90,7 +74,6 @@ const controls = [
     evidenceProcedureIds: ["document-business-associate-inventory", "document-vendor-contracts"],
     remediationId: "baa-coverage",
     remediation: "Inventory PHI-handling vendors, obtain required BAAs, and prohibit PHI transfer to vendors that are not contractually authorized.",
-    applicability: ["covered_entity_or_business_associate", "uses_phi_subprocessors"],
   }),
   control({
     id: "HIPAA-PR-04",
@@ -106,7 +89,6 @@ const controls = [
     evidenceProcedureIds: ["document-individual-rights-procedure", "artifact-data-lineage"],
     remediationId: "phi-rights-workflow",
     remediation: "Implement searchable lineage and approved workflows for access, correction, denial, and response tracking.",
-    applicability: ["covered_entity", "maintains_designated_record_set"],
   }),
   control({
     id: "HIPAA-PR-05",
@@ -122,7 +104,6 @@ const controls = [
     evidenceProcedureIds: ["document-privacy-notice", "document-ai-transparency"],
     remediationId: "privacy-notice-update",
     remediation: "Review whether AI-assisted processing changes described privacy practices and update notices and user disclosures where required.",
-    applicability: ["covered_entity"],
   }),
   control({
     id: "HIPAA-S-01",
@@ -138,7 +119,6 @@ const controls = [
     evidenceProcedureIds: ["document-security-risk-analysis", "artifact-threat-model"],
     remediationId: "hipaa-risk-analysis",
     remediation: "Complete and approve an ePHI risk analysis covering the chatbot, retrieval pipeline, model provider, vector store, logs, and administrators.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-02",
@@ -154,7 +134,6 @@ const controls = [
     evidenceProcedureIds: ["document-risk-register", "document-risk-treatment"],
     remediationId: "risk-treatment-plan",
     remediation: "Create a tracked treatment plan for material ePHI risks and require documented approval of residual risk.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-03",
@@ -170,7 +149,6 @@ const controls = [
     evidenceProcedureIds: ["document-role-assignment", "document-security-charter"],
     remediationId: "assign-security-official",
     remediation: "Formally assign responsibility and authority for the system's ePHI security program.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-04",
@@ -186,7 +164,6 @@ const controls = [
     evidenceProcedureIds: ["adapter-audit-configuration", "artifact-access-review"],
     remediationId: "ephi-access-governance",
     remediation: "Implement role-based authorization, joiner/mover/leaver controls, and periodic ePHI entitlement reviews.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-05",
@@ -202,7 +179,6 @@ const controls = [
     evidenceProcedureIds: ["document-training-program", "artifact-training-completion"],
     remediationId: "hipaa-ai-training",
     remediation: "Add role-specific training for PHI in prompts, retrieval sources, model outputs, logs, exports, and incident reporting.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-06",
@@ -218,7 +194,6 @@ const controls = [
     evidenceProcedureIds: ["adapter-monitoring-summary", "document-incident-runbook"],
     remediationId: "ephi-incident-response",
     remediation: "Integrate AI/RAG events into incident detection and test an ePHI incident response runbook.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-07",
@@ -234,7 +209,6 @@ const controls = [
     evidenceProcedureIds: ["document-contingency-plan", "artifact-recovery-test"],
     remediationId: "ephi-contingency",
     remediation: "Define and test backup, restoration, continuity, and emergency access procedures for critical ePHI services.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-08",
@@ -250,7 +224,6 @@ const controls = [
     evidenceProcedureIds: ["document-evaluation-program", "artifact-assessment-history"],
     remediationId: "hipaa-evaluation",
     remediation: "Schedule and retain evaluations after model, corpus, provider, architecture, or regulatory changes.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-P-01",
@@ -266,7 +239,6 @@ const controls = [
     evidenceProcedureIds: ["document-facility-controls", "document-workstation-policy"],
     remediationId: "physical-workstation-controls",
     remediation: "Document facility access, workstation use, screen protection, and remote administration safeguards.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-P-02",
@@ -282,7 +254,6 @@ const controls = [
     evidenceProcedureIds: ["document-media-policy", "artifact-disposal-records"],
     remediationId: "ephi-media-controls",
     remediation: "Implement accountable disposal, sanitization, transfer, and reuse controls for media and exported assessment artifacts.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-T-01",
@@ -298,7 +269,6 @@ const controls = [
     evidenceProcedureIds: ["adapter-audit-configuration", "artifact-emergency-access"],
     remediationId: "unique-ephi-access",
     remediation: "Replace shared identities, enforce least privilege and session controls, and document emergency access.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-T-02",
@@ -314,7 +284,6 @@ const controls = [
     evidenceProcedureIds: ["adapter-monitoring-summary", "artifact-audit-log-sample"],
     remediationId: "ephi-audit-logging",
     remediation: "Log PHI retrieval, administrative changes, exports, authentication, policy decisions, and security-relevant model interactions.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-T-03",
@@ -330,7 +299,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-rag-corpus-manifest", "artifact-integrity-verification"],
     remediationId: "ephi-integrity",
     remediation: "Use controlled ingestion, provenance, checksums, approvals, backups, and anomaly detection for ePHI and indexed content.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-T-04",
@@ -346,7 +314,6 @@ const controls = [
     evidenceProcedureIds: ["adapter-audit-configuration", "artifact-authentication-policy"],
     remediationId: "ephi-authentication",
     remediation: "Require strong user and workload authentication, protect service credentials, and reject anonymous PHI access.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-T-05",
@@ -362,7 +329,6 @@ const controls = [
     evidenceProcedureIds: ["artifact-network-configuration", "artifact-encryption-configuration"],
     remediationId: "ephi-transmission-security",
     remediation: "Enforce authenticated encryption for ePHI flows and document exceptions, certificate management, and endpoint trust.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-BR-01",
@@ -378,7 +344,6 @@ const controls = [
     evidenceProcedureIds: ["document-breach-runbook", "artifact-breach-exercise"],
     remediationId: "hipaa-breach-response",
     remediation: "Implement and exercise breach assessment, documentation, mitigation, and notification workflows with accountable deadlines.",
-    applicability: ["covered_entity_or_business_associate", "handles_phi"],
   }),
   control({
     id: "HIPAA-DOC-01",
@@ -394,7 +359,6 @@ const controls = [
     evidenceProcedureIds: ["document-policy-register", "artifact-document-retention"],
     remediationId: "hipaa-documentation",
     remediation: "Maintain approved policies and evidence with owners, effective dates, revision history, and required retention.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-09",
@@ -410,7 +374,6 @@ const controls = [
     evidenceProcedureIds: ["document-sanction-policy", "artifact-sanction-records"],
     remediationId: "hipaa-sanctions",
     remediation: "Define, communicate, and consistently apply sanctions for violations of ePHI security policy.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-10",
@@ -426,7 +389,6 @@ const controls = [
     evidenceProcedureIds: ["adapter-monitoring-summary", "artifact-log-review-records"],
     remediationId: "ephi-activity-review",
     remediation: "Assign recurring review of access, audit, exception, and incident records with documented follow-up.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-11",
@@ -442,7 +404,6 @@ const controls = [
     evidenceProcedureIds: ["document-workforce-access", "artifact-access-review"],
     remediationId: "workforce-access-lifecycle",
     remediation: "Implement authorization, supervision, clearance, and termination procedures for all ePHI access.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-12",
@@ -458,7 +419,6 @@ const controls = [
     evidenceProcedureIds: ["adapter-audit-configuration", "artifact-authentication-policy"],
     remediationId: "credential-management",
     remediation: "Enforce strong authentication, managed secrets, credential rotation, recovery, and immediate revocation.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-13",
@@ -474,7 +434,6 @@ const controls = [
     evidenceProcedureIds: ["document-backup-plan", "artifact-recovery-test"],
     remediationId: "ephi-backup",
     remediation: "Maintain protected, tested backups with recovery objectives and evidence of successful restoration.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-S-14",
@@ -490,7 +449,6 @@ const controls = [
     evidenceProcedureIds: ["document-disaster-recovery", "artifact-continuity-exercise"],
     remediationId: "ephi-disaster-recovery",
     remediation: "Test restoration, emergency operation, communications, and security controls under realistic disruption scenarios.",
-    applicability: ["covered_entity_or_business_associate", "handles_ephi"],
   }),
   control({
     id: "HIPAA-PR-06",
@@ -506,14 +464,13 @@ const controls = [
     evidenceProcedureIds: ["document-disclosure-accounting", "artifact-audit-log-sample"],
     remediationId: "phi-disclosure-accounting",
     remediation: "Record applicable disclosures with recipient, purpose, data, date, and response workflow.",
-    applicability: ["covered_entity", "handles_phi"],
   }),
 ];
 
 export const hipaaCurrentPack: FrameworkPack = validateFrameworkPack({
   manifest: {
     id: "hipaa",
-    release: "2026.07-draft.2",
+    release: "2026.10-draft.1",
     status: "draft",
     assuranceLevel: "readiness",
     sourceVersion: "45 CFR Parts 160 and 164 — current rules",
@@ -528,7 +485,7 @@ export const hipaaCurrentPack: FrameworkPack = validateFrameworkPack({
     version: "45 CFR Parts 160 and 164 — current rules",
     kind: "Mandatory",
     jurisdiction: "United States",
-    description: "Applicability-aware privacy, security, and breach readiness for RAG systems handling PHI or ePHI.",
+    description: "Full-scope privacy, security, and breach readiness for RAG systems handling PHI or ePHI.",
     reportFormat: "HIPAA Readiness and Evidence Report",
     scoringMethod: "Applicable-control coverage with critical-control overrides",
     passThreshold: "No failed applicable critical controls; complete evidence required for a compliance conclusion",

@@ -45,7 +45,6 @@ test("pre-flight plan states what will run, what will not, and what each tier re
     body: JSON.stringify({
       standardIds: ["hipaa", "nist_ai_rmf"],
       tier: 2,
-      applicability: baseInput.applicability,
       access: {},
     }),
   });
@@ -104,55 +103,25 @@ test("pre-flight plan requires a framework and rejects unparsable input", async 
   assert.equal(broken.status, 400);
 });
 
-test("scope route reports what applies with the engine's own reason for each exclusion", async () => {
+test("scope route assesses every HIPAA and EU AI Act control without scope questions", async () => {
+  // No profile is sent and none is needed: role-, PHI- and risk-class-specific
+  // obligations are reported against the system rather than ruled out.
   const response = await request("/api/scope", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      standardIds: ["hipaa"],
-      tier: 2,
-      applicability: {
-        ...baseInput.applicability,
-        hipaaRole: "not_regulated",
-        handlesPhi: false,
-        handlesEphi: false,
-        usesPhiSubprocessors: false,
-        maintainsDesignatedRecordSet: false,
-      },
-    }),
+    body: JSON.stringify({ standardIds: ["hipaa", "eu_ai_act"], tier: 1 }),
   });
   assert.equal(response.status, 200);
   const scope = await response.json();
-  assert.ok(scope.notApplicable >= 30);
-  assert.equal(scope.byStandard.length, 1);
-  assert.equal(scope.byStandard[0].shortName, "HIPAA");
-  assert.ok(scope.byStandard[0].exclusions.length >= 30);
-  assert.ok(
-    scope.byStandard[0].exclusions.every((entry) => entry.reason.length > 10),
-    "Every exclusion must carry a reason.",
+  assert.equal(scope.applicable, 54);
+  assert.equal(scope.notApplicable, 0);
+  assert.equal(scope.unknown, 0);
+  assert.deepEqual(
+    scope.byStandard.map((row) => [row.shortName, row.applicable, row.exclusions.length]),
+    [["HIPAA", 30, 0], ["EU AI Act", 24, 0]],
   );
   assert.equal(scope.byPillar.length, 5);
-});
-
-test("scope route surfaces unresolved questions instead of guessing an answer", async () => {
-  const response = await request("/api/scope", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      standardIds: ["hipaa", "eu_ai_act"],
-      tier: 1,
-      applicability: {
-        ...baseInput.applicability,
-        hipaaRole: "unknown",
-        euTerritorialScope: "unknown",
-      },
-    }),
-  });
-  assert.equal(response.status, 200);
-  const scope = await response.json();
-  assert.ok(scope.openQuestions.length >= 2);
-  assert.ok(scope.openQuestions.some((question) => /HIPAA role/i.test(question)));
-  assert.ok(scope.openQuestions.some((question) => /territorial scope/i.test(question)));
+  assert.equal("openQuestions" in scope, false);
 });
 
 test("analysis posture is recomputable from the raw control results", async () => {
@@ -1042,11 +1011,11 @@ test("provenance survives two packs that share a clause identifier", async () =>
  * PCI DSS 4.0.1 framework pack.
  * ------------------------------------------------------------------------- */
 
-async function pciScope(applicability) {
+async function pciScope() {
   const response = await request("/api/scope", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ standardIds: ["pci_dss"], tier: 3, applicability }),
+    body: JSON.stringify({ standardIds: ["pci_dss"], tier: 3 }),
   });
   assert.equal(response.status, 200);
   return response.json();
@@ -1068,13 +1037,12 @@ test("PCI DSS is a versioned pack and retail suggests it first", async () => {
 });
 
 test("PCI DSS asks no scope questions and assesses every requirement", async () => {
-  // Even a profile that answers nothing leaves every requirement applicable:
-  // payment-page and multi-tenant requirements are reported, never ruled out.
-  const scope = await pciScope(baseInput.applicability);
+  // Every requirement applies: payment-page and multi-tenant requirements are
+  // reported, never ruled out.
+  const scope = await pciScope();
   assert.equal(scope.applicable, 49);
   assert.equal(scope.notApplicable, 0);
   assert.equal(scope.unknown, 0);
-  assert.equal(scope.openQuestions.length, 0);
 
   const result = await runAssessment({ standardIds: ["pci_dss"], tier: 2 });
   const pci = result.reports.find((report) => report.standardId === "pci_dss");

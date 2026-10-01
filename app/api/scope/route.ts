@@ -1,24 +1,21 @@
-import { defaultApplicabilityProfile, validateApplicability } from "@/lib/applicability";
 import { standardById } from "@/lib/catalog";
 import { scopeSummary } from "@/lib/plan";
 import { writeExecutionLog } from "@/lib/execution-log";
-import type { AccessTier, ApplicabilityProfile, AssessmentInput } from "@/lib/types";
+import type { AccessTier } from "@/lib/types";
 
 export const runtime = "edge";
 
 interface ScopeRequest {
   standardIds?: string[];
   tier?: AccessTier;
-  applicability?: ApplicabilityProfile;
 }
 
 /**
  * What applies, and why.
  *
  * Returns the applicable / excluded / unresolved split per framework with the
- * engine's own reason for every exclusion, plus the questions still outstanding.
- * An unresolved answer stays unresolved: nothing here guesses on the client's
- * behalf, because a guessed exclusion is an invented pass.
+ * engine's own reason for every exclusion. No pack asks scope questions, so
+ * every control of a selected framework applies.
  */
 export async function POST(request: Request) {
   const started = Date.now();
@@ -40,12 +37,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const applicability = { ...defaultApplicabilityProfile, ...(body.applicability ?? {}) };
-  const summary = scopeSummary({ standardIds, tier, applicability });
-  const openQuestions = validateApplicability({
-    standardIds,
-    applicability,
-  } as AssessmentInput);
+  const summary = scopeSummary({ standardIds, tier });
 
   writeExecutionLog({
     module: "app/api/scope/route",
@@ -58,7 +50,7 @@ export async function POST(request: Request) {
   });
 
   return Response.json(
-    { ...summary, openQuestions },
+    summary,
     { headers: { "Cache-Control": "no-store" } },
   );
 }
