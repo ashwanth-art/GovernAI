@@ -3,6 +3,7 @@ import type {
   Control,
   IndustryDefinition,
   Pillar,
+  Severity,
   StandardDefinition,
   StandardKind,
 } from "./types";
@@ -13,78 +14,94 @@ const controlTemplates: Array<{
   name: string;
   category: string;
   pillars: Pillar[];
+  /* What a failure here costs. Without it every finding from these standards
+     defaulted to medium, so a broken access boundary read the same as a stale
+     model card. */
+  severity: Severity;
   remediation: string;
 }> = [
   {
     name: "AI risk assessment and treatment",
     category: "Governance",
     pillars: ["governance", "compliance"],
+    severity: "high",
     remediation: "Document the system risk assessment, owner, treatment plan, and review cadence.",
   },
   {
     name: "Access control and least privilege",
     category: "Security",
     pillars: ["security", "governance"],
+    severity: "critical",
     remediation: "Enforce role-based access, least privilege, and quarterly entitlement reviews.",
   },
   {
     name: "Encryption and key management",
     category: "Technical safeguards",
     pillars: ["security", "data_protection"],
+    severity: "critical",
     remediation: "Use managed encryption at rest and TLS 1.2+ with documented key rotation.",
   },
   {
     name: "Privacy, minimisation, and retention",
     category: "Data lifecycle",
     pillars: ["data_protection", "compliance"],
+    severity: "high",
     remediation: "Minimise indexed data, redact sensitive values, and enforce a tested retention schedule.",
   },
   {
     name: "Human oversight and escalation",
     category: "Trustworthiness",
     pillars: ["trust", "governance"],
+    severity: "high",
     remediation: "Add named human oversight, appeal, escalation, and safe shutdown procedures.",
   },
   {
     name: "Accuracy and groundedness monitoring",
     category: "Trustworthiness",
     pillars: ["trust"],
+    severity: "high",
     remediation: "Measure retrieval precision, groundedness, and hallucination rates against acceptance thresholds.",
   },
   {
     name: "Bias and adverse-impact testing",
     category: "Fairness",
     pillars: ["trust", "compliance"],
+    severity: "high",
     remediation: "Test outcomes by relevant protected groups and document mitigation and re-test results.",
   },
   {
     name: "Logging, monitoring, and incident response",
     category: "Operations",
     pillars: ["security", "compliance"],
+    severity: "high",
     remediation: "Centralise immutable audit logs and test the AI incident and breach response runbook.",
   },
   {
     name: "Supplier and model-provider assurance",
     category: "Third-party risk",
     pillars: ["governance", "compliance"],
+    severity: "medium",
     remediation: "Record supplier due diligence, contractual controls, and ongoing service assurance.",
   },
   {
     name: "Model card and system documentation",
     category: "Documentation",
     pillars: ["governance", "trust"],
+    severity: "medium",
     remediation: "Maintain a current model card covering intended use, limits, data, evaluation, and change history.",
   },
   {
     name: "RAG corpus integrity and provenance",
     category: "Data assurance",
     pillars: ["security", "trust", "data_protection"],
+    severity: "critical",
     remediation: "Verify source provenance, signed ingestion, tenant isolation, and poisoning detection.",
   },
   {
     name: "Transparency and user notice",
     category: "Transparency",
     pillars: ["trust", "compliance"],
+    severity: "high",
     remediation: "Tell users when AI is used, its limits, data practices, and available human review routes.",
   },
 ];
@@ -100,6 +117,7 @@ function buildControls(prefix: string, total: number, coverage: [number, number,
       name: template.name,
       category: template.category,
       pillars: template.pillars,
+      severity: template.severity,
       tierMinimum,
       testType:
         tierMinimum === 1

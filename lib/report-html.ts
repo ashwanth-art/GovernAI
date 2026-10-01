@@ -1,3 +1,5 @@
+import { caughtPhrase, stakesForPillar, stakesForStandard, stakesOverall, type StakeItem } from "./high-stakes";
+import { pillarLabel } from "./pillars";
 import { verdictLabels } from "./posture";
 import { statusLabel } from "./terms";
 import type { AssessmentResult, StandardReport } from "./types";
@@ -38,6 +40,11 @@ code,.mono{font-family:"SFMono-Regular",Consolas,monospace;font-size:11px}
 .sev{font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.05em}
 .sev-critical{color:#b1301b}.sev-high{color:#c25a17}.sev-medium{color:#8a6a12}.sev-low{color:#4a5a55}
 .na{color:#62716d}
+.stakes{border:1px solid #f0cec8;background:#fbecea;border-radius:8px;padding:13px 16px;margin:14px 0}
+.stakes.clear{border-color:#bfdfcd;background:#eaf5ef}
+.stakes b.head{display:block;font-size:18px;color:#bd3325}
+.stakes.clear b.head{color:#14734b}
+.o-caught{color:#bd3325;font-weight:700}.o-held{color:#14734b;font-weight:700}.o-unreached{color:#62716d}
 @media print{body{margin:14mm}h2{break-after:avoid}section{break-inside:auto}}
 `;
 
@@ -96,6 +103,41 @@ export function createReportHtml(result: AssessmentResult, report?: StandardRepo
         .join("")}
     </tbody></table>
   </section>`;
+
+  const outcomeWord = { caught: "Caught", held: "Verified", unreached: "Not reached" } as const;
+  const stakeRows = (items: StakeItem[], withClause: boolean) =>
+    items
+      .map(
+        (item) =>
+          `<tr><td class="sev sev-${esc(item.severity)}">${esc(item.severity)}</td><td>${
+            withClause && item.clause ? `<code>${esc(item.clause)}</code><br/>` : ""
+          }<strong>${esc(item.title)}</strong><br/><span class="lede">${esc(item.why)}</span></td><td class="o-${item.outcome}">${
+            outcomeWord[item.outcome]
+          }</td><td>${esc(
+            item.outcome === "caught" ? item.finding ?? "Rule failed" : item.outcome === "unreached" ? item.reach ?? "" : "Safeguard holds",
+          )}</td></tr>`,
+      )
+      .join("");
+  const stakeTable = (items: StakeItem[], withClause: boolean) =>
+    `<table><thead><tr><th>Severity</th><th>Check — what it guards against</th><th>Outcome</th><th>Detail</th></tr></thead><tbody>${stakeRows(items, withClause)}</tbody></table>`;
+
+  const overall = stakesOverall(result);
+  const stakesSection = overall.items.length
+    ? `<section><h2>High-stakes checks</h2>
+      <div class="stakes${overall.caught ? "" : " clear"}"><b class="head">${esc(
+        overall.caught ? `${caughtPhrase(overall)} caught` : "Every high-stakes check we reached held",
+      )}</b>
+      ${overall.items.length} critical and high-severity checks were in play across the five areas: ${overall.caught} caught a live weakness, ${overall.held} verified that the safeguard holds, and ${overall.unreached} need deeper access. Every outcome is a rule with a written pass condition.</div>
+      ${analysis.pillars
+        .map((pillar) => {
+          const summary = stakesForPillar(result, pillar.pillar);
+          return summary.items.length
+            ? `<h3>${esc(pillarLabel(pillar.pillar))} — ${summary.caught} caught · ${summary.held} verified · ${summary.unreached} not reached</h3>${stakeTable(summary.items, false)}`
+            : "";
+        })
+        .join("")}
+      </section>`
+    : "";
 
   const findingsSection = analysis.findings.length
     ? `<section><h2>Problems (${analysis.findings.length})</h2>
@@ -199,6 +241,20 @@ export function createReportHtml(result: AssessmentResult, report?: StandardRepo
       <p><strong>Official authority:</strong> ${esc(item.officialReference.authority)} — <a href="${esc(item.officialReference.url)}">${esc(item.officialReference.title)}</a><br/><strong>Assessment access:</strong> reference link recorded; the official page was not fetched during this run.</p>
       <h3>Report structure</h3>
       <ol>${item.nativeSections.map((section) => `<li>${esc(section)}</li>`).join("")}</ol>
+      ${(() => {
+        const summary = stakesForStandard(result, item.standardId);
+        if (!summary.items.length) return "";
+        const pillars = [...new Set(summary.items.map((entry) => entry.pillar))];
+        return `<h3>High-stakes clauses — ${esc(summary.caught ? `${caughtPhrase(summary)} caught` : "none failed")} · ${summary.held} verified · ${summary.unreached} not reached</h3>${pillars
+          .map(
+            (pillar) =>
+              `<p><strong>${esc(pillarLabel(pillar))}</strong></p>${stakeTable(
+                summary.items.filter((entry) => entry.pillar === pillar),
+                true,
+              )}`,
+          )
+          .join("")}`;
+      })()}
       <h3>Control evidence</h3>
       <table><thead><tr><th>Control</th><th>Status</th><th>Applies?</th><th>Evidence</th><th>Remediation</th></tr></thead>
       <tbody>${controlRows(item.controls)}</tbody></table>
@@ -225,7 +281,7 @@ export function createReportHtml(result: AssessmentResult, report?: StandardRepo
     <p><strong>${esc(result.scope.organization)}</strong> · ${esc(result.scope.systemName)} · ${esc(result.scope.industry)}<br/>
     Assessment <code>${esc(result.assessmentId)}</code> · Tier ${result.scope.tier} · ${esc(new Date(result.generatedAt).toLocaleString())}<br/>
     Frameworks: ${esc(result.scope.selectedStandards.join(", "))}</p>
-    ${postureSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${evidenceSection}${notesHtml}
+    ${postureSection}${stakesSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${evidenceSection}${notesHtml}
     <script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250))</script>
     </body></html>`;
 }
