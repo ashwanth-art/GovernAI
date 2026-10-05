@@ -495,6 +495,7 @@ test("the stream emits the derived plan, check, pillar, finding and posture even
  * PCI DSS is a framework pack rather than a mapping, but every one of its
  * controls is built from the library or names its own procedures, so it is held
  * to the same bar here (it has no scope questions, so all of its controls apply).
+ * DPDP follows the same rule and reuses the library for all 33 obligations.
  *
  * Every standard in `mappedStandards` belongs in this list. That is what stops a
  * new sector standard from shipping with a control nothing can ever close: if a
@@ -508,6 +509,7 @@ const AUTHORED = [
   "mas_ai",
   "iso27001",
   "gdpr",
+  "dpdp_act",
   "nis2",
   "nerc_cip",
   "pci_dss",
@@ -1065,4 +1067,47 @@ test("PCI DSS controls share checks with the library, so one fix closes them eve
     playbook.closes.some((entry) => entry.standardId === "iso27001"),
   );
   assert.ok(redaction, "a shared failing check must produce one playbook closing both standards");
+});
+
+test("DPDP is a versioned India-wide pack suggested for every industry", async () => {
+  const catalog = await (await request("/api/catalog")).json();
+  const dpdp = catalog.standards.find((standard) => standard.id === "dpdp_act");
+  assert.equal(dpdp.version, "DPDP Act 2023 + Rules 2025");
+  assert.equal(dpdp.jurisdiction, "India");
+  assert.equal(dpdp.kind, "Mandatory");
+  assert.equal(dpdp.pack.release, "2026.10-draft.1");
+  assert.equal(dpdp.pack.status, "draft");
+  assert.equal(dpdp.pack.assuranceLevel, "readiness");
+  assert.match(dpdp.pack.contentHash, /^fnv1a32:[0-9a-f]{8}$/);
+  assert.equal(dpdp.totalControls, 33);
+  assert.deepEqual(dpdp.coverage, { 1: 2, 2: 8, 3: 33 });
+
+  for (const industry of catalog.industries) {
+    assert.ok(
+      industry.recommendations.some((entry) => entry.standardId === "dpdp_act"),
+      `${industry.id} must suggest DPDP`,
+    );
+  }
+});
+
+test("DPDP asks no questions and Tier 3 reaches every listed obligation", async () => {
+  const scopeResponse = await request("/api/scope", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ standardIds: ["dpdp_act"], tier: 3 }),
+  });
+  assert.equal(scopeResponse.status, 200);
+  const scope = await scopeResponse.json();
+  assert.equal(scope.applicable, 33);
+  assert.equal(scope.notApplicable, 0);
+  assert.equal(scope.unknown, 0);
+
+  const result = await runAssessment({
+    standardIds: ["dpdp_act"],
+    tier: 3,
+    credentials: { ...baseInput.credentials, ...TIER_3_CREDENTIALS },
+  });
+  const report = result.reports.find((entry) => entry.standardId === "dpdp_act");
+  assert.equal(report.coveragePercent, 100);
+  assert.equal(report.controls.filter((entry) => entry.status === "not_assessed").length, 0);
 });

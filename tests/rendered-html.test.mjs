@@ -217,7 +217,7 @@ test("catalog exposes all industries, standards, and tier-specific fields", asyn
   );
   assert.deepEqual(
     catalog.industries.find((item) => item.id === "healthcare").recommendations.map((item) => item.standardId),
-    ["hipaa", "iso42001", "nist_ai_rmf"],
+    ["hipaa", "iso42001", "nist_ai_rmf", "dpdp_act"],
   );
 
   // Every industry must recommend standards that exist. A typo here would ship a

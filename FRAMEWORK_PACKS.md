@@ -6,6 +6,7 @@ GovernAI framework packs separate official source requirements from GovernAI-aut
 
 | Pack | Release | Controls | Assurance | Status |
 |---|---|---:|---|---|
+| India DPDP Act 2023 + Rules 2025 | `2026.10-draft.1` | 33 | Readiness | Draft |
 | HIPAA current rules | `2026.10-draft.2` | 21 | Readiness | Draft |
 | NIST AI RMF 1.0 + GenAI Profile | `2026.10-draft.1` | 22 | Readiness | Draft |
 | EU AI Act | `2026.10-draft.2` | 11 | Readiness | Draft |
@@ -20,6 +21,7 @@ Every standard lists only controls a Tier 3 run can reach a verdict on, so Tier 
 
 | Pack | Out of scope |
 |---|---|
+| India DPDP | Data Protection Board administration, appeals, penalties, government directions, exemptions and other provisions that impose no testable control on the assessed organization |
 | HIPAA | HIPAA-PR-01 PHI use policy, PR-04 individual rights, S-07 contingency plan, S-08 periodic evaluation, S-09 sanctions, P-01 physical safeguards, P-02 media controls, BR-01 breach response, DOC-01 policy documentation |
 | NIST AI RMF | GOV-02 obligations register, GOV-06 independent challenge, MAP-02 impact assessment, MAP-06 emergent risk, MANAGE-05 risk communication, MANAGE-06 safe shutdown |
 | EU AI Act | PR-01 prohibited practices, DEP-01 deployer controls, DEP-02 fundamental-rights impact assessment, TR-01 AI-interaction disclosure, PROV-01 quality management, PROV-03 corrective action, IMP-01 importer, DIST-01 distributor, CONF-01 conformity assessment, CONF-02 EU declaration, CONF-03 registration, GPAI-01/02 GPAI documentation and copyright |
@@ -27,6 +29,12 @@ Every standard lists only controls a Tier 3 run can reach a verdict on, so Tier 
 | Screening catalog | Every Tier 3 template (supplier assurance, model card, and the document-review forms of corpus integrity, transparency, and incident response) |
 
 The procedure ids those controls named are still accepted in an Evidence Manifest, so a manifest written for an earlier release loads cleanly; nothing consumes them.
+
+## India DPDP Act 2023 + Rules 2025
+
+Suggested for every sector because DPDP is a horizontal Indian privacy law rather than an industry-specific rulebook. The pack covers 33 organization-facing obligations across lawful processing, notice and consent, Data Fiduciary accountability, processors, children, Significant Data Fiduciaries, Data Principal rights, reasonable security safeguards, breach response, retention and cross-border transfers. Tier coverage is 2 / 8 / 33.
+
+All 33 controls reuse verification-library checks, so one notice, retention, processor-contract, security or incident-response fix closes the matching DPDP obligation and matching controls in other selected standards. The pack asks no scope questions. Selecting it automatically assesses every listed obligation; phased commencement, exemptions and whether the organization is a Significant Data Fiduciary remain legal-review matters and are clearly stated in the report boundary.
 
 ## PCI DSS v4.0.1
 

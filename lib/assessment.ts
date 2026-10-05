@@ -1732,6 +1732,14 @@ const nativeSectionsByStandard: Record<string, string[]> = {
     "Accountability, DPIA, and Processors (Articles 24–35)",
     "Compliance Conclusion + Remediation Priority",
   ],
+  dpdp_act: [
+    "Processing Grounds, Notice, and Consent (Sections 4–7)",
+    "Data Fiduciary Obligations (Section 8)",
+    "Children and Significant Data Fiduciaries (Sections 9–10)",
+    "Data Principal Rights (Sections 11–14)",
+    "Security, Breach, Retention, and Transfers (Rules 6–15)",
+    "Phased-Commencement Readiness Conclusion",
+  ],
   nis2: [
     "Entity Classification and Scope",
     "Article 21(2) Risk-Management Measures",

@@ -716,6 +716,20 @@ const standardSeeds: StandardSeed[] = [
     prefix: "Art",
   },
   {
+    id: "dpdp_act",
+    shortName: "DPDP Act",
+    name: "Digital Personal Data Protection Act",
+    version: "DPDP Act 2023 + Rules 2025",
+    kind: "Mandatory",
+    jurisdiction: "India",
+    description: "India-wide duties for digital personal data, consent, rights, security, breach response, retention, processors and accountability.",
+    reportFormat: "DPDP Act and Rules Readiness Assessment",
+    scoringMethod: "Act and Rules obligation coverage with evidence confidence",
+    passThreshold: "No failed applicable mandatory controls; phased commencement and legal applicability require review",
+    coverage: [2, 8, 33],
+    prefix: "DPDP",
+  },
+  {
     id: "nis2",
     shortName: "NIS2",
     name: "Network and Information Security Directive 2",
@@ -826,7 +840,7 @@ export const standards: StandardDefinition[] = standardSeeds.map((seed) => {
   };
 });
 
-export const industries: IndustryDefinition[] = [
+const industryCatalog: IndustryDefinition[] = [
   {
     id: "it_services",
     name: "IT Services / Technology",
@@ -989,6 +1003,15 @@ export const industries: IndustryDefinition[] = [
     ],
   },
 ];
+
+/** DPDP is horizontal Indian privacy law, not a sector-specific framework. */
+export const industries: IndustryDefinition[] = industryCatalog.map((industry) => ({
+  ...industry,
+  recommendations: [
+    ...industry.recommendations,
+    { standardId: "dpdp_act", reason: "Indian digital-personal-data duties" },
+  ],
+}));
 
 export const standardById = new Map(standards.map((standard) => [standard.id, standard]));
 export const industryById = new Map(industries.map((industry) => [industry.id, industry]));

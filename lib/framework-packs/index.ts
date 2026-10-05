@@ -1,4 +1,5 @@
 import type { AccessTier, StandardDefinition } from "../types";
+import { dpdpAct2023Pack } from "./dpdp-act-2023";
 import { euAiActPack } from "./eu-ai-act-2024";
 import { hipaaCurrentPack } from "./hipaa-current";
 import { nistAiRmfPack } from "./nist-ai-rmf-1.0";
@@ -8,6 +9,7 @@ import type { FrameworkPack } from "./schema";
 import { libraryProcedureIds } from "../verification-library";
 
 export {
+  dpdpAct2023Pack,
   euAiActPack,
   hipaaCurrentPack,
   nistAiRmfPack,
@@ -17,6 +19,7 @@ export {
 export type { FrameworkPack, FrameworkPackControl } from "./schema";
 
 export const pilotFrameworkPacks = [
+  dpdpAct2023Pack,
   hipaaCurrentPack,
   nistAiRmfPack,
   euAiActPack,

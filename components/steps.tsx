@@ -266,9 +266,9 @@ function IndustryStep({ input, patch }: StepProps) {
         This only decides which rulebooks we suggest. You choose the real list on the next screen.
       </p>
       <div className="q-body">
-        {/* No pack count on the card: every sector suggests three, so printing it
-            ten times distinguishes nothing. The consequence line below names the
-            actual three for whichever one is chosen. */}
+        {/* The recommendation count does not help a user choose the sector in
+            which the system actually operates; the consequence line below names
+            the suggested packs for the selected sector. */}
         <div className="picks tight">
           {industries.map((industry) => (
             <button
