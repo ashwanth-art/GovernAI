@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { baseInput, request } from "./harness.mjs";
+import { baseInput, request, targetState } from "./harness.mjs";
 
 test("server-renders the first step of the track, and nothing that comes after it", async () => {
   const response = await request("/", { headers: { accept: "text/html" } });
@@ -213,7 +213,7 @@ test("catalog exposes all industries, standards, and tier-specific fields", asyn
   assert.ok(catalog.standards.every((standard) => standard.officialReference?.url.startsWith("https://")));
   assert.equal(
     catalog.standards.find((standard) => standard.id === "sr_11_7").officialReference.status,
-    "superseded",
+    "current",
   );
   assert.deepEqual(
     catalog.industries.find((item) => item.id === "healthcare").recommendations.map((item) => item.standardId),
@@ -552,6 +552,13 @@ test("Tier 3 reaches a verdict on every control of every standard", async () => 
   // A standard lists only controls a run can judge, so with a full evidence
   // manifest the whole catalogue is covered — whatever the selection.
   const catalog = await (await request("/api/catalog")).json();
+  // An ordinary AI demo does not contain bank-wide evidence. Supply an explicit
+  // banking fixture for this full-evidence test only.
+  const template = await (await request("/api/banking/evidence-template")).json();
+  targetState.bankingProcedures = Object.fromEntries(Object.entries(template.measurementContract).map(([id, rule]) => [id, {
+    status: "pass", summary: "Banking test fixture measurement export.",
+    measurements: Object.fromEntries(Object.entries(rule.requiredFields).map(([field, condition]) => [field, condition === "true" ? true : condition === "zero" ? 0 : 12])),
+  }]));
   const response = await request("/api/assessments", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -571,6 +578,7 @@ test("Tier 3 reaches a verdict on every control of every standard", async () => 
   });
   assert.equal(response.status, 200);
   const result = await response.json();
+  targetState.bankingProcedures = {};
   assert.equal(result.analysis.posture.notAssessed, 0);
   assert.equal(result.analysis.posture.assessed, result.analysis.posture.applicable);
   assert.deepEqual(

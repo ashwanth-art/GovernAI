@@ -7,6 +7,7 @@ import { owaspLlm2025Pack } from "./owasp-llm-2025";
 import { pciDss401Pack } from "./pci-dss-4.0.1";
 import type { FrameworkPack } from "./schema";
 import { libraryProcedureIds } from "../verification-library";
+import { bankingFrameworkPacks } from "./banking";
 
 export {
   dpdpAct2023Pack,
@@ -19,6 +20,7 @@ export {
 export type { FrameworkPack, FrameworkPackControl } from "./schema";
 
 export const pilotFrameworkPacks = [
+  ...bankingFrameworkPacks,
   dpdpAct2023Pack,
   hipaaCurrentPack,
   nistAiRmfPack,

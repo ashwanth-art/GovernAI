@@ -3,6 +3,53 @@ import test from "node:test";
 
 import { baseInput, request, session, targetState } from "./harness.mjs";
 
+test("banking packs are versioned and recommended without scope questions", async () => {
+  const catalog = await (await request("/api/catalog")).json();
+  const ids = ["rbi_it_governance", "rbi_it_outsourcing", "rbi_digital_payments", "rbi_kyc_aml", "rbi_free_ai", "fatf", "bcbs_239", "basel_operational_resilience", "swift_cscf", "nist_csf", "iso22301"];
+  for (const id of ids) {
+    const pack = catalog.standards.find(item => item.id === id);
+    assert.ok(pack, id);
+    assert.equal(pack.pack.release, "2026.10-draft.1");
+    assert.equal(pack.coverage[3], pack.totalControls);
+    assert.match(pack.pack.contentHash, /^fnv1a32:/);
+  }
+  assert.equal(catalog.standards.find(item => item.id === "sr_11_7").shortName, "SR 26-2");
+  const recommended = catalog.industries.find(item => item.id === "finance").recommendations.map(item => item.standardId);
+  assert.ok(recommended.includes("rbi_it_governance"));
+  assert.ok(recommended.includes("dpdp_act"));
+  const response = await request("/api/scope", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ standardIds: ids, tier: 3 }) });
+  const scope = await response.json();
+  assert.equal(scope.unknown, 0);
+  assert.equal(scope.notApplicable, 0);
+});
+
+test("banking measurements override claimed passes and map shared failures across standards", async () => {
+  targetState.bankingProcedures = {
+    "artifact-bank-patch-vulnerability": { status: "pass", summary: "Publisher claims all controls passed.", measurements: { scanCompleted: true, overdueCriticalVulnerabilities: 3, overdueCriticalPatches: 0 } },
+    "artifact-bank-privileged-access": { status: "pass", summary: "Incomplete access export.", measurements: { privilegedMfaEnforced: "true", overdueAccessReviews: 0 } },
+    "artifact-bank-board-oversight": { status: "pass", summary: "Complete board export.", measurements: { strategyApproved: true, accountableOwnerAssigned: true, overdueBoardReviews: 0 } },
+    "artifact-bank-vendor-contracts": { status: "pass", summary: "No measurements supplied." },
+  };
+  try {
+    const result = await runAssessment({ industryId: "finance", standardIds: ["rbi_it_governance", "nist_csf", "rbi_it_outsourcing"], tier: 3, credentials: { ...baseInput.credentials, ...TIER_3_LOCATIONS } });
+    const controls = allControls(result);
+    const patch = controls.filter(control => control.evaluationRuleId === "artifact.bank-patch-vulnerability");
+    assert.equal(patch.length, 2);
+    assert.ok(patch.every(control => control.status === "fail"));
+    assert.match(patch[0].evidence, /overdueCriticalVulnerabilities=3/);
+    assert.ok(controls.filter(control => control.evaluationRuleId === "artifact.bank-privileged-access").every(control => control.status === "not_assessed"));
+    assert.ok(controls.filter(control => control.evaluationRuleId === "artifact.bank-vendor-contracts").every(control => control.status === "not_assessed"));
+    assert.ok(controls.filter(control => control.evaluationRuleId === "artifact.bank-board-oversight").every(control => control.status === "pass"));
+    const finding = result.analysis.findings.find(finding => finding.breaches.some(breach => breach.controlId === patch[0].id));
+    assert.ok(finding);
+    assert.equal(finding.severity, "critical");
+    assert.ok(finding.breaches.some(breach => breach.controlId === patch[1].id));
+    assert.ok(result.analysis.posture.notAssessed > 0);
+  } finally {
+    targetState.bankingProcedures = {};
+  }
+});
+
 /** Tier 3 requires the white-box locations, or validation rejects the run before it starts. */
 const TIER_3_LOCATIONS = {
   repoUrl: "https://ci.target.test/source",

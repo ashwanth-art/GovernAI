@@ -1,4 +1,5 @@
 import type { ControlStatus, EvidenceSourceType } from "./types";
+import { judgeBankingMeasurements } from "./banking-evidence";
 
 export type EvidenceProcedureKind =
   | "probe"
@@ -29,6 +30,7 @@ export interface EvidenceManifest {
       confidence?: number;
       collectedAt?: string;
       artifactRef?: string;
+      measurements?: Record<string, boolean | number>;
     }
   >;
 }
@@ -78,7 +80,10 @@ export function parseEvidenceManifest(
       errors.push(`${procedureId}: evidence entry must be an object.`);
       continue;
     }
-    const status = raw.status;
+    const measured = judgeBankingMeasurements(procedureId, raw.measurements);
+    const status = measured
+      ? measured.status === "pass" && ["fail", "partial"].includes(raw.status) ? raw.status : measured.status
+      : raw.status;
     if (!["pass", "partial", "fail", "not_assessed"].includes(status)) {
       errors.push(`${procedureId}: invalid status.`);
       continue;
@@ -94,8 +99,8 @@ export function parseEvidenceManifest(
     evidence[procedureId] = {
       procedureId,
       status,
-      summary: raw.summary.trim(),
-      confidence,
+      summary: measured ? `${measured.summary} Publisher note: ${raw.summary.trim()}${raw.collectedAt ?? manifest.generatedAt ? ` Collected: ${raw.collectedAt ?? manifest.generatedAt}.` : ""}${raw.artifactRef ? ` Source record: ${raw.artifactRef}.` : ""}` : raw.summary.trim(),
+      confidence: status === "not_assessed" ? 0 : confidence,
       sourceType: "artifact_manifest",
       collectedAt: raw.collectedAt ?? manifest.generatedAt,
       artifactRef: raw.artifactRef,

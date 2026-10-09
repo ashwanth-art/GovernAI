@@ -6,6 +6,7 @@ import { duration, measuredPercent, rulePhrase } from "@/lib/metrics";
 import { pillarHue, pillarLabel } from "@/lib/pillars";
 import { verdictLabels } from "@/lib/posture";
 import { methodLabel, methodPlain, statusMeaning, tierLabel } from "@/lib/terms";
+import { BankingReport } from "@/components/banking-report";
 import type {
   AssessmentResult,
   ControlResult,
@@ -297,6 +298,7 @@ export function Report({
         </section>
         ) : null}
 
+        {!coverageOnly && <BankingReport result={result} />}
         {/* ---- II · area by area --------------------------------------- */}
         <section className="chapter" id={coverageOnly ? "monitor-areas" : "areas"}>
           <div className="ch-n">

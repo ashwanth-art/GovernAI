@@ -1,5 +1,11 @@
 # GovernAI Framework Packs
 
+## Banking additions (October 2026)
+
+The banking registry adds versioned readiness packs for RBI IT Governance, RBI IT Outsourcing, RBI Digital Payments, Commercial Banks KYC / AML, FREE-AI, FATF, BCBS 239, Basel Operational Resilience, Basel Core Governance, SWIFT CSCF topic readiness, NIST CSF 2.0 and ISO 22301. SR 26-2 replaces the SR 11-7 display label while preserving the saved-input ID.
+
+These are selected, authored evidence objectives. Every listed objective has a Tier 3 evidence path; the path requires real banking measurements and does not guarantee that every obligation in the source is represented. Banking evidence unavailable from the demo target is reported `not_assessed`. See [BANKING_GOVERNANCE.md](BANKING_GOVERNANCE.md) for source baselines, coverage limits, source-system integration, measurement rules and the report matrix. No setup steps or scope questions were added.
+
 GovernAI framework packs separate official source requirements from GovernAI-authored assessment objectives and reusable evidence procedures.
 
 ## Current pilot inventory

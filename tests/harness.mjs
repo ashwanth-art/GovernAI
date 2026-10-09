@@ -84,7 +84,7 @@ const libraryManifest = Object.fromEntries(
  * cycles, so the monitor tests turn a real control off here and read what the next
  * cycle says about it. Everything else in this file is fixed.
  */
-export const targetState = { injectionGuardrail: true };
+export const targetState = { injectionGuardrail: true, bankingProcedures: {} };
 
 const nativeFetch = globalThis.fetch;
 globalThis.fetch = async (input, init = {}) => {
@@ -342,6 +342,7 @@ globalThis.fetch = async (input, init = {}) => {
       generatedAt: "2026-07-28T00:00:00.000Z",
       procedures: {
         ...libraryManifest,
+        ...targetState.bankingProcedures,
         "document-security-risk-analysis": {
           status: "pass",
           summary: "System-specific ePHI risk analysis is approved and current.",

@@ -145,8 +145,8 @@ const officialReferences: Record<string, StandardDefinition["officialReference"]
     authority: "Board of Governors of the Federal Reserve System",
     title: "SR 26-2 Revised Guidance on Model Risk Management",
     url: "https://www.federalreserve.gov/supervisionreg/srletters/SR2602.htm",
-    status: "superseded",
-    note: "SR 26-2 superseded SR 11-7 on April 17, 2026; the catalog retains the legacy selection label for continuity.",
+    status: "current",
+    note: "SR 26-2 superseded SR 11-7 on April 17, 2026; the internal legacy selection ID is retained for saved inputs.",
   },
   soc2: {
     authority: "AICPA & CIMA",
@@ -839,6 +839,10 @@ export const standards: StandardDefinition[] = standardSeeds.map((seed) => {
     })),
   };
 });
+// Packs without a legacy catalog seed remain discoverable in the same picker.
+for (const [id, standard] of pilotStandardsById) {
+  if (!standards.some(entry => entry.id === id)) standards.push(standard);
+}
 
 const industryCatalog: IndustryDefinition[] = [
   {
@@ -866,8 +870,12 @@ const industryCatalog: IndustryDefinition[] = [
     name: "Finance / Banking",
     description: "Banks, fintech, payments, wealth, and lending.",
     recommendations: [
-      { standardId: "mas_ai", reason: "Financial-sector AI governance" },
-      { standardId: "soc2", reason: "Client-trust control assurance" },
+      { standardId: "rbi_it_governance", reason: "India banking IT governance and assurance" },
+      { standardId: "rbi_it_outsourcing", reason: "India banking cloud and outsourcing controls" },
+      { standardId: "rbi_free_ai", reason: "Responsible AI in Indian financial services" },
+      { standardId: "rbi_kyc_aml", reason: "India banking KYC and financial-crime governance" },
+      { standardId: "rbi_digital_payments", reason: "Digital-payment security readiness" },
+      { standardId: "iso27001", reason: "Information-security management baseline" },
       { standardId: "iso42001", reason: "Certifiable AI governance" },
     ],
   },

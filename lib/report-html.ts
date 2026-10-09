@@ -1,5 +1,6 @@
 import { verdictLabels } from "./posture";
 import { statusLabel } from "./terms";
+import { bankingReportRows, hasBankingReport } from "./banking-report";
 import type { AssessmentResult, StandardReport } from "./types";
 
 /**
@@ -45,6 +46,10 @@ export function createReportHtml(result: AssessmentResult, report?: StandardRepo
   const { analysis } = result;
   const selected = report ? [report] : result.reports;
   const scopeNote = report ? ` — ${esc(report.shortName)} only` : "";
+  const bankingRows = bankingReportRows(result, report?.standardId);
+  const bankingSection = hasBankingReport(result) ? `<section><h2>Banking governance</h2><p>Coverage measures the selected control objectives evaluated, not completeness of banking obligations. Missing evidence is not a pass.</p>
+    <table><thead><tr><th>Practice</th><th>Listed</th><th>Passed</th><th>Failed</th><th>Partial</th><th>Not assessed</th></tr></thead><tbody>${bankingRows.map(row => `<tr><td>${esc(row.domain)}</td><td>${row.total || "Not included"}</td><td>${row.passed}</td><td>${row.failed}</td><td>${row.partial}</td><td>${row.notAssessed}</td></tr>`).join("")}</tbody></table>
+    ${bankingRows.map(row => `<h3>${esc(row.domain)}</h3><p>Evidence sources: ${esc(row.systems.join("; "))}</p><table><thead><tr><th>Standard / control</th><th>Outcome</th><th>Evidence / next action</th></tr></thead><tbody>${row.items.map(item => `<tr><td>${esc(item.standardName)} / ${esc(item.id)}<br/>${esc(item.name)}</td><td>${esc(statusLabel(item.status))}<br/>${esc(item.severity)}</td><td>${esc(item.evidence)}${item.status !== "pass" ? `<br/>${esc(item.remediation)}` : ""}<br/>Required: ${esc(item.evidenceProcedureIds?.join(", ") ?? "Live target check")}</td></tr>`).join("")}</tbody></table>`).join("")}</section>` : "";
 
   const controlRows = (controls: StandardReport["controls"]) =>
     controls
@@ -225,7 +230,7 @@ export function createReportHtml(result: AssessmentResult, report?: StandardRepo
     <p><strong>${esc(result.scope.organization)}</strong> · ${esc(result.scope.systemName)} · ${esc(result.scope.industry)}<br/>
     Assessment <code>${esc(result.assessmentId)}</code> · Tier ${result.scope.tier} · ${esc(new Date(result.generatedAt).toLocaleString())}<br/>
     Frameworks: ${esc(result.scope.selectedStandards.join(", "))}</p>
-    ${postureSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${evidenceSection}${notesHtml}
+    ${postureSection}${bankingSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${evidenceSection}${notesHtml}
     <script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250))</script>
     </body></html>`;
 }

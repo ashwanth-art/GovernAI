@@ -1484,7 +1484,9 @@ function controlResult(
       status: "not_assessed",
       score: 0,
       confidence: 0,
-      evidence: `Tier 3 preflight reached ${reachableLocations}/3 supplied locations, but source code, staging behavior, model cards, and artifacts were not inspected. This control is not assessed.`,
+      evidence: control.evaluationRuleId?.startsWith("artifact.bank-")
+        ? `Banking evidence unavailable. Publish structured measurements for ${(control.evidenceProcedureIds ?? []).join(", ")} through the existing evidence manifest. ${control.objective ?? control.name} This control is not assessed.`
+        : `Tier 3 preflight reached ${reachableLocations}/3 supplied locations, but source code, staging behavior, model cards, and artifacts were not inspected. This control is not assessed.`,
     };
   }
 
