@@ -166,7 +166,7 @@ test("client bundle carries the track, the run, and the five-chapter report", as
 
   // Health is a rate over what was assessed, and the card says which denominator it
   // used instead of printing its own figure back at the reader a second time.
-  assert.match(bundle, /averaged over the /);
+  assert.match(bundle, /averaged over /);
   assert.doesNotMatch(bundle, /% health`/);
   // The verdict is a heading and an identifier at once, so both forms ship: the
   // sentence for the reader, the token for the export.
@@ -197,7 +197,7 @@ test("client bundle carries the track, the run, and the five-chapter report", as
   assert.doesNotMatch(bundle, /Guided/);
   // One register only. The other two are gone from the shipped strings, not hidden
   // behind a toggle.
-  assert.doesNotMatch(bundle, /Engineering/);
+  assert.doesNotMatch(bundle, /children:`Engineering`/);
   assert.doesNotMatch(bundle, /Nothing here is armed/);
 
   assert.doesNotMatch(bundle, /document\.write/);

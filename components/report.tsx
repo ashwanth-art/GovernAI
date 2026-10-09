@@ -6,7 +6,7 @@ import { duration, measuredPercent, rulePhrase } from "@/lib/metrics";
 import { pillarHue, pillarLabel } from "@/lib/pillars";
 import { verdictLabels } from "@/lib/posture";
 import { methodLabel, methodPlain, statusMeaning, tierLabel } from "@/lib/terms";
-import { BankingReport } from "@/components/banking-report";
+import { evaluatedReportView } from "@/lib/report-view";
 import type {
   AssessmentResult,
   ControlResult,
@@ -40,8 +40,7 @@ export const CHAPTERS = [
   { id: "verdict", n: "I", label: "Where you stand" },
   { id: "areas", n: "II", label: "Area by area" },
   { id: "packs", n: "III", label: "Pack by pack" },
-  { id: "unseen", n: "IV", label: "What we could not see" },
-  { id: "trace", n: "V", label: "The full trace" },
+  { id: "trace", n: "IV", label: "The full trace" },
 ] as const;
 
 const SEV_ORDER: Severity[] = ["critical", "high", "medium", "low"];
@@ -55,7 +54,7 @@ const SETTLED = new Set(["pass", "fail", "partial"]);
 const OWASP_ID = "owasp_llm_2025";
 
 export function Report({
-  result,
+  result: rawResult,
   onActiveChapter,
   onPrint,
   onExport,
@@ -72,6 +71,7 @@ export function Report({
   /** Reuse the exact pillar and pack report inside the separate Monitoring tab. */
   coverageOnly?: boolean;
 }) {
+  const result = useMemo(() => evaluatedReportView(rawResult), [rawResult]);
   const { analysis, scope, liveEvidence } = result;
   const { posture } = analysis;
   const hostRef = useRef<HTMLDivElement>(null);
@@ -232,8 +232,7 @@ export function Report({
               {posture.assessed}
               <span style={{ color: "var(--faint)" }}>/{posture.applicable}</span>
               <small>
-                controls we could reach a verdict on, out of the <b>{posture.applicable}</b> that
-                apply to you.{" "}
+                evaluated controls included in this report.{" "}
                 {posture.notApplicable > 0 ? (
                   <>
                     A further <b>{posture.notApplicable}</b> were ruled out before the run, each
@@ -249,14 +248,14 @@ export function Report({
                 <strong>{measuredPercent(posture.healthPercent, posture.assessed > 0)}</strong>
                 <p>
                   {posture.assessed > 0
-                    ? `averaged over the ${posture.assessed} assessed, not the ${posture.applicable} applicable`
+                    ? `averaged over ${posture.assessed} evaluated controls`
                     : "no verdicts yet — nothing here could be assessed"}
                 </p>
               </div>
               <div className={`stat ${coverageTone}`}>
                 <em>Coverage</em>
                 <strong>{posture.coveragePercent}%</strong>
-                <p>assessed ÷ applicable · 90% clears the evidence bar</p>
+                <p>evaluated controls included in this report</p>
               </div>
               <div className={`stat ${posture.openFindings > 0 ? "fail" : "pass"}`}>
                 <em>Open findings</em>
@@ -298,7 +297,6 @@ export function Report({
         </section>
         ) : null}
 
-        {!coverageOnly && <BankingReport result={result} />}
         {/* ---- II · area by area --------------------------------------- */}
         <section className="chapter" id={coverageOnly ? "monitor-areas" : "areas"}>
           <div className="ch-n">
@@ -436,7 +434,7 @@ export function Report({
           <p className="lede">
             {coverageOnly
               ? "The same current monitoring result, cut by every selected standard. Open one to see what is covered, what remains unread, every current problem and the exact corrective playbook."
-              : "The identical result, cut the way an auditor asks for it — one card per standard you selected. Coverage here is against that pack’s own applicable clauses, so a pack can read well while another reads badly in the same run. Open one for its clauses read, its clauses still unread, and every problem it carries with the fix underneath."}
+              : "Passed and failed controls, grouped by standard. Open a card for its evaluated controls, findings and fixes."}
           </p>
 
           <div className="areas">
@@ -554,7 +552,7 @@ export function Report({
         {/* ---- IV · what we could not see ------------------------------ */}
         {!coverageOnly ? (
         <>
-        <section className="chapter" id="unseen">
+        {analysis.gaps.length > 0 && <section className="chapter" id="unseen">
           <div className="ch-n">
             <em>Chapter IV</em>
             <hr />
@@ -663,7 +661,7 @@ export function Report({
               </button>
             </div>
           ) : null}
-        </section>
+        </section>}
 
         {/* ---- VI · the full trace ------------------------------------- */}
         <section className="chapter" id="trace">

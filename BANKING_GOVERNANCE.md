@@ -63,4 +63,4 @@ This yields a failure and identifies the two overdue critical vulnerabilities. I
 
 ## Reports
 
-Finance and banking-pack assessments append Banking Governance within the existing final report. It shows ten practice domains, outcomes per selected standard/control, severity, evidence, timestamps/source references when provided, remediation and required procedure names. Unselected domains show `Not included`; missing connected-system evidence shows `Not assessed`. The printable HTML carries the same information. Coverage is the fraction of listed controls evaluated, never a claim that all banking obligations have been satisfied.
+The final report and printable HTML show only controls with pass or fail verdicts. The separate Banking Governance section and practice matrix have been removed. Frameworks with no pass/fail verdicts do not appear in this report view. Counts and coverage use the included evaluated controls, so Tier 3 shows evaluated/evaluated. Partial and missing-evidence outcomes remain in the raw downloadable result. This presentation scope does not change the assessment engine, source evidence, banking checks, setup steps or credentials.
