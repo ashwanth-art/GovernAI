@@ -412,7 +412,7 @@ export function Report({
                         ? `${playbooks.length} fix${playbooks.length === 1 ? "" : "es"} · ${effort[0]}–${effort[1]}h`
                         : unread > 0
                           ? `${unread} clause${unread === 1 ? "" : "s"} unread`
-                          : "fully read"}
+                          : measured ? "fully read" : "no verdicts"}
                     </span>
                     <span className="area-go" aria-hidden="true">
                       Open ↗
@@ -537,7 +537,7 @@ export function Report({
                         ? `${playbooks.length} fix${playbooks.length === 1 ? "" : "es"} · ${effort[0]}–${effort[1]}h`
                         : unread > 0
                           ? `${unread} clause${unread === 1 ? "" : "s"} unread`
-                          : "fully read"}
+                          : measured ? "fully read" : "no verdicts"}
                     </span>
                     <span className="area-go" aria-hidden="true">
                       Open ↗
