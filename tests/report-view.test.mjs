@@ -13,11 +13,19 @@ const { evaluatedReportView } = require("../lib/report-view.ts");
 const { createReportHtml } = require("../lib/report-html.ts");
 
 test("report includes only pass/fail verdicts and counts its evaluated scope without modifying raw evidence", async () => {
-  const response = await request("/api/assessments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...baseInput, tier: 3, industryId: "finance", standardIds: ["iso27001", "rbi_it_governance"], credentials: { ...baseInput.credentials, repoUrl: "https://ci.target.test/source", stagingUrl: "https://ci.target.test/staging", modelRegistryUrl: "https://ci.target.test/models", evidenceManifestUrl: "https://evidence.target.test/manifest.json" } }) });
+  const response = await request("/api/assessments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...baseInput, tier: 3, industryId: "finance", standardIds: ["iso27001", "rbi_it_governance", "rbi_it_outsourcing", "rbi_free_ai", "rbi_digital_payments"], credentials: { ...baseInput.credentials, repoUrl: "https://ci.target.test/source", stagingUrl: "https://ci.target.test/staging", modelRegistryUrl: "https://ci.target.test/models", evidenceManifestUrl: "https://evidence.target.test/manifest.json" } }) });
   assert.equal(response.status, 200);
   const raw = await response.json();
   const original = JSON.stringify(raw);
   const view = evaluatedReportView(raw);
+  assert.equal(view.reports.length, 5);
+  assert.deepEqual(view.reports.map(report => report.standardId), raw.reports.map(report => report.standardId));
+  assert.deepEqual(view.scope.selectedStandards, raw.scope.selectedStandards);
+  const rbi = view.reports.find(report => report.standardId === "rbi_it_governance");
+  assert.ok(rbi);
+  assert.equal(rbi.controls.length, 0);
+  assert.equal(rbi.readiness, "No pass/fail verdicts available");
+  assert.ok(view.analysis.matrix.some(row => row.standardId === "rbi_it_governance"));
   assert.ok(raw.reports.some(report => report.controls.some(control => control.status === "not_assessed")));
   assert.ok(view.reports.every(report => report.controls.every(control => ["pass", "fail"].includes(control.status))));
   assert.equal(view.analysis.posture.assessed, view.analysis.posture.applicable);
@@ -28,4 +36,6 @@ test("report includes only pass/fail verdicts and counts its evaluated scope wit
   const html = createReportHtml(raw);
   assert.ok(!html.includes("Banking governance"));
   assert.ok(!html.includes("RBI_IT_GOVERNANCE-01"));
+  assert.ok(html.includes("RBI IT Governance"));
+  assert.ok(html.includes("No pass/fail verdicts available"));
 });
