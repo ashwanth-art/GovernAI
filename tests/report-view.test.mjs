@@ -18,14 +18,9 @@ test("report includes only pass/fail verdicts and counts its evaluated scope wit
   const raw = await response.json();
   const original = JSON.stringify(raw);
   const view = evaluatedReportView(raw);
-  assert.equal(view.reports.length, 5);
-  assert.deepEqual(view.reports.map(report => report.standardId), raw.reports.map(report => report.standardId));
-  assert.deepEqual(view.scope.selectedStandards, raw.scope.selectedStandards);
-  const rbi = view.reports.find(report => report.standardId === "rbi_it_governance");
-  assert.ok(rbi);
-  assert.equal(rbi.controls.length, 0);
-  assert.equal(rbi.readiness, "No pass/fail verdicts available");
-  assert.ok(view.analysis.matrix.some(row => row.standardId === "rbi_it_governance"));
+  assert.deepEqual(view.reports.map(report => report.standardId), ["iso27001"]);
+  assert.deepEqual(view.scope.selectedStandards, ["ISO/IEC 27001"]);
+  assert.ok(!view.analysis.matrix.some(row => row.standardId === "rbi_it_governance"));
   assert.ok(raw.reports.some(report => report.controls.some(control => control.status === "not_assessed")));
   assert.ok(view.reports.every(report => report.controls.every(control => ["pass", "fail"].includes(control.status))));
   assert.equal(view.analysis.posture.assessed, view.analysis.posture.applicable);
@@ -36,6 +31,6 @@ test("report includes only pass/fail verdicts and counts its evaluated scope wit
   const html = createReportHtml(raw);
   assert.ok(!html.includes("Banking governance"));
   assert.ok(!html.includes("RBI_IT_GOVERNANCE-01"));
-  assert.ok(html.includes("RBI IT Governance"));
-  assert.ok(html.includes("No pass/fail verdicts available"));
+  assert.ok(!html.includes("RBI IT Governance"));
+  assert.ok(!html.includes("No pass/fail verdicts available"));
 });
