@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
 const run = promisify(execFile), group = "rg-governai-demo", app = "governai";
-const release = process.env.REVIEW_RELEASE || "20261016.6";
+const release = process.env.REVIEW_RELEASE || "20261016.10";
 if (!/^\d{8}\.\d+$/.test(release)) throw new Error("Release must be a dated image tag.");
 async function az(...args) {
   try { const { stdout } = await run("az", [...args, "--only-show-errors", "-o", "json"], { maxBuffer: 8e6 }); return stdout.trim() ? JSON.parse(stdout) : null; }

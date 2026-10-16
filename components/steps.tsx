@@ -437,7 +437,7 @@ const DEPTH: Record<AccessTier, { needs: string; gain: string }> = {
   },
   3: {
     needs: "Provider URLs and an evidence manifest",
-    gain: "The only depth that can close the documentation and process controls. Document content is never interpreted — only a named procedure verdict is accepted.",
+    gain: "Closes supported document and process controls using named evidence. Opted-in policy text can receive source-verified model review; missing evidence stays unresolved.",
   },
 };
 

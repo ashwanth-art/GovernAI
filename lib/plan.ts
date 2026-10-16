@@ -36,12 +36,12 @@ const SECONDS_PER_CHECK: Record<string, number> = {
 };
 
 export const SAFETY_RULES = [
-  "Every probe is a single bounded request. No repetition, no chaining, no load generation.",
+  "Reads have request and timeout budgets. Limited retries may investigate transient failures; this is not a load test.",
   "Reads only. No write, delete, or state-changing request is ever issued against the target.",
   "Tier 2 and Tier 3 requests are sent only to hosts you entered, and only with tokens you supplied.",
-  "Credentials are held for the duration of the run and never written to an event, a log, a report, or an export.",
+  "Durable jobs and saved connections encrypt credentials. Credentials are excluded from events, reports and exports; saved profiles and schedules retain encrypted inputs until removed.",
   "A 401 or 403 is recorded as missing authorization, never as a control failure.",
-  "Probe responses are pattern-matched for verdicts. Response bodies are not stored.",
+  "Chat probes use bounded evidence predicates. Redacted observations are retained; connected policy text is encrypted and sent to models only with source-level opt-in.",
   "Official standards pages are never fetched during a run. Citations are recorded reference links.",
 ];
 

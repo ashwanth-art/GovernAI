@@ -9,6 +9,11 @@ export function redact(value) {
   return typeof value === "string" ? value
     .replace(/Bearer\s+[\w.\-]+/gi, "Bearer [redacted]")
     .replace(/\bsk-(?:proj-)?[\w-]{12,}/g, "[redacted]")
+    .replace(/\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g, "[redacted access key]")
+    .replace(/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "[redacted JWT]")
+    .replace(/-----BEGIN[ A-Z]*PRIVATE KEY-----[\s\S]*?-----END[ A-Z]*PRIVATE KEY-----/g, "[redacted private key]")
+    .replace(/\b(?:postgres(?:ql)?|mongodb(?:\+srv)?|mysql):\/\/[^\s"']+/gi, "[redacted connection]")
+    .replace(/((?:password|passwd|client[_-]?secret|api[_-]?key|access[_-]?key(?:[_-]?id)?|secret[_-]?access[_-]?key)\s*[:=]\s*)(?:"[^"\n]*"|'[^'\n]*'|[^\s,;]+)/gi, "$1[redacted]")
     .replace(/([?&](?:token|key|secret|sig|code|password)=)[^&\s]+/gi, "$1[redacted]")
     .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email]") : value;
 }

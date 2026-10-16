@@ -3,6 +3,20 @@ import test from "node:test";
 
 import { baseInput, request, session, targetState } from "./harness.mjs";
 
+test("deployment verdicts reject caller injection and accept only the trusted collector bridge", async () => {
+  const original = process.env.REVIEW_ENCRYPTION_KEY;
+  process.env.REVIEW_ENCRYPTION_KEY = "isolated-trusted-bridge-test";
+  const input = { ...baseInput, tier: 3, standardIds: ["deployment_review"], credentials: { ...baseInput.credentials, repoUrl: "https://ci.target.test/source", stagingUrl: "https://ci.target.test/staging", modelRegistryUrl: "https://ci.target.test/models" }, reviewManifest: { schemaVersion: "1.0", procedures: { "artifact-review-frontend-csp": { status: "fail", summary: "Direct observation: no enforcing CSP header was present." } } } };
+  try {
+    const denied = await (await request("/api/assessments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) })).json();
+    assert.ok(denied.reports[0].controls.every(control => control.status === "not_assessed"));
+    const accepted = await (await request("/api/assessments", { method: "POST", headers: { "content-type": "application/json", "x-arq-review-token": process.env.REVIEW_ENCRYPTION_KEY }, body: JSON.stringify(input) })).json();
+    assert.equal(accepted.reports[0].controls.find(control => control.id === "DEP-FRONTEND-CSP").status, "fail");
+    const fix = accepted.analysis.playbooks.find(book => book.verification.checkIds.includes("chk.artifact.review-frontend-csp"));
+    assert.match(fix.steps[1].action, /enforcing Content-Security-Policy/);
+  } finally { if (original === undefined) delete process.env.REVIEW_ENCRYPTION_KEY; else process.env.REVIEW_ENCRYPTION_KEY = original; }
+});
+
 test("banking packs are versioned and recommended without scope questions", async () => {
   const catalog = await (await request("/api/catalog")).json();
   const ids = ["rbi_it_governance", "rbi_it_outsourcing", "rbi_digital_payments", "rbi_kyc_aml", "rbi_free_ai", "fatf", "bcbs_239", "basel_operational_resilience", "swift_cscf", "nist_csf", "iso22301"];
@@ -130,7 +144,7 @@ test("pre-flight plan states what will run, what will not, and what each tier re
   assert.ok(plan.blindSpots.length > 0);
   assert.ok(plan.blindSpots.every((spot) => spot.reason && spot.closedBy));
   assert.ok(plan.safety.length >= 5);
-  assert.ok(plan.safety.some((rule) => /never written to an event/i.test(rule)));
+  assert.ok(plan.safety.some((rule) => /Credentials are excluded from events, reports and exports/i.test(rule)));
   assert.ok(plan.safety.some((rule) => /401 or 403/i.test(rule)));
 });
 

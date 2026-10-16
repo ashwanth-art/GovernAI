@@ -261,7 +261,7 @@ export function Report({
               <div className={`stat ${posture.openFindings > 0 ? "fail" : "pass"}`}>
                 <em>Open findings</em>
                 <strong>{posture.openFindings}</strong>
-                <p>raised by a rule, never inferred</p>
+                <p>linked to the evidence and evaluation rule</p>
               </div>
               <div className="stat">
                 <em>Exposure index</em>
@@ -949,7 +949,8 @@ export function Report({
             </span>
           </div>
           <p className="faint" style={{ fontSize: 12.5, marginTop: 14, lineHeight: 1.6 }}>
-            No model judged any control in this report. Every verdict is a deterministic predicate
+            Configuration checks use written rules. Optional model-assisted documentary judgments
+            require source citations and independent verification. Each configuration verdict is a predicate
             over collected evidence. The status <span className="mono">not_assessed</span> means{" "}
             {statusMeaning.not_assessed}; a control with no evidence is never counted as a pass.
           </p>

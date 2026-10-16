@@ -35,7 +35,7 @@ const PLAIN: Record<string, { now: string; sub: string }> = {
   },
   evaluate: {
     now: "Applying each pass condition",
-    sub: "One written rule at a time. No model decides any of these — each verdict is a predicate over the evidence.",
+    sub: "Configuration verdicts use written rules. Model-assisted documentary judgments require independent source verification; missing evidence stays unresolved.",
   },
   rollup: {
     now: "Adding it up",

@@ -11,6 +11,21 @@ const require = createRequire(import.meta.url);
 require.extensions[".ts"] = (module, path) => module._compile(ts.transpileModule(readFileSync(path, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, path);
 const { evaluatedReportView } = require("../lib/report-view.ts");
 const { createReportHtml } = require("../lib/report-html.ts");
+const { fallbackSeed } = require("../lib/remediation.ts");
+const { artifactCheck } = require("../lib/checks.ts");
+const { deploymentReviewPack } = require("../lib/framework-packs/deployment-review.ts");
+
+test("deployment findings prescribe configuration fixes and require direct re-observation", () => {
+  for (const control of deploymentReviewPack.controls) {
+    const check = artifactCheck(control), fix = fallbackSeed(check.id, check.title);
+    assert.equal(check.request.endpoint, "{scopedReviewConnection}");
+    assert.match(check.request.note, /Target-published manifest verdicts cannot/);
+    assert.equal(fix.owner, "Platform engineering");
+    assert.match(fix.verification, /direct collector must observe/);
+    assert.ok(!fix.steps.some(step => /Add the named evidence procedure/.test(step.action)));
+  }
+  assert.match(fallbackSeed("chk.artifact.review-frontend-csp", "CSP").steps[1].action, /enforcing Content-Security-Policy/);
+});
 
 test("report includes only pass/fail verdicts and counts its evaluated scope without modifying raw evidence", async () => {
   const response = await request("/api/assessments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...baseInput, tier: 3, industryId: "finance", standardIds: ["iso27001", "rbi_it_governance", "rbi_it_outsourcing", "rbi_free_ai", "rbi_digital_payments"], credentials: { ...baseInput.credentials, repoUrl: "https://ci.target.test/source", stagingUrl: "https://ci.target.test/staging", modelRegistryUrl: "https://ci.target.test/models", evidenceManifestUrl: "https://evidence.target.test/manifest.json" } }) });

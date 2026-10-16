@@ -721,6 +721,44 @@ export const playbookSeedByCheck = new Map<string, PlaybookSeed>(
 
 /** Artifact and unnamed checks get a generated playbook rather than no playbook at all. */
 export function fallbackSeed(checkId: string, checkTitle: string): PlaybookSeed {
+  if (checkId.startsWith("chk.artifact.review-")) {
+    const key = checkId.slice("chk.artifact.review-".length);
+    const actions: Record<string, string> = {
+      "dns-resolution": "Correct authoritative A/AAAA/CNAME records for the intended public application hostname and verify resolution from the review network.",
+      "tls-valid": "Renew or replace the certificate with a trusted chain and matching hostname; check certificate delivery on every serving endpoint.",
+      "tls-modern": "Configure the serving edge to negotiate TLS 1.2 or 1.3 and disable obsolete protocol versions after compatibility testing.",
+      "frontend-reachable": "Inspect application, edge and load-balancer health; restore the intended frontend response at the configured URL.",
+      "frontend-csp": "Define a Content-Security-Policy for the application's actual script, style and connection sources. Test violations, then deliver an enforcing Content-Security-Policy response header.",
+      "frontend-nosniff": "Deliver X-Content-Type-Options: nosniff on frontend responses and verify that assets have correct MIME types.",
+      "frontend-framing": "Set CSP frame-ancestors to the approved embedding origins, or use an appropriate X-Frame-Options restriction when embedding is not required.",
+      "frontend-hsts": "Verify HTTPS delivery, then configure a nonzero Strict-Transport-Security max-age. Extend the lifetime only after checking the affected hosts; do not add includeSubDomains blindly.",
+      "browser-render": "Inspect frontend delivery failures and the recorded blocked requests. Correct application delivery; do not weaken the review broker's network boundary to manufacture a pass.",
+      "browser-runtime": "Reproduce the recorded initial-load JavaScript errors, fix their underlying application code or asset delivery, and repeat the bounded browser load.",
+      "auth-anonymous-boundary": "Enforce server-side authentication on the explicitly configured protected route; anonymous reads must return 401 or 403 rather than protected content.",
+      "auth-authenticated-read": "Check the read-only test identity's token expiry, audience and intended permissions for the configured protected route.",
+      "auth-role-boundary": "Enforce role and object-level authorization on the explicitly configured forbidden resource; the configured test identity must not receive protected content.",
+      "azure-storage-https": "Enable HTTPS-only traffic on the affected Azure Storage account and check its consumers before rollout.",
+      "azure-storage-public": "Disable account-level anonymous blob access and review any intentionally public delivery paths separately.",
+      "azure-vault-protection": "Enable purge protection on the affected Key Vault using the organization's approved retention and recovery policy.",
+      "azure-runtime-images": "Deploy reviewed container images using immutable @sha256 digests rather than mutable image tags.",
+      "azure-diagnostics": "Configure enabled diagnostic log export for the affected resource to the approved logging destination; confirm that records arrive.",
+      "aws-alarm-routing": "Enable notification actions on the application alarms, verify their destinations and permissions, and test the notification path.",
+      "aws-log-retention": "Set the scoped CloudWatch log groups to meet the retention requirement recorded in this connection profile.",
+      "aws-trail-recording": "Restore logging on the explicitly scoped CloudTrail ARN and verify delivery and selector coverage for the application.",
+      "aws-trail-digests": "Enable CloudTrail log-file validation/digest delivery. Independently validate delivered digest chains before claiming log integrity.",
+      "aws-admin-ingress": "Remove world-open SSH/RDP or all-protocol ingress; restrict administrative access to approved private paths or CIDRs.",
+      "aws-storage-public": "Enable all four S3 public-access-block settings on the affected private bucket and review any approved public-delivery exception separately.",
+      "aws-storage-encryption": "Configure default S3 encryption with the key management required by policy and verify authorized access paths.",
+      "aws-storage-versioning": "Enable bucket versioning where required and perform a scoped recovery exercise; versioning alone does not establish restore effectiveness.",
+      "aws-root-mfa": "Have the authorized account security owner configure root MFA using the organization's approved process. Do not give the reviewer root credentials.",
+      "source-workflow-permissions": "Declare minimal workflow token permissions, normally contents: read at the default level, and grant narrowly scoped additional permissions only to jobs that require them.",
+    };
+    return { checkId, title: `Correct the observed configuration: ${checkTitle}`, owner: "Platform engineering", effortHours: [2, 8], steps: [
+      { action: "Identify the affected asset, response or source revision from this finding's evidence record and obtain the normal change approval.", where: "Review evidence and change management" },
+      { action: actions[key] ?? "Correct the configuration condition documented by the direct collector on the affected asset.", where: "Affected application, source repository or provider configuration" },
+      { action: "Run the same Tier 3 review with the same target and scoped connection. Retain the new direct observation and compare it with the earlier evidence.", where: "Assessment setup and review history" },
+    ], verification: `Re-run ${checkId}: the direct collector must observe a passing configuration. A target-published manifest or document cannot override this deployment check.` };
+  }
   return {
     checkId,
     title: `Supply and attest the evidence for: ${checkTitle}`,

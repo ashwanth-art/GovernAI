@@ -424,6 +424,7 @@ export function artifactCheck(control: Control): CheckDefinition {
   const domain = domainFor(pillar, control);
   const slug = (control.evaluationRuleId ?? "artifact.unnamed").replace(/^artifact\./, "");
   const procedures = control.evidenceProcedureIds ?? [];
+  const deployment = slug.startsWith("review-");
   return {
     id: `chk.artifact.${slug}`,
     ruleId: control.evaluationRuleId ?? "artifact.unnamed",
@@ -439,18 +440,18 @@ export function artifactCheck(control: Control): CheckDefinition {
     provenance: "direct",
     request: {
       method: "GET",
-      endpoint: "{evidenceManifestUrl}",
-      note: "Reads the supplied Evidence Manifest. ARQ Governance does not extract or interpret document content — it accepts a named procedure verdict.",
+      endpoint: deployment ? "{scopedReviewConnection}" : "{evidenceManifestUrl}",
+      note: deployment ? "Reads direct observations from the trusted, scoped deployment collector. Target-published manifest verdicts cannot satisfy these checks." : "Accepts named procedure evidence. Durable reviews can additionally provide opted-in documentary judgments with independent source verification.",
     },
     rule: {
       id: control.evaluationRuleId ?? "artifact.unnamed",
-      statement: `Passes when every named evidence procedure for this control returns pass in the supplied Evidence Manifest. Partial when fewer procedures are present than required, or any returns partial. Fails when any returns fail. With no manifest the control is not_assessed — a missing document is never a pass and never a failure.`,
+      statement: deployment ? "Passes when the trusted direct collector observes the required configuration on the scoped assets. Fails on an observed violation. Missing access or an unavailable observation stays not assessed. Target-published manifest verdicts are ignored for deployment checks." : `Passes when every required named procedure returns pass from accepted evidence. Partial when evidence is incomplete or any procedure returns partial. Fails when any returns fail. Missing evidence is not assessed, never an inferred pass or failure.`,
       passWhen: `all of [${procedures.join(", ") || "none declared"}] return pass`,
       partialWhen: "fewer procedures present than required, or any procedure returns partial",
       failWhen: "any named procedure returns fail",
       thresholds: [
         { key: "required procedures", value: procedures.length ? procedures.join(", ") : "none declared" },
-        { key: "document content read", value: "no — verdict only" },
+        { key: "evidence evaluation", value: deployment ? "trusted direct collector; not a target declaration" : "named verdict or independently verified opted-in documentary review" },
       ],
     },
   };

@@ -173,7 +173,7 @@ test("client bundle carries the track, the run, and the five-chapter report", as
   assert.match(bundle, /Not enough evidence to judge/);
   assert.match(bundle, /insufficient_evidence/);
   // Findings come from rules. Nothing on this screen is inferred or model-judged.
-  assert.match(bundle, /raised by a rule, never inferred/);
+  assert.match(bundle, /linked to the evidence and evaluation rule/);
   assert.match(bundle, /assessed ÷ applicable/);
   assert.match(bundle, /not_assessed/);
   // An area with nothing planned reads as a sentence rather than "0 of 0 rules".

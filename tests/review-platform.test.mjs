@@ -29,6 +29,8 @@ test("secrets are removed before evidence reaches models or reports", () => {
   const result = redact({ accessToken: "secret", config: { clientSecret: "never", safe: "ok" }, url: "https://example.com?token=hidden", note: "Bearer abc123 mail@example.com" });
   assert.deepEqual(result.config, { safe: "ok" }); assert.equal(result.accessToken, undefined);
   assert.ok(!JSON.stringify(result).includes("hidden")); assert.ok(!result.note.includes("mail@example.com"));
+  const text = redact("password=hunter123 api_key=never-expose AKIA1234567890123456 mongodb+srv://name:password@example.com/db");
+  assert.ok(!text.includes("hunter123")); assert.ok(!text.includes("never-expose")); assert.ok(!text.includes("AKIA1234")); assert.ok(!text.includes("mongodb+srv://"));
 });
 
 test("connection profiles require scoped accounts, regions and HTTPS", () => {
