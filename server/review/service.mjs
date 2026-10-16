@@ -31,13 +31,16 @@ export function sessionIdentity(request, key) {
 }
 
 export function createReviewService({ engineFetch, store: suppliedStore, enabled = Boolean(process.env.REVIEW_DATABASE_URL), sessionKey = process.env.REVIEW_SESSION_KEY } = {}) {
-  let store = suppliedStore, ready = false, stopped = false, busy = false, catalog;
+  let store = suppliedStore, ready = false, stopped = false, busy = false, initializing = false, catalog;
   const aborts = new Map();
-  const init = (async () => {
-    if (!enabled || !sessionKey) return;
-    store ??= new ReviewStore();
-    await store.init(); ready = true;
-  })().catch(() => { console.error("[review] Persistent review service initialization failed; inspect database connectivity and secret references."); });
+  async function initialize() {
+    if (!enabled || !sessionKey || initializing || ready || stopped) return;
+    initializing = true;
+    try { store ??= new ReviewStore(); await store.init(); ready = true; }
+    catch (error) { console.error("[review] Persistent service not ready; retrying database initialization.", error.code || error.name); }
+    finally { initializing = false; }
+  }
+  const init = initialize();
 
   async function loadCatalog() {
     if (!catalog) catalog = await (await engineFetch(new Request("http://review.internal/api/review-catalog"))).json();
@@ -82,7 +85,8 @@ export function createReviewService({ engineFetch, store: suppliedStore, enabled
     const transient = evidence.some(record => record.observations?.some(observation => /timed out/i.test(observation.summary)));
     if (transient && !signal.aborted) {
       await progress("Investigating transient evidence gaps with one bounded retry");
-      await collectLayers({ input: { ...input, tier: 1 }, profiles: [], save, audit: store.audit.bind(store), owner: job.owner, jobId: job.id, signal, progress });
+      const retried = await collectLayers({ input: { ...input, tier: 1 }, profiles: [], save, audit: store.audit.bind(store), owner: job.owner, jobId: job.id, signal, progress });
+      collection.toolCalls += retried.toolCalls;
     }
     const model = await reviewWithModels({ controls, evidence, signal, progress, save });
     const procedures = { ...model.procedures, ...exportedManifest(evidence), ...technicalManifest(evidence) };
@@ -127,7 +131,8 @@ export function createReviewService({ engineFetch, store: suppliedStore, enabled
     return result;
   }
   async function tick() {
-    if (!ready || stopped || busy) return;
+    if (stopped || busy) return;
+    if (!ready) { await initialize(); return; }
     busy = true;
     try {
       await store.enqueueDue();

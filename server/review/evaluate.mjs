@@ -94,6 +94,8 @@ export async function reviewWithModels({ controls, evidence, signal, progress, s
     const extracted = await modelCall(process.env.REVIEW_MODEL_SMALL || "gpt-4.1-mini", "Extract documentary evidence against the supplied controls. With no documentary controls, summarize the observed public application facts and return an empty assessments array.", payload, signal);
     reviews.push({ role: "extraction", status: "completed", model: extracted.model, summary: redact(extracted.summary), usage: extracted.usage });
     await save({ layer: "model", source: "https://api.openai.com/v1/responses", collectedAt: new Date().toISOString(), observations: [], model: extracted.model, role: "extraction", summary: redact(extracted.summary), usage: extracted.usage });
+    const needsVerification = documents.length > 0 || publicObservations.some(item => item.observations?.some(observation => ["fail", "partial"].includes(observation.status)));
+    if (!needsVerification) return { procedures, reviews };
     // Independent review is used for documentary judgments or cross-layer
     // contradictions; it cannot overrule a deterministic failing observation.
     await progress("Complex-model cross-layer verification");

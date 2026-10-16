@@ -47,10 +47,10 @@ const ip = (await (await fetch("https://api.ipify.org")).text()).trim();
 if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) throw new Error("Could not identify the provisioning machine's IPv4 address.");
 await firewall("review-provisioner", ip);
 console.log("Waiting for scoped database firewall updates to become effective.");
-for (let attempt = 0; attempt < 60; attempt++) {
+for (let attempt = 0; attempt < 180; attempt++) {
   const rules = await az("postgres", "flexible-server", "firewall-rule", "list", "-g", group, "-n", pgName);
   if (rules.some(rule => rule.name === "review-provisioner") && rules.length >= addresses.length + 1) break;
-  if (attempt === 59) throw new Error("Scoped firewall updates are still pending. Re-run provisioning after Azure finishes them.");
+  if (attempt === 179) throw new Error("Scoped firewall updates are still pending. Re-run provisioning after Azure finishes them.");
   await new Promise(resolve => setTimeout(resolve, 5000));
 }
 const secrets = await az("containerapp", "secret", "list", "-g", group, "-n", app, "--show-values");
