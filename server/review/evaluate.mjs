@@ -66,7 +66,7 @@ async function modelCall(model, task, payload, signal) {
 
 export function verifyModelAssessment(assessment, controls, evidence) {
   const control = controls.find(control => control.standardId === assessment.standardId && control.id === assessment.controlId);
-  if (!control || !["pass", "fail"].includes(assessment.status) || assessment.confidence < 0.9 || assessment.confidence > 1 || assessment.missingRequirements?.length || !assessment.citations?.length) return null;
+  if (!control || !["pass", "fail"].includes(assessment.status) || !Number.isFinite(assessment.confidence) || assessment.confidence < 0.9 || assessment.confidence > 1 || assessment.missingRequirements?.length || !assessment.citations?.length) return null;
   const ids = control.evidenceProcedureIds ?? [];
   // Organizational documents can support documentary procedures. They cannot
   // establish runtime configurations or manufacture banking measurements.

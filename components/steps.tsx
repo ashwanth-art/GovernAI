@@ -738,8 +738,9 @@ function ReadyStep({ input, plan, scope }: StepProps) {
   return (
     <>
       <p className="q-sub">
-        Nothing below is a guess. This is the plan the engine will execute, built by the same code
-        that runs it.
+        This is the base assessment plan, built by the same code that runs it. When durable
+        reviews are enabled, deployment collectors additionally allow up to 100 scoped reads per
+        collection round and up to two model calls. Their progress and evidence appear in the trace.
       </p>
       <div className="q-body">
         <div className="stats">

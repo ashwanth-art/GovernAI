@@ -31,7 +31,6 @@ export class ReviewStore {
   }
   async init() {
     await this.pool.query(`
-      CREATE SCHEMA IF NOT EXISTS arq_review;
       CREATE TABLE IF NOT EXISTS arq_review.jobs (
         id uuid PRIMARY KEY, owner text NOT NULL, status text NOT NULL DEFAULT 'queued',
         created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),
@@ -92,7 +91,7 @@ export class ReviewStore {
     await this.emit(id, "review_progress", { message: stage, occurredAt: new Date().toISOString() });
   }
   async finish(id, lease, result, error) {
-    return this.pool.query("UPDATE arq_review.jobs SET status=$3,result=$4,error=$5,lease_until=NULL,input=$6,updated_at=now() WHERE id=$1 AND lease=$2 AND NOT cancelled", [id, lease, error ? "failed" : "completed", result ? this.cipher.seal(result) : null, error || null, this.cipher.seal({ erased: true })]);
+    return this.pool.query("UPDATE arq_review.jobs SET status=$3,result=$4,error=$5,lease_until=NULL,input=$6,updated_at=now() WHERE id=$1 AND lease=$2 AND NOT cancelled AND status='running' AND lease_until>now()", [id, lease, error ? "failed" : "completed", result ? this.cipher.seal(result) : null, error || null, this.cipher.seal({ erased: true })]);
   }
   async get(owner, id, includeResult = false) {
     const { rows } = await this.pool.query("SELECT id,status,created_at,updated_at,summary,error,result FROM arq_review.jobs WHERE owner=$1 AND id=$2", [owner, id]);
@@ -141,7 +140,7 @@ export class ReviewStore {
     const count = await this.pool.query("SELECT count(*)::int AS count FROM arq_review.schedules WHERE owner=$1 AND enabled", [owner]);
     if (count.rows[0].count >= 5) throw new Error("Disable an existing schedule before creating another (maximum five).");
     const id = randomUUID();
-    await this.pool.query("INSERT INTO arq_review.schedules(id,owner,input,interval_seconds,next_due) VALUES($1,$2,$3,$4,now()+make_interval(secs=>$4))", [id, owner, this.cipher.seal(input), intervalSeconds]);
+    await this.pool.query("INSERT INTO arq_review.schedules(id,owner,input,interval_seconds,next_due) VALUES($1,$2,$3,$4::int,now()+make_interval(secs=>$4::int))", [id, owner, this.cipher.seal(input), intervalSeconds]);
     await this.audit(owner, "schedule.created", id, { intervalSeconds }); return id;
   }
   async schedules(owner) {
