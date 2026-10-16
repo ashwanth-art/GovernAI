@@ -192,9 +192,9 @@ export function LiveRun({
 
   const elapsedMs = useMemo(() => {
     if (running && startedAt && now) return now - startedAt;
-    const fromStream = Number(last?.data.elapsedMs);
-    return Number.isFinite(fromStream) ? fromStream : 0;
-  }, [running, startedAt, now, last]);
+    const fromStream = Number(events.findLast(event => Number.isFinite(Number(event.data.elapsedMs)))?.data.elapsedMs ?? 0);
+    return Math.max(fromStream, startedAt && now ? now - startedAt : 0);
+  }, [running, startedAt, now, events]);
 
   const percent = failed
     ? (progress?.percentage ?? 0)
@@ -463,7 +463,7 @@ export function LiveRun({
                       </span>
                       <span className="ms">
                         {item.ran === false
-                          ? `needs T${item.tierMinimum ?? "?"}`
+                          ? input.tier >= (item.tierMinimum ?? 4) ? "needs evidence" : `needs T${item.tierMinimum ?? "?"}`
                           : item.ms
                             ? `${item.ms}ms`
                             : item.live
