@@ -387,7 +387,7 @@ export const TARGET_RULES: TargetRuleSpec[] = [
     intent:
       "Confirms the running deployment declares itself production and restricts browser origins to the real front end.",
     pillar: "security",
-    domainId: "security.isolation",
+    domainId: "security.endpoint",
     tierMinimum: 2,
     probeId: "audit-config-evidence",
     request: AUDIT_REQUEST,
@@ -443,7 +443,7 @@ export const TARGET_RULES: TargetRuleSpec[] = [
     intent:
       "Confirms no service key is a placeholder and that a rotation interval exists, without ever reading key material.",
     pillar: "security",
-    domainId: "security.isolation",
+    domainId: "security.iam",
     tierMinimum: 2,
     probeId: "audit-config-evidence",
     request: AUDIT_REQUEST,
@@ -780,7 +780,7 @@ export const TARGET_RULES: TargetRuleSpec[] = [
     title: "Transport encryption and key custody",
     intent: "Confirms transport is encrypted and records where TLS terminates.",
     pillar: "data_protection",
-    domainId: "data.residency",
+    domainId: "data.crypto",
     tierMinimum: 2,
     probeId: "audit-config-evidence",
     request: AUDIT_REQUEST,
@@ -923,7 +923,7 @@ export const TARGET_RULES: TargetRuleSpec[] = [
     intent:
       "Confirms an alert rule and a notification channel exist, so a breach is announced rather than merely recorded.",
     pillar: "compliance",
-    domainId: "comp.audit",
+    domainId: "comp.detection",
     tierMinimum: 2,
     probeId: "monitoring-evidence",
     request: MONITORING_REQUEST,

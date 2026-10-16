@@ -87,13 +87,13 @@ export const pillarRegistry: PillarDefinition[] = [
         id: "security.network",
         label: "Network & edge protection",
         question: "Are network paths, transport and public-facing services protected?",
-        match: /\bdns\b|\btls\b|network|\bwaf\b|ddos|egress|ingress|segmentation|certificate|\bhsts\b/i,
+        match: /\bdns\b|\btls\b|network|\bwaf\b|ddos|egress|ingress|segmentation|certificate|\bhsts\b|https|transport/i,
       },
       {
         id: "security.endpoint",
         label: "Device & runtime hardening",
         question: "Are managed devices and workloads hardened, monitored and patched?",
-        match: /device|endpoint detection|host hardening|\bedr\b|patch|vulnerab|runtime.image|container.image/i,
+        match: /device|endpoint detection|host hardening|deployment.hardening|\bedr\b|patch|vulnerab|runtime.image|container.image/i,
       },
       {
         id: "security.injection",

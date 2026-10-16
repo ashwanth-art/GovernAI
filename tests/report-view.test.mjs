@@ -12,7 +12,7 @@ require.extensions[".ts"] = (module, path) => module._compile(ts.transpileModule
 const { evaluatedReportView } = require("../lib/report-view.ts");
 const { createReportHtml } = require("../lib/report-html.ts");
 const { fallbackSeed } = require("../lib/remediation.ts");
-const { artifactCheck } = require("../lib/checks.ts");
+const { artifactCheck, resolveCheck } = require("../lib/checks.ts");
 const { deploymentReviewPack } = require("../lib/framework-packs/deployment-review.ts");
 const { primaryPillar, domainFor } = require("../lib/pillars.ts");
 const { buildApplicationMap, mapStandardsFromResult } = require("../lib/application-map.ts");
@@ -45,6 +45,7 @@ test("new evaluations map into their existing report pillars and specific domain
     "DEP-SECURITY-VISIBILITY-ALERTS": ["compliance", "comp.detection"],
     "DEP-SECURITY-APP-AI-VALIDATION": ["trust", "trust.oversight"],
     "DEP-ENTRA-MFA-REGISTRATION": ["security", "security.iam"],
+    "DEP-FRONTEND-HSTS": ["security", "security.network"],
   };
   for (const [id, [pillar, domain]] of Object.entries(expected)) {
     const control = deploymentReviewPack.controls.find(item => item.id === id);
@@ -53,6 +54,14 @@ test("new evaluations map into their existing report pillars and specific domain
     assert.equal(artifactCheck(control).domainId, domain, id);
   }
   assert.deepEqual([...new Set(deploymentReviewPack.controls.map(primaryPillar))].sort(), ["compliance", "data_protection", "governance", "security", "trust"]);
+});
+
+test("existing canonical adapter checks stay aligned with the new pillar subdomains", () => {
+  const control = deploymentReviewPack.controls[0];
+  for (const [rule, domain] of Object.entries({ "adapter.credential-hygiene": "security.iam", "adapter.deployment-posture": "security.endpoint", "adapter.transport-encryption": "data.crypto", "adapter.alert-routing": "comp.detection", "probe.service-health": "gov.resilience" })) {
+    const check = resolveCheck({ ...control, evaluationRuleId: rule, testType: rule.startsWith("probe.") ? "adversarial_probe" : "config_check" }, { hasNamedEvidence: false });
+    assert.equal(check.domainId, domain, rule);
+  }
 });
 
 test("deployment findings prescribe scoped fixes and require fresh observation or typed evidence", () => {

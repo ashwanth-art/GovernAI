@@ -153,7 +153,7 @@ const SEEDS: CheckSeed[] = [
     intent:
       "Reads the health endpoint and the dependencies it declares, so every other result in the run is qualified by whether the target was healthy while it was assessed.",
     pillar: "governance",
-    domainId: "gov.general",
+    domainId: "gov.resilience",
     method: "live_probe",
     tierMinimum: 1,
     probeId: "endpoint-health",
