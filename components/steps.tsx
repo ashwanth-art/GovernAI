@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ReviewConnections } from "@/components/review-console";
 import { credentialFields } from "@/lib/assessment";
 import { industries, industryById, standardById, standards } from "@/lib/catalog";
 import { estimate, reachPhrase, requestPhrase } from "@/lib/metrics";
@@ -613,7 +614,7 @@ function ConnectStep({
     <>
       <p className="q-sub">
         {tierLabel(input.tier)} needs {fields.length} {fields.length === 1 ? "field" : "fields"}.
-        Credentials are held for the length of one run and are never written anywhere.
+        Run credentials are encrypted while a durable review is active and erased from its input when it finishes. Saved connections and schedules retain encrypted credentials until removed.
       </p>
       <div className="q-body">
         <div className="fields two">
@@ -634,6 +635,8 @@ function ConnectStep({
             </label>
           ))}
         </div>
+
+        <ReviewConnections target={input.credentials.chatbotEndpoint ?? ""} />
 
         <div className="actions" style={{ marginTop: 22 }}>
           <button className="btn" type="button" onClick={onPreflight} disabled={preflightLoading}>
@@ -826,7 +829,7 @@ function ReadyStep({ input, plan, scope }: StepProps) {
               </>
             ) : null}
             Nothing is written to your system. Every request is a read, to a host you named, and{" "}
-            <b>no model judges anything</b> — every verdict comes from a rule with a written pass
+            <b>configuration checks use written rules</b>; connected policy documents can receive a source-verified model review. Each configuration verdict has a written pass
             condition.
           </span>
         </div>

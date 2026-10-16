@@ -350,10 +350,10 @@ export function LiveRun({
         />
 
         <div className="run-now">
-          <strong>{hasResult ? "Done" : plain.now}</strong>
+          <strong>{hasResult ? "Done" : events.findLastIndex(event => event.name === "review_progress") > events.findLastIndex(event => event.name === "stage_start") ? String(events.filter(event => event.name === "review_progress").at(-1)?.data.message ?? plain.now) : plain.now}</strong>
           <p>
             {hasResult
-              ? `${requestPhrase(Number(startEvent?.data.boundedRequests ?? plan?.boundedRequests ?? 0))} sent · ${duration(elapsedMs)} · nothing written, nothing stored`
+              ? `${requestPhrase(Number(startEvent?.data.boundedRequests ?? plan?.boundedRequests ?? 0))} in the assessment plan · ${duration(elapsedMs)} · read-only target checks`
               : plain.sub}
           </p>
         </div>

@@ -8,6 +8,7 @@ import { pciDss401Pack } from "./pci-dss-4.0.1";
 import type { FrameworkPack } from "./schema";
 import { libraryProcedureIds } from "../verification-library";
 import { bankingFrameworkPacks } from "./banking";
+import { deploymentReviewPack } from "./deployment-review";
 
 export {
   dpdpAct2023Pack,
@@ -20,6 +21,7 @@ export {
 export type { FrameworkPack, FrameworkPackControl } from "./schema";
 
 export const pilotFrameworkPacks = [
+  deploymentReviewPack,
   ...bankingFrameworkPacks,
   dpdpAct2023Pack,
   hipaaCurrentPack,

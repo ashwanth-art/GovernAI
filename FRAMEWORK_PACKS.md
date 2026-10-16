@@ -1,5 +1,21 @@
 # GovernAI Framework Packs
 
+## Durable deployment reviews (October 16, 2026)
+
+The six setup steps are unchanged. The Node runtime queues `/api/reviews` jobs in a dedicated PostgreSQL schema, leases work across replicas, and persists encrypted results, resumable events, connection profiles and schedules. Private Azure Blob objects hold encrypted evidence copies; SHA-256 hashes link each observation to its source and timestamp. Keep at least one replica running for schedules. This is a co-hosted background worker, not a separately deployed worker service.
+
+The additional authored `deployment_review` pack contains 28 Tier 3 observation checks. These cover DNS, TLS, frontend security headers, initial browser rendering, explicitly configured authentication boundaries, selected Azure settings, application-scoped AWS configuration and source workflow permissions. The pack is not an exhaustive NIST CSF or regulatory assessment. Target-published manifests cannot create these direct-collector verdicts.
+
+Optional profiles live inside the existing Connect step. Azure requires a resource group-scoped read-only service principal. AWS requires an account, explicit regions and application tag; optional role assumption supports an external ID. No provider access is inferred from a provider label. GitHub reads a bounded source snapshot. Authentication probes require explicit protected/forbidden URLs and a test identity. Monitoring and banking exports require named procedure evidence. Governance documents must be UTF-8 text or JSON; model processing is opt-in per source.
+
+All brokered HTTP reads validate and pin public DNS, disallow redirects, block private/metadata destinations and mutations, and enforce request/time/body budgets. Browser requests are restricted to the target origin and GET/HEAD; this intentionally does not perform arbitrary user journeys. AWS uses an internal SDK command allowlist. Discovery is bounded; truncation and missing access are gaps, not a completeness claim.
+
+Model routing uses a small extraction model and independent complex verifier via strict structured outputs with `store: false`. Only public normalized observations and explicitly opted-in document text are sent. A documentary verdict needs matching model judgments, fresh exact source quotations and complete agreement across every selected obligation sharing a procedure. Missing records, uncertain interpretations and unconnected runtime layers remain unresolved. Banking measurements are still evaluated by the existing deterministic measurement contract, never inferred from a policy document.
+
+Review history reopens persisted reports and reconnects to running jobs. Daily schedules use the current setup and encrypted credentials, independent of browser activity. The public demo isolates data by a signed HttpOnly session cookie. Optional OIDC JWT verification is available to API deployments but no enterprise identity provider/login is configured in the demo. Production tenancy, human sign-off workflows, full provider pagination, Kubernetes, arbitrary dashboard semantics and cryptographic CloudTrail digest-chain validation remain expansion work; this release does not claim to replace a full human audit.
+
+The existing pass/fail-only report projection remains unchanged. Its N/N count describes displayed evaluated controls, not all obligations in a standard. The evidence trace and raw JSON retain original coverage and unresolved requirements. Removing a profile deletes its saved credentials; finishing/cancelling a job erases its input credentials, while enabled schedules keep encrypted inputs until disabled. Results and redacted evidence are retained; configure an organizational retention policy before production use. Provisioning creates billable PostgreSQL, Blob storage and an always-on replica.
+
 ## Banking additions (October 2026)
 
 The banking registry adds versioned readiness packs for RBI IT Governance, RBI IT Outsourcing, RBI Digital Payments, Commercial Banks KYC / AML, FREE-AI, FATF, BCBS 239, Basel Operational Resilience, Basel Core Governance, SWIFT CSCF topic readiness, NIST CSF 2.0 and ISO 22301. SR 26-2 replaces the SR 11-7 display label while preserving the saved-input ID.

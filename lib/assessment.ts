@@ -1964,7 +1964,7 @@ function assessmentId(input: AssessmentInput) {
 export async function runAssessment(
   input: AssessmentInput,
   emit: EventCallback = () => undefined,
-  options: { eventDelayMs?: number } = {},
+  options: { eventDelayMs?: number; procedureEvidence?: ProcedureEvidenceMap } = {},
 ): Promise<AssessmentResult> {
   const runStartedAt = new Date().toISOString();
   const runStartedMs = Date.now();
@@ -2185,6 +2185,14 @@ export async function runAssessment(
     });
     enterStage("reach");
     const signals = await collectLiveSignals(input, emitEvent);
+    // Deployment observations must come from the trusted reviewer collector,
+    // not from a target declaring its own frontend/cloud checks successful.
+    for (const id of Object.keys(signals.procedureEvidence)) if (id.startsWith("artifact-review-")) delete signals.procedureEvidence[id];
+    for (const [id, reading] of Object.entries(options.procedureEvidence ?? {})) {
+      const existing = signals.procedureEvidence[id];
+      if (existing?.status === "fail" || (existing?.status === "partial" && reading.status === "pass")) continue;
+      signals.procedureEvidence[id] = reading;
+    }
 
     const pace = (ms: number) =>
       ms > 0 ? new Promise<void>((resolve) => setTimeout(resolve, ms)) : Promise.resolve();

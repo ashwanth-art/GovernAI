@@ -25,7 +25,7 @@ ENV NODE_ENV=production \
 
 # sharp ships prebuilt binaries but still wants libvips' runtime deps present.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates \
+ && apt-get install -y --no-install-recommends ca-certificates chromium fonts-liberation \
  && rm -rf /var/lib/apt/lists/*
 
 # dist/server/vinext-externals.json is empty: the build bundles every dependency into
@@ -33,7 +33,8 @@ RUN apt-get update \
 # Installing them anyway added 446 MB. sharp is the one genuine runtime dependency —
 # it is loaded dynamically by the /_vinext/image handler — so it is the only install.
 # Verified by serving the app with the others deleted from node_modules.
-RUN npm install --no-save --omit=dev sharp@0.35.3 \
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm install --no-save --omit=dev sharp@0.35.5 \
  && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist

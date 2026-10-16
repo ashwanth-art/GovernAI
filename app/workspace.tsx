@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LiveRun, type RunEvent } from "@/components/live";
 import { Monitoring, useMonitors } from "@/components/monitor";
+import { ReviewHistory } from "@/components/review-console";
+import { watchReview } from "@/lib/review-client";
 import { CHAPTERS, Report } from "@/components/report";
 import {
   receiptFor,
@@ -50,7 +52,7 @@ const startingInput: AssessmentInput = {
   organization: "ACI Infotech",
   systemName: "ACI Knowledge Assistant",
   industryId: "finance",
-  standardIds: ["rbi_it_governance", "rbi_it_outsourcing", "rbi_free_ai", "rbi_kyc_aml", "rbi_digital_payments", "iso27001", "iso42001", "dpdp_act"],
+  standardIds: ["rbi_it_governance", "rbi_it_outsourcing", "rbi_free_ai", "rbi_kyc_aml", "rbi_digital_payments", "iso27001", "iso42001", "dpdp_act", "deployment_review"],
   tier: 1,
   credentials: { ...DEMO_CREDENTIALS },
   architecture: {
@@ -118,7 +120,7 @@ type Phase = "setup" | "run" | "report";
  * into the report would also mean it only existed while a report was on screen,
  * and a schedule that stops when you navigate away is not a schedule.
  */
-type View = "assess" | "monitor";
+type View = "assess" | "monitor" | "history";
 
 export function AssessmentWorkspace() {
   const [view, setView] = useState<View>("assess");
@@ -144,6 +146,7 @@ export function AssessmentWorkspace() {
      connection open and still issues the requests it was going to issue — a stop
      button that only hides the screen is not a stop button. */
   const abortRef = useRef<AbortController | null>(null);
+  const activeJob = useRef<string | null>(null);
 
   const track = useMemo(() => trackFor(), []);
   const step: StepId = track[Math.min(at, track.length - 1)] ?? "system";
@@ -369,7 +372,30 @@ export function AssessmentWorkspace() {
 
   const back = useCallback(() => goTo(at - 1), [goTo, at]);
 
-  const cancelRun = useCallback(() => abortRef.current?.abort(), []);
+  const cancelRun = useCallback(() => {
+    if (activeJob.current) void fetch(`/api/reviews/${activeJob.current}/cancel`, { method: "POST" });
+    abortRef.current?.abort();
+  }, []);
+
+  const receiveReviewEvent = useCallback((name: string, data: Record<string, unknown>) => {
+    if (name === "assessment_error" || name === "review_cancelled") {
+      setFailed(true); setErrors([String(data.message ?? "Review stopped.")]);
+    }
+    setEvents(current => appendEvent(current, { name, data }));
+  }, []);
+  const receiveReviewResult = useCallback((value: AssessmentResult) => {
+    setResult(value); setFailed(false); activeJob.current = null;
+    window.sessionStorage.removeItem("governai.activeReview");
+  }, []);
+
+  const resumeReview = useCallback(async (id: string) => {
+    if (abortRef.current) return;
+    const controller = new AbortController(); abortRef.current = controller; activeJob.current = id;
+    setView("assess"); setPhase("run"); setRunning(true); setFailed(false); setResult(null); setEvents([]); setErrors([]); setStartedAt(Date.now());
+    try { await watchReview(id, controller.signal, receiveReviewEvent, receiveReviewResult); }
+    catch (error) { setFailed(true); setErrors([error instanceof Error ? error.message : String(error)]); }
+    finally { abortRef.current = null; setRunning(false); }
+  }, [receiveReviewEvent, receiveReviewResult]);
 
   const start = useCallback(async () => {
     const controller = new AbortController();
@@ -382,6 +408,20 @@ export function AssessmentWorkspace() {
     setStartedAt(Date.now());
     setPhase("run");
     try {
+      const queued = await fetch("/api/reviews", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input), signal: controller.signal,
+      });
+      if (queued.status !== 404) {
+        const body = await queued.json();
+        if (!queued.ok) throw new Error(body.errors?.join(" · ") || "The durable review could not be queued.");
+        activeJob.current = body.id;
+        window.sessionStorage.setItem("governai.activeReview", body.id);
+        receiveReviewEvent("review_progress", { message: "Review queued. The server will keep working if this tab closes." });
+        await watchReview(body.id, controller.signal, receiveReviewEvent, receiveReviewResult);
+        return;
+      }
+      // The Vite-only development server has no Node worker. Production never
+      // silently falls back when its durable service is unavailable.
       const response = await fetch("/api/assessments/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -445,7 +485,7 @@ export function AssessmentWorkspace() {
       abortRef.current = null;
       setRunning(false);
     }
-  }, [input]);
+  }, [input, receiveReviewEvent, receiveReviewResult]);
 
   const toReport = useCallback(() => {
     setPhase("report");
@@ -596,6 +636,7 @@ export function AssessmentWorkspace() {
               <b>{armedCount}</b>
             ) : null}
           </button>
+          <button type="button" className={view === "history" ? "on" : ""} aria-current={view === "history" ? "page" : undefined} onClick={() => setView("history")}>Review history</button>
         </nav>
 
         {view === "assess" && phase === "setup" ? (
@@ -661,6 +702,7 @@ export function AssessmentWorkspace() {
       ) : null}
 
       <div className="stage" ref={stageRef}>
+        {view === "history" ? <ReviewHistory input={input} onResume={id => void resumeReview(id)} onOpen={saved => { setResult(saved); setPhase("report"); setView("assess"); setChapter(CHAPTERS[0].id); }} /> : null}
         {view === "assess" && phase === "setup" ? (
           <div className={`step ${dir}`} key={step}>
             <Step

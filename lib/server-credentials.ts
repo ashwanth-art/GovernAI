@@ -38,10 +38,14 @@ function demoCredential(field: string): string {
 export function resolveServerCredentialRecord(
   credentials: Record<string, string> = {},
 ): Record<string, string> {
+  let demoTarget = false;
+  try { demoTarget = new URL(credentials.chatbotEndpoint).origin === (process.env.DEMO_TARGET_ORIGIN || "https://chat-bot-22j5.onrender.com"); } catch { /* Invalid targets are validated by the assessment route. */ }
   return Object.fromEntries(
     Object.entries(credentials).map(([field, value]) => [
       field,
-      DEMO_PLACEHOLDERS.has(value.trim()) ? demoCredential(field) : value,
+      DEMO_PLACEHOLDERS.has(value.trim()) ? demoTarget && (field !== "evidenceManifestToken" || (() => {
+        try { return new URL(credentials.evidenceManifestUrl).origin === new URL(credentials.chatbotEndpoint).origin; } catch { return false; }
+      })()) ? demoCredential(field) : "" : value,
     ]),
   );
 }

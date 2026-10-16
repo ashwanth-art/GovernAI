@@ -221,6 +221,14 @@ export function createReportHtml(rawResult: AssessmentResult, rawReport?: Standa
     .map((note) => `<li>${esc(note)}</li>`)
     .join("")}</ul></section>`;
 
+  const review = rawResult.review;
+  const reviewSection = review ? `<section><h2>Deployment review provenance</h2>
+    <p>Durable job ${esc(review.jobId)} · ${review.toolCalls} brokered reads · ${review.assets.length} assets · ${review.evidence.length} evidence records.</p>
+    <p>Coverage before the pass/fail presentation filter: ${review.originalCoverage.evaluated}/${review.originalCoverage.total}. Not connected: ${esc(review.connectionsNotConfigured.join(", ") || "none")}.</p>
+    <p>Models assist documentary review only with opted-in, fresh, verified source citations. Cloud configuration is evaluated by deterministic checks. Unobserved controls do not imply compliance.</p>
+    <ul>${review.modelReviews.map(model => `<li>${esc(model.model || model.role || "Model review")}: ${esc(model.summary || model.reason || model.status)}</li>`).join("")}</ul>
+    <table><thead><tr><th>Layer / source</th><th>Collected</th><th>SHA-256</th></tr></thead><tbody>${review.evidence.map(record => `<tr><td>${esc(record.layer)}<br/>${esc(record.source)}</td><td>${esc(record.collectedAt)}</td><td class="mono">${esc(record.hash)}</td></tr>`).join("")}</tbody></table></section>` : "";
+
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"/>
     <title>${esc(result.scope.systemName)} — governance assessment${scopeNote}</title>
     <style>${STYLE}</style></head><body>
@@ -228,7 +236,7 @@ export function createReportHtml(rawResult: AssessmentResult, rawReport?: Standa
     <p><strong>${esc(result.scope.organization)}</strong> · ${esc(result.scope.systemName)} · ${esc(result.scope.industry)}<br/>
     Assessment <code>${esc(result.assessmentId)}</code> · Tier ${result.scope.tier} · ${esc(new Date(result.generatedAt).toLocaleString())}<br/>
     Frameworks: ${esc(result.scope.selectedStandards.join(", "))}</p>
-    ${postureSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${evidenceSection}${notesHtml}
+    ${postureSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${evidenceSection}${reviewSection}${notesHtml}
     <script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250))</script>
     </body></html>`;
 }

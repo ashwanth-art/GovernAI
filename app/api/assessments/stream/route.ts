@@ -8,6 +8,8 @@ import {
 import { redactLogText, writeExecutionLog } from "@/lib/execution-log";
 import { resolveServerCredentials } from "@/lib/server-credentials";
 import type { AssessmentInput } from "@/lib/types";
+import { parseEvidenceManifest } from "@/lib/evidence-procedures";
+import { pilotEvidenceProcedureIds } from "@/lib/framework-packs";
 
 export const runtime = "edge";
 
@@ -143,7 +145,12 @@ export async function POST(request: Request) {
             elapsedMs: Date.now() - streamStarted,
             progress: progress.snapshot(),
           }));
-        }, { eventDelayMs: 90 });
+        }, {
+          eventDelayMs: 90,
+          procedureEvidence: process.env.REVIEW_ENCRYPTION_KEY && request.headers.get("x-arq-review-token") === process.env.REVIEW_ENCRYPTION_KEY
+            ? parseEvidenceManifest((input as AssessmentInput & { reviewManifest?: unknown }).reviewManifest, pilotEvidenceProcedureIds).evidence
+            : undefined,
+        });
         sequence += 1;
         progress.complete();
         controller.enqueue(event("execution_summary", {

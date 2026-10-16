@@ -1,4 +1,5 @@
 "use client";
+import { ReviewEvidence } from "@/components/review-console";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Disc, Meter, Pill, Sev, sevHue, Tag } from "@/components/kit";
@@ -670,6 +671,7 @@ export function Report({
             <hr />
           </div>
           <h2>The full trace</h2>
+          <ReviewEvidence result={result} />
           <p className="lede">
             Every problem, every fix, every rule the engine applied and every request it made, so
             that any number above can be walked back to the thing it came from. The problems and

@@ -1018,6 +1018,7 @@ export const industries: IndustryDefinition[] = industryCatalog.map((industry) =
   recommendations: [
     ...industry.recommendations,
     { standardId: "dpdp_act", reason: "Indian digital-personal-data duties" },
+    { standardId: "deployment_review", reason: "Direct deployment, frontend, authentication and cloud evidence" },
   ],
 }));
 

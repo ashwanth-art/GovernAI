@@ -20,6 +20,7 @@ import { pipeline } from "node:stream/promises";
 import { fileURLToPath } from "node:url";
 
 import handler from "../dist/server/index.js";
+import { createReviewService } from "./review/service.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const CLIENT_DIR = join(ROOT, "dist", "client");
@@ -165,16 +166,22 @@ function toRequest(nodeRequest) {
   });
 }
 
+const reviews = createReviewService({ engineFetch: request => handler.fetch(request, { ASSETS: assets, IMAGES: images }, executionContext()) });
+
 const server = createServer(async (nodeRequest, nodeResponse) => {
   try {
     const request = toRequest(nodeRequest);
+    const reviewPath = new URL(request.url).pathname.startsWith("/api/reviews");
+    if (reviewPath && Number(nodeRequest.headers["content-length"] || 0) > 300000) {
+      nodeResponse.writeHead(413, { "content-type": "application/json" }); nodeResponse.end('{"errors":["Review request exceeds its size budget."]}'); return;
+    }
 
     /* Static assets are matched before the handler runs, because that is what the
        Workers runtime does: Cloudflare's asset router answers /assets/* itself and
        the worker never sees the request. Calling the handler first instead makes it
        404 every hashed bundle — the shell renders and the page stays unstyled. */
-    let response = null;
-    if (request.method === "GET" || request.method === "HEAD") {
+    let response = reviewPath ? await reviews.route(request) : null;
+    if (!response && (request.method === "GET" || request.method === "HEAD")) {
       const candidate = await assets.fetch(request);
       if (candidate.status === 200) response = candidate;
     }
@@ -221,6 +228,7 @@ server.listen(PORT, HOST, () => {
 for (const signal of ["SIGTERM", "SIGINT"]) {
   process.on(signal, () => {
     console.log(`${signal} received, closing.`);
+    void reviews.close();
     server.close(() => process.exit(0));
     // Container Apps sends SIGTERM then waits; don't outlast its grace period.
     setTimeout(() => process.exit(0), 10_000).unref();

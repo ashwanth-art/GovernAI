@@ -217,7 +217,7 @@ test("catalog exposes all industries, standards, and tier-specific fields", asyn
   );
   assert.deepEqual(
     catalog.industries.find((item) => item.id === "healthcare").recommendations.map((item) => item.standardId),
-    ["hipaa", "iso42001", "nist_ai_rmf", "dpdp_act"],
+    ["hipaa", "iso42001", "nist_ai_rmf", "dpdp_act", "deployment_review"],
   );
 
   // Every industry must recommend standards that exist. A typo here would ship a
@@ -555,16 +555,20 @@ test("Tier 3 reaches a verdict on every control of every standard", async () => 
   // An ordinary AI demo does not contain bank-wide evidence. Supply an explicit
   // banking fixture for this full-evidence test only.
   const template = await (await request("/api/banking/evidence-template")).json();
+  const reviewCatalog = await (await request("/api/review-catalog")).json();
+  const reviewProcedures = Object.fromEntries(reviewCatalog.standards.find(item => item.id === "deployment_review").controls.flatMap(control => control.evidenceProcedureIds.map(id => [id, { status: "pass", summary: "Trusted deployment collector fixture; not target-published evidence." }])));
+  process.env.REVIEW_ENCRYPTION_KEY = "test-trusted-review-token";
   targetState.bankingProcedures = Object.fromEntries(Object.entries(template.measurementContract).map(([id, rule]) => [id, {
     status: "pass", summary: "Banking test fixture measurement export.",
     measurements: Object.fromEntries(Object.entries(rule.requiredFields).map(([field, condition]) => [field, condition === "true" ? true : condition === "zero" ? 0 : 12])),
   }]));
   const response = await request("/api/assessments", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "x-arq-review-token": process.env.REVIEW_ENCRYPTION_KEY },
     body: JSON.stringify({
       ...baseInput,
       standardIds: catalog.standards.map((standard) => standard.id),
+      reviewManifest: { schemaVersion: "1.0", procedures: reviewProcedures },
       tier: 3,
       credentials: {
         ...baseInput.credentials,

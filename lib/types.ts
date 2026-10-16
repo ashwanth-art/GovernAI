@@ -142,6 +142,18 @@ export interface StandardReport {
 }
 
 export interface AssessmentResult {
+  review?: {
+    jobId: string; mode: "durable"; rounds: number; toolCalls: number;
+    assets: Array<{ id: string; kind: string; name?: string }>;
+    edges: Array<{ from: string; to: string; relation: string }>;
+    layers: Array<{ layer: string; evidenceCount: number; failedObservations: number }>;
+    evidence: Array<{ id: string; layer: string; source: string; collectedAt: string; hash: string }>;
+    controlPlan: Array<{ standardId: string; controlId: string; objective: string; procedures: string[] }>;
+    unresolved: Array<{ controlId: string; name: string; reason: string }>;
+    originalCoverage: { evaluated: number; total: number; percent: number };
+    modelReviews: Array<{ role?: string; status: string; model?: string; summary?: string; reason?: string }>;
+    connectionCount: number; connectionsNotConfigured: string[]; integrity: string;
+  };
   assessmentId: string;
   generatedAt: string;
   liveEvidence: {
