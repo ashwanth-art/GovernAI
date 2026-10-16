@@ -153,6 +153,7 @@ export interface AssessmentResult {
     originalCoverage: { evaluated: number; total: number; percent: number };
     modelReviews: Array<{ role?: string; status: string; model?: string; summary?: string; reason?: string }>;
     connectionCount: number; connectionsNotConfigured: string[]; integrity: string;
+    securityPillars?: Array<{ id: string; name: string; passed: number; failed: number; unresolved: number; missingRuleIds: string[]; scope: string; outcomes: Array<{ id: string; status: string; evidenceIds: string[] }> }>;
   };
   assessmentId: string;
   generatedAt: string;

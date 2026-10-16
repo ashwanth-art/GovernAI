@@ -1,4 +1,6 @@
 import { contentHashForControls, createPackControl, validateFrameworkPack } from "./schema";
+import securityRules from "../security-layer-rules.json";
+import type { Pillar, Severity } from "../types";
 
 const source = { authority: "ARQ Governance; NIST outcome mapping", title: "Deployment evidence review mapped to NIST CSF 2.0 outcomes", url: "https://www.nist.gov/publications/nist-cybersecurity-framework-csf-20", status: "current" as const, note: "Authored deployment checks, not an exhaustive CSF assessment. Evidence is scoped to the assets and time observed." };
 const definitions = [
@@ -29,9 +31,25 @@ const definitions = [
   ["aws-storage-encryption", "AWS scoped S3 default encryption", "data_protection", "PR.DS"],
   ["aws-storage-versioning", "AWS scoped S3 object versioning", "data_protection", "PR.DS"],
   ["aws-root-mfa", "AWS account root MFA configuration", "security", "PR.AA"],
+  ["aws-iam-console-mfa", "Scoped AWS console identities have MFA configured", "security", "PR.AA"],
+  ["aws-iam-key-age", "Scoped AWS active access-key rotation age", "security", "PR.AA"],
+  ["aws-iam-unused-credentials", "Scoped AWS unused active credentials", "security", "PR.AA"],
+  ["aws-access-analyzer-findings", "Configured AWS analyzer unresolved application findings", "security", "PR.AA"],
+  ["entra-mfa-registration", "Scoped Entra user MFA registration", "security", "PR.AA"],
+  ["entra-credential-expiry", "Scoped Entra application credential expiry", "security", "PR.AA"],
+  ["entra-required-policy-state", "Explicitly required Entra Conditional Access policies are enabled", "security", "PR.AA"],
+  ["entra-timebound-roles", "Scoped Entra role assignments meet required time-bound policy", "security", "PR.AA"],
+  ["auth-test-matrix", "Approved identity and resource authorization matrix", "security", "PR.AA"],
+  ["identity-graph-lifecycle", "Source identity graph lifecycle and ownership consistency", "security", "PR.AA"],
+  ["identity-graph-role-conflicts", "Nested assigned-role conflicts against approved separation policy", "security", "PR.AA"],
   ["source-workflow-permissions", "Source workflow token permission declaration", "security", "GV.SC"],
 ] as const;
 
-const controls = definitions.map(([key, name, pillar, section]) => createPackControl({ id: `DEP-${key.toUpperCase()}`, name, objective: `Evaluate ${name.toLowerCase()} from a timestamped direct observation of the configured application scope. A successful read is not sufficient where a configuration condition must be satisfied.`, category: "Deployment evidence", tierMinimum: 3, pillars: [pillar], testType: "document_verify", evaluationRuleId: `artifact.review-${key}`, evidenceProcedureIds: [`artifact-review-${key}`], severity: /public|auth-|admin|mfa|tls-valid/.test(key) ? "critical" : "high", section, mappingType: "governai_evidence_mapping", remediationId: `review-${key}`, remediation: `Correct the ${name.toLowerCase()} configuration on the affected asset and re-run the same scoped evidence check.` }, source));
+const controls = [
+  ...definitions.map(([key, name, pillar, section]) => createPackControl({ id: `DEP-${key.toUpperCase()}`, name, objective: `Evaluate ${name.toLowerCase()} from a timestamped direct observation of the configured application scope. A successful read is not sufficient where a configuration condition must be satisfied.`, category: "Deployment evidence", tierMinimum: 3, pillars: [pillar], testType: "document_verify", evaluationRuleId: `artifact.review-${key}`, evidenceProcedureIds: [`artifact-review-${key}`], severity: /public|auth-|admin|mfa|tls-valid/.test(key) ? "critical" : "high", section, mappingType: "governai_evidence_mapping", remediationId: `review-${key}`, remediation: `Correct the ${name.toLowerCase()} configuration on the affected asset and re-run the same scoped evidence check.` }, source)),
+  ...securityRules.map(rule => createPackControl({ id: `DEP-SECURITY-${rule.id.toUpperCase()}`, name: rule.name,
+    objective: `Evaluate ${rule.name.toLowerCase()} within an explicitly connected source scope. Required typed measurements: ${Object.entries(rule.fields).map(([field, condition]) => `${field}: ${condition}`).join("; ")}. Incomplete scope cannot pass.`,
+    category: `Seven-pillar security: ${rule.layer}`, tierMinimum: 3, pillars: [rule.pillar as Pillar], testType: "document_verify", evaluationRuleId: `artifact.review-security-${rule.id}`, evidenceProcedureIds: [`artifact-review-security-${rule.id}`], severity: rule.severity as Severity, section: rule.layer, mappingType: "governai_evidence_mapping", remediationId: `review-security-${rule.id}`, remediation: rule.fix }, source)),
+];
 
-export const deploymentReviewPack = validateFrameworkPack({ manifest: { id: "deployment_review", release: "2026.10-draft.1", status: "draft", assuranceLevel: "readiness", sourceVersion: "ARQ deployment checks / NIST CSF 2.0 mapping", publishedAt: "2026-10-16", contentHash: contentHashForControls(controls), note: "Direct, bounded deployment observations. Missing connections remain not assessed. Successful observations do not establish completeness of the environment or regulatory compliance." }, standard: { id: "deployment_review", shortName: "Deployment Review", name: "Application Deployment Evidence Review", version: "2026.10", kind: "Methodological", jurisdiction: "Global", description: "DNS, TLS, frontend, authentication, cloud, source and operational configuration observations.", reportFormat: "Deployment Evidence Review", scoringMethod: "Rule-based observed configuration outcomes", passThreshold: "No failed observed controls", officialReference: source }, controls });
+export const deploymentReviewPack = validateFrameworkPack({ manifest: { id: "deployment_review", release: "2026.10-draft.2", status: "draft", assuranceLevel: "readiness", sourceVersion: "ARQ seven-pillar deployment checks / NIST CSF 2.0 mapping", publishedAt: "2026-10-16", contentHash: contentHashForControls(controls), note: "Direct deployment observations and scoped connected-tool measurements across seven security pillars. Export completeness is source-declared. Missing connections remain not assessed. Successful observations do not establish whole-bank or regulatory completeness." }, standard: { id: "deployment_review", shortName: "Deployment Review", name: "Application Deployment Evidence Review", version: "2026.10", kind: "Methodological", jurisdiction: "Global", description: "Seven-pillar evidence review: identity, devices, applications/AI, data, networks, automation and visibility.", reportFormat: "Deployment Evidence Review", scoringMethod: "Rule-based direct observations and typed source measurements", passThreshold: "No failed observed controls", officialReference: source }, controls });

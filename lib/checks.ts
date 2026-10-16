@@ -441,11 +441,11 @@ export function artifactCheck(control: Control): CheckDefinition {
     request: {
       method: "GET",
       endpoint: deployment ? "{scopedReviewConnection}" : "{evidenceManifestUrl}",
-      note: deployment ? "Reads direct observations from the trusted, scoped deployment collector. Target-published manifest verdicts cannot satisfy these checks." : "Accepts named procedure evidence. Durable reviews can additionally provide opted-in documentary judgments with independent source verification.",
+      note: deployment ? "Reads scoped deployment observations or explicitly connected typed security measurements. Export scope completeness is source-declared. Target-published manifest verdicts cannot satisfy these checks." : "Accepts named procedure evidence. Durable reviews can additionally provide opted-in documentary judgments with independent source verification.",
     },
     rule: {
       id: control.evaluationRuleId ?? "artifact.unnamed",
-      statement: deployment ? "Passes when the trusted direct collector observes the required configuration on the scoped assets. Fails on an observed violation. Missing access or an unavailable observation stays not assessed. Target-published manifest verdicts are ignored for deployment checks." : `Passes when every required named procedure returns pass from accepted evidence. Partial when evidence is incomplete or any procedure returns partial. Fails when any returns fail. Missing evidence is not assessed, never an inferred pass or failure.`,
+      statement: deployment ? "Passes when scoped direct observations or fresh typed measurements satisfy this rule. Export completeness is source-declared, not an independent whole-environment attestation. Fails on positive evidence of a violation. Missing access, incomplete measurements or unavailable observations stay not assessed. Target-published manifest verdicts are ignored." : `Passes when every required named procedure returns pass from accepted evidence. Partial when evidence is incomplete or any procedure returns partial. Fails when any returns fail. Missing evidence is not assessed, never an inferred pass or failure.`,
       passWhen: `all of [${procedures.join(", ") || "none declared"}] return pass`,
       partialWhen: "fewer procedures present than required, or any procedure returns partial",
       failWhen: "any named procedure returns fail",

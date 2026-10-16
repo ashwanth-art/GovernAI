@@ -1,4 +1,5 @@
 import type { RemediationPlaybook, Severity } from "./types";
+import securityRules from "./security-layer-rules.json";
 
 /**
  * Remediation playbooks, keyed by the check that detected the problem.
@@ -751,13 +752,24 @@ export function fallbackSeed(checkId: string, checkTitle: string): PlaybookSeed 
       "aws-storage-encryption": "Configure default S3 encryption with the key management required by policy and verify authorized access paths.",
       "aws-storage-versioning": "Enable bucket versioning where required and perform a scoped recovery exercise; versioning alone does not establish restore effectiveness.",
       "aws-root-mfa": "Have the authorized account security owner configure root MFA using the organization's approved process. Do not give the reviewer root credentials.",
+      "aws-iam-console-mfa": "Configure MFA for the affected console-enabled IAM user and separately verify enforcement. Do not confuse registration with a per-request MFA requirement.",
+      "aws-iam-key-age": "Rotate the affected active credential under normal change approval and verify application consumers before revoking the old key.",
+      "aws-iam-unused-credentials": "Confirm the reported last-use scope, then disable unused credentials after owner review and an approved change.",
+      "aws-access-analyzer-findings": "Review the recorded active findings in the configured analyzer. Remove unintended access or document and approve an exception; do not archive findings merely to improve the report.",
+      "entra-mfa-registration": "Register approved strong authentication methods for the affected active user; separately evaluate Conditional Access enforcement and exclusions.",
+      "entra-credential-expiry": "Replace expired application credentials using the approved workload-identity process and verify consumer connectivity.",
+      "entra-required-policy-state": "Enable the explicitly required policy after impact testing. Review exclusions and applicability independently; enabled state alone does not prove authentication enforcement.",
+      "entra-timebound-roles": "Replace unapproved permanent assignments for the configured privileged roles with approved time-bound access. Preserve authorized emergency-access exceptions through the normal policy process.",
+      "auth-test-matrix": "Enforce server-side authorization on the failed identity/resource pair and rerun both its allow baseline and deny test with approved fixtures.",
+      "identity-graph-lifecycle": "Reconcile the affected identity with its HR/workload owner, disable confirmed terminated access and assign accountable ownership; republish a fresh scoped inventory.",
+      "identity-graph-role-conflicts": "Review the recorded nested group paths and remove the conflicting assignment under the approved segregation policy. Separately test business-action authorization before claiming maker-checker effectiveness.",
       "source-workflow-permissions": "Declare minimal workflow token permissions, normally contents: read at the default level, and grant narrowly scoped additional permissions only to jobs that require them.",
     };
     return { checkId, title: `Correct the observed configuration: ${checkTitle}`, owner: "Platform engineering", effortHours: [2, 8], steps: [
       { action: "Identify the affected asset, response or source revision from this finding's evidence record and obtain the normal change approval.", where: "Review evidence and change management" },
-      { action: actions[key] ?? "Correct the configuration condition documented by the direct collector on the affected asset.", where: "Affected application, source repository or provider configuration" },
+      { action: securityRules.find(rule => `security-${rule.id}` === key)?.fix ?? actions[key] ?? "Correct the configuration condition documented by the scoped collector on the affected asset.", where: "Affected application, source repository or provider configuration" },
       { action: "Run the same Tier 3 review with the same target and scoped connection. Retain the new direct observation and compare it with the earlier evidence.", where: "Assessment setup and review history" },
-    ], verification: `Re-run ${checkId}: the direct collector must observe a passing configuration. A target-published manifest or document cannot override this deployment check.` };
+    ], verification: `Re-run ${checkId} with the same scope: a direct observation or fresh, complete typed tool export must satisfy its rule. A target-published manifest or model opinion cannot override this deployment check.` };
   }
   return {
     checkId,

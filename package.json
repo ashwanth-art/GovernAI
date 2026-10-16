@@ -9,11 +9,12 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/analysis.test.mjs tests/rendered-html.test.mjs tests/report-view.test.mjs tests/review-platform.test.mjs tests/review-store.integration.test.mjs",
+    "test": "npm run build && node --test tests/analysis.test.mjs tests/rendered-html.test.mjs tests/report-view.test.mjs tests/review-platform.test.mjs tests/security-layers.test.mjs tests/review-store.integration.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern work --ignore-pattern outputs --ignore-pattern diagrams",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@aws-sdk/client-accessanalyzer": "^3.1152.0",
     "@aws-sdk/client-cloudtrail": "^3.1152.0",
     "@aws-sdk/client-cloudwatch": "^3.1152.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.1152.0",

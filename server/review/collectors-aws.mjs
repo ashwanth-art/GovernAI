@@ -5,7 +5,9 @@ import { CloudWatchLogsClient, DescribeLogGroupsCommand } from "@aws-sdk/client-
 import { CloudTrailClient, DescribeTrailsCommand, GetTrailStatusCommand, GetEventSelectorsCommand, LookupEventsCommand } from "@aws-sdk/client-cloudtrail";
 import { EC2Client, DescribeSecurityGroupsCommand } from "@aws-sdk/client-ec2";
 import { S3Client, GetPublicAccessBlockCommand, GetBucketEncryptionCommand, GetBucketVersioningCommand } from "@aws-sdk/client-s3";
-import { IAMClient, GetAccountSummaryCommand } from "@aws-sdk/client-iam";
+import { IAMClient, GetAccountSummaryCommand, GetCredentialReportCommand } from "@aws-sdk/client-iam";
+import { credentialObservations } from "./aws-identity.mjs";
+import { AccessAnalyzerClient, GetAnalyzerCommand, ListFindingsV2Command } from "@aws-sdk/client-accessanalyzer";
 
 const obs = (id, status, summary, detail = {}) => ({ id, status, summary, ...detail });
 
@@ -31,6 +33,15 @@ export async function collectAws(context, profile) {
   const identity = await invoke(new STSClient({ region, credentials, maxAttempts: 1 }), new GetCallerIdentityCommand({}));
   if (identity.Account !== c.accountId) throw new Error("AWS credential identity does not match the connection account.");
   const save = async (layer, source, observations, detail = {}) => context.save({ layer, source, collectedAt: new Date().toISOString(), observations, ...detail });
+  if (c.includeIdentityAudit === true) {
+    try {
+      const report = await invoke(new IAMClient({ region, credentials, maxAttempts: 1 }), new GetCredentialReportCommand({}));
+      const observations = credentialObservations(report, c);
+      await save("identity", `aws-iam://${c.accountId}`, observations, { assets: [...new Set(observations.map(item => item.assetId).filter(Boolean))].map(id => ({ id, kind: "identity:user" })), limitation: "Explicit IAM users only. Identity Center, effective policies, trusts and privilege escalation require additional connected evidence." });
+    } catch {
+      await save("identity", `aws-iam://${c.accountId}`, [obs("aws-iam-console-mfa", "not_assessed", "Existing IAM credential report unavailable. No report generation or permission change was attempted.", { securityPillar: "identity" })]);
+    }
+  }
   for (const r of c.regions) {
     const config = { region: r, credentials, maxAttempts: 1 };
     const scoped = c.tagKey && c.tagValue ? [{ Key: c.tagKey, Values: [c.tagValue] }] : null;
@@ -38,6 +49,25 @@ export async function collectAws(context, profile) {
     const discovery = await invoke(new ResourceGroupsTaggingAPIClient(config), new GetResourcesCommand({ TagFilters: scoped, ResourcesPerPage: 100 }));
     const assets = (discovery.ResourceTagMappingList ?? []).map(item => ({ id: item.ResourceARN, name: item.ResourceARN.split(":").at(-1), kind: item.ResourceARN.split(":")[2], region: r }));
     await save("cloud", `aws://${c.accountId}/${r}`, [obs("aws-inventory", "pass", `${assets.length} application-tagged AWS assets discovered.`, { truncated: Boolean(discovery.PaginationToken) })], { assets, edges: assets.map(asset => ({ from: `application:${context.target.origin}`, to: asset.id, relation: "application_tag" })) });
+    if (c.accessAnalyzerArn?.startsWith(`arn:aws:access-analyzer:${r}:${c.accountId}:analyzer/`)) {
+      try {
+        const analyzer = new AccessAnalyzerClient(config);
+        const metadata = await invoke(analyzer, new GetAnalyzerCommand({ analyzerName: c.accessAnalyzerArn.split("/").at(-1) }));
+        const detail = metadata.analyzer, lastAnalyzed = Date.parse(detail?.lastResourceAnalyzedAt);
+        if (detail?.status !== "ACTIVE" || !Number.isFinite(lastAnalyzed) || Date.now() - lastAnalyzed > 86400000 || lastAnalyzed > Date.now() + 300000) throw new Error("Analyzer is inactive or has no recent scan metadata.");
+        const scope = new Set(assets.map(asset => asset.id));
+        const findings = []; let nextToken, pages = 0;
+        do {
+          const page = await invoke(analyzer, new ListFindingsV2Command({ analyzerArn: c.accessAnalyzerArn, filter: { status: { eq: ["ACTIVE"] } }, maxResults: 100, ...(nextToken ? { nextToken } : {}) }));
+          if (!Array.isArray(page.findings)) throw new Error("Analyzer returned an incomplete findings response.");
+          findings.push(...page.findings.filter(finding => scope.has(finding.resource)));
+          nextToken = page.nextToken; pages++;
+        } while (nextToken && pages < 3);
+        await save("identity", c.accessAnalyzerArn, [obs("aws-access-analyzer-findings", findings.length ? "fail" : nextToken || !scope.size || discovery.PaginationToken ? "not_assessed" : "pass", `${findings.length} active Access Analyzer findings matched the discovered application assets. This checks unresolved findings in this configured analyzer, not all effective permissions or full analyzer resource coverage.`, { securityPillar: "identity", truncated: Boolean(nextToken), findingIds: findings.map(finding => finding.id), analyzerType: detail.type, lastAnalyzedAt: detail.lastResourceAnalyzedAt })]);
+      } catch {
+        await save("identity", c.accessAnalyzerArn, [obs("aws-access-analyzer-findings", "not_assessed", "Configured Access Analyzer is unavailable, stale, or could not be completely queried within the read budget.", { securityPillar: "identity" })]);
+      }
+    }
     const allowedNames = new Set(assets.map(asset => asset.name));
     const cw = new CloudWatchClient(config), logs = new CloudWatchLogsClient(config), trail = new CloudTrailClient(config);
     const [alarms, dashboards, groups, trails] = await Promise.allSettled([

@@ -78,6 +78,24 @@ export const pillarRegistry: PillarDefinition[] = [
     hue: "#4655a8",
     domains: [
       {
+        id: "security.iam",
+        label: "Identity & privileged access",
+        question: "Are identities, credentials and privileged permissions constrained and reviewed?",
+        match: /\biam\b|\bmfa\b|identit|privileged|credential|assigned.role|role.assignment|segregation|maker.checker|session|federation|conditional access/i,
+      },
+      {
+        id: "security.network",
+        label: "Network & edge protection",
+        question: "Are network paths, transport and public-facing services protected?",
+        match: /\bdns\b|\btls\b|network|\bwaf\b|ddos|egress|ingress|segmentation|certificate|\bhsts\b/i,
+      },
+      {
+        id: "security.endpoint",
+        label: "Device & runtime hardening",
+        question: "Are managed devices and workloads hardened, monitored and patched?",
+        match: /device|endpoint detection|host hardening|\bedr\b|patch|vulnerab|runtime.image|container.image/i,
+      },
+      {
         id: "security.injection",
         label: "Prompt-injection containment",
         question: "Can an instruction in the input override the system's rules?",
@@ -117,6 +135,18 @@ export const pillarRegistry: PillarDefinition[] = [
     question: "Does personal and health data stay where it belongs?",
     hue: "#7a4bb0",
     domains: [
+      {
+        id: "data.access",
+        label: "Data access & entitlements",
+        question: "Can only approved identities reach sensitive data?",
+        match: /effective access|data.access|data.grant|privileged.data/i,
+      },
+      {
+        id: "data.crypto",
+        label: "Encryption & key management",
+        question: "Are sensitive stores encrypted and cryptographic keys protected?",
+        match: /encrypt|cryptograph|key.management|key.access|key.vault/i,
+      },
       {
         id: "data.redaction",
         label: "PII/PHI detection & redaction",
@@ -158,6 +188,24 @@ export const pillarRegistry: PillarDefinition[] = [
     hue: "#177a54",
     domains: [
       {
+        id: "gov.accessreviews",
+        label: "Access reviews & revocation",
+        question: "Are entitlements recertified and rejected access actually removed?",
+        match: /access.recertification|access.review|revocation|entitlement/i,
+      },
+      {
+        id: "gov.automation",
+        label: "Security workflows & exceptions",
+        question: "Do response workflows, approvals and exceptions have effective safeguards?",
+        match: /playbook|security.workflow|security.exception|exception.ownership/i,
+      },
+      {
+        id: "gov.resilience",
+        label: "Recovery & incident readiness",
+        question: "Are restoration, critical dependencies and escalation demonstrably tested?",
+        match: /recover|backup|restor|resilien|incident|escalat|availab/i,
+      },
+      {
         id: "gov.accountability",
         label: "Roles & accountability",
         question: "Is a named person answerable for this system?",
@@ -197,6 +245,12 @@ export const pillarRegistry: PillarDefinition[] = [
     question: "Can we prove all of this to a regulator?",
     hue: "#a5762a",
     domains: [
+      {
+        id: "comp.detection",
+        label: "Detection & security-event correlation",
+        question: "Do tested detections connect identity and resource activity to investigation?",
+        match: /detection|correlat|critical.alert/i,
+      },
       {
         id: "comp.scoping",
         label: "Applicability & obligations",

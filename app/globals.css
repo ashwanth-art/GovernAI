@@ -1960,6 +1960,39 @@ table.tbl td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .sh-clause.on b { color: var(--fail); }
 /* Durable reviews are optional side panels; the six setup steps stay unchanged. */
+.layer-map { margin: 28px 0; padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper, #fff); }
+.layer-map-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.layer-map h3 { font-size: 22px; letter-spacing: -.03em; margin: 4px 0; }
+.layer-map h4 { font-size: 16px; margin: 0 0 8px; }
+.layer-map-note { font-size: 12.5px; color: var(--muted); line-height: 1.65; margin: 10px 0 16px; }
+.layer-map-path { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 22px 0; flex-wrap: wrap; }
+.layer-map-path span { background: #edf4f0; border: 1px solid #d4e3da; border-radius: 8px; padding: 10px 15px; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.layer-map-path i { color: var(--muted); font-style: normal; }
+.layer-map-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; }
+.layer-map-node { text-align: left; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; background: transparent; border: 1px solid var(--line); border-radius: 11px; padding: 15px; color: inherit; cursor: pointer; font: inherit; }
+.layer-map-node:hover { background: #f5f8f4; }
+.layer-map-node.selected { border-color: #177a54; box-shadow: inset 0 0 0 1px #177a54; background: #f0f7f1; }
+.layer-map-node:focus-visible { outline: 3px solid #177a54; outline-offset: 3px; }
+.layer-map-number { font: 11px monospace; color: var(--muted); }
+.layer-map-node strong { font-size: 14px; }
+.layer-map-node small { font-size: 11.5px; line-height: 1.6; color: var(--muted); }
+.layer-map-counts { margin-top: auto; padding-top: 7px; font-size: 11px; font-weight: 600; }
+.layer-map-node.has-failures .layer-map-counts { color: #9c3026; }
+.layer-map-detail { margin-top: 18px; padding-top: 20px; border-top: 1px solid var(--line); }
+.layer-map-standard { border-top: 1px solid var(--line); }
+.layer-map-standard summary { display: flex; gap: 12px; justify-content: space-between; cursor: pointer; padding: 13px 0; font-size: 13px; font-weight: 600; }
+.layer-map-standard summary span { color: var(--muted); font-size: 11px; }
+.layer-map-standard ul { list-style: none; padding: 0; margin: 0 0 12px; }
+.layer-map-standard li { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+.layer-map-standard li div { display: grid; gap: 5px; min-width: 0; }
+.layer-map-standard code { font-size: 10.5px; color: var(--muted); overflow-wrap: anywhere; }
+.layer-map-standard li strong { font-size: 13px; font-weight: 550; }
+.layer-map-standard li small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.layer-map-state { font-size: 10.5px; border: 1px solid var(--line); border-radius: 5px; padding: 4px 7px; max-width: 150px; flex-shrink: 0; color: var(--muted); }
+.layer-map-state.fail { color: #9c3026; background: #fff1ee; border-color: #ebc9c3; }
+.layer-map-state.pass { color: #177a54; background: #eef7ef; border-color: #bcdcc8; }
+.layer-map-pillar { background: none; border: 0; padding: 0; cursor: pointer; color: #177a54; text-align: left; font-size: 11px; }
+@media (max-width: 560px) { .layer-map { padding: 15px; } .layer-map-standard li { flex-wrap: wrap; } .layer-map-path { gap: 7px; } }
 .review-panel { border: 1px solid var(--line, #dfe4dc); border-radius: 12px; padding: 18px; margin: 22px 0; overflow-wrap: anywhere; }
 .review-panel summary { cursor: pointer; font-weight: 650; }
 .review-panel p { font-size: 14px; line-height: 1.6; margin: 14px 0; }

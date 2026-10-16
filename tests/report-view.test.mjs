@@ -8,23 +8,64 @@ import { baseInput, request } from "./harness.mjs";
 // Compile source helpers in-process so presentation is tested independently of
 // the assessment engine and without changing production module resolution.
 const require = createRequire(import.meta.url);
-require.extensions[".ts"] = (module, path) => module._compile(ts.transpileModule(readFileSync(path, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, path);
+require.extensions[".ts"] = (module, path) => module._compile(ts.transpileModule(readFileSync(path, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText, path);
 const { evaluatedReportView } = require("../lib/report-view.ts");
 const { createReportHtml } = require("../lib/report-html.ts");
 const { fallbackSeed } = require("../lib/remediation.ts");
 const { artifactCheck } = require("../lib/checks.ts");
 const { deploymentReviewPack } = require("../lib/framework-packs/deployment-review.ts");
+const { primaryPillar, domainFor } = require("../lib/pillars.ts");
+const { buildApplicationMap, mapStandardsFromResult } = require("../lib/application-map.ts");
 
-test("deployment findings prescribe configuration fixes and require direct re-observation", () => {
+test("application map includes only selected controls, all seven layers and truthful planned/evidence-gap states", () => {
+  const selected = [{ id: deploymentReviewPack.standard.id, shortName: "Deployment Review", controls: deploymentReviewPack.controls }];
+  const plan = buildApplicationMap(selected, 3);
+  assert.equal(plan.total, 69); assert.equal(plan.evaluated, 0); assert.equal(plan.layers.length, 7);
+  assert.ok(plan.layers.every(layer => layer.controls.length > 0));
+  assert.ok(plan.layers.flatMap(layer => layer.controls).every(control => control.state === "planned"));
+  const shallow = buildApplicationMap(selected, 1);
+  assert.ok(shallow.layers.flatMap(layer => layer.controls).every(control => control.state === "needs_deeper_tier"));
+  const result = { reports: [{ standardId: "deployment_review", shortName: "Deployment Review", controls: deploymentReviewPack.controls.map((control, index) => ({ ...control, status: index === 0 ? "pass" : index === 1 ? "fail" : "not_assessed" })) }] };
+  const completed = buildApplicationMap(mapStandardsFromResult(result), 3);
+  assert.equal(completed.evaluated, 2); assert.equal(completed.total, 69);
+  assert.equal(completed.layers.flatMap(layer => layer.controls).filter(control => control.state === "not_assessed").length, 67);
+  assert.deepEqual(buildApplicationMap([], 3).layers.map(layer => layer.controls.length), [0, 0, 0, 0, 0, 0, 0]);
+});
+
+test("new evaluations map into their existing report pillars and specific domains", () => {
+  const expected = {
+    "DEP-SECURITY-IAM-MFA": ["security", "security.iam"],
+    "DEP-SECURITY-IAM-REVIEWS": ["governance", "gov.accessreviews"],
+    "DEP-SECURITY-DEVICE-EDR": ["security", "security.endpoint"],
+    "DEP-SECURITY-NETWORK-SEGMENTATION": ["security", "security.network"],
+    "DEP-SECURITY-DATA-ACCESS": ["data_protection", "data.access"],
+    "DEP-SECURITY-DATA-CRYPTO": ["data_protection", "data.crypto"],
+    "DEP-SECURITY-DATA-RECOVERY": ["governance", "gov.resilience"],
+    "DEP-SECURITY-AUTOMATION-RESPONSE": ["governance", "gov.automation"],
+    "DEP-SECURITY-VISIBILITY-ALERTS": ["compliance", "comp.detection"],
+    "DEP-SECURITY-APP-AI-VALIDATION": ["trust", "trust.oversight"],
+    "DEP-ENTRA-MFA-REGISTRATION": ["security", "security.iam"],
+  };
+  for (const [id, [pillar, domain]] of Object.entries(expected)) {
+    const control = deploymentReviewPack.controls.find(item => item.id === id);
+    assert.ok(control, id); assert.equal(primaryPillar(control), pillar, id);
+    assert.equal(domainFor(pillar, control).id, domain, id);
+    assert.equal(artifactCheck(control).domainId, domain, id);
+  }
+  assert.deepEqual([...new Set(deploymentReviewPack.controls.map(primaryPillar))].sort(), ["compliance", "data_protection", "governance", "security", "trust"]);
+});
+
+test("deployment findings prescribe scoped fixes and require fresh observation or typed evidence", () => {
   for (const control of deploymentReviewPack.controls) {
     const check = artifactCheck(control), fix = fallbackSeed(check.id, check.title);
     assert.equal(check.request.endpoint, "{scopedReviewConnection}");
     assert.match(check.request.note, /Target-published manifest verdicts cannot/);
     assert.equal(fix.owner, "Platform engineering");
-    assert.match(fix.verification, /direct collector must observe/);
+    assert.match(fix.verification, /direct observation or fresh, complete typed tool export/);
     assert.ok(!fix.steps.some(step => /Add the named evidence procedure/.test(step.action)));
   }
   assert.match(fallbackSeed("chk.artifact.review-frontend-csp", "CSP").steps[1].action, /enforcing Content-Security-Policy/);
+  assert.match(fallbackSeed("chk.artifact.review-security-iam-sod", "SoD").steps[1].action, /Separate initiating and approving permissions/);
 });
 
 test("report includes only pass/fail verdicts and counts its evaluated scope without modifying raw evidence", async () => {

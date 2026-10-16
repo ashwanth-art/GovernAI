@@ -4,6 +4,7 @@ import { validateProfile, redact, resolvePublic } from "./broker.mjs";
 import { collectLayers } from "./collectors.mjs";
 import { technicalManifest, exportedManifest, reviewWithModels } from "./evaluate.mjs";
 import { enterpriseIdentity } from "./identity.mjs";
+import { summarizeSecurityPillars, layerExportTemplate } from "./security-layers.mjs";
 
 const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...headers } });
 const uuid = value => /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value ?? "");
@@ -124,7 +125,8 @@ export function createReviewService({ engineFetch, store: suppliedStore, enabled
       layers: [...new Set(evidence.map(record => record.layer))].map(layer => ({ layer, evidenceCount: evidence.filter(record => record.layer === layer).length, failedObservations: evidence.filter(record => record.layer === layer).flatMap(record => record.observations ?? []).filter(observation => observation.status === "fail").length })),
       evidence: evidence.map(record => ({ id: record.id, layer: record.layer, source: record.source, collectedAt: record.collectedAt, hash: record.hash })),
       controlPlan: plan, unresolved, originalCoverage: { evaluated: observed.length, total: all.length, percent: all.length ? Math.round(observed.length / all.length * 100) : 0 },
-      modelReviews: model.reviews, connectionCount: profiles.length, connectionsNotConfigured: ["azure", "aws", "auth", "documents", "banking_export"].filter(kind => !profiles.some(profile => profile.kind === kind)),
+      modelReviews: model.reviews, connectionCount: profiles.length, connectionsNotConfigured: ["azure", "aws", "entra", "auth", "documents", "banking_export", "security_export"].filter(kind => !profiles.some(profile => profile.kind === kind)),
+      securityPillars: summarizeSecurityPillars(evidence),
       integrity: digest(evidence.map(record => ({ id: record.id, hash: record.hash }))),
     };
     await progress("Persisting evidence, review history and control outcomes");
@@ -173,6 +175,11 @@ export function createReviewService({ engineFetch, store: suppliedStore, enabled
     const session = sessionIdentity(request, sessionKey), owner = enterprise ? createHmac("sha256", sessionKey).update(enterprise.subject).digest("hex") : session.owner;
     const headers = session.cookie ? { "Set-Cookie": session.cookie } : {};
     try {
+      if (path === "/api/reviews/security-template" && request.method === "GET") {
+        const target = new URL(new URL(request.url).searchParams.get("target") || "https://your-app.example");
+        if (target.protocol !== "https:" || target.username || target.password) throw new Error("Template target must be an HTTPS origin without credentials.");
+        return json(layerExportTemplate(target.origin), 200, { ...headers, "Content-Disposition": 'attachment; filename="security-evidence-contract.json"' });
+      }
       if (path === "/api/reviews/connections") {
         if (request.method === "GET") return json({ connections: await store.profiles(owner) }, 200, headers);
         if (request.method === "POST") { if ((await store.profiles(owner)).length >= 10) throw new Error("A workspace supports at most ten scoped connections."); const profile = validateProfile(await readJson(request)); return json({ id: await store.saveProfile(owner, profile) }, 201, headers); }

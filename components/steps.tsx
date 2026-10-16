@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ReviewConnections } from "@/components/review-console";
+import { ApplicationLayerMap } from "@/components/application-layer-map";
 import { credentialFields } from "@/lib/assessment";
 import { industries, industryById, standardById, standards } from "@/lib/catalog";
 import { estimate, reachPhrase, requestPhrase } from "@/lib/metrics";
@@ -707,6 +708,10 @@ function ConnectStep({
 /* ---- 6 · ready ---------------------------------------------------------- */
 
 function ReadyStep({ input, plan, scope }: StepProps) {
+  const mapStandards = useMemo(() => input.standardIds.flatMap(id => {
+    const standard = standardById.get(id);
+    return standard ? [{ id: standard.id, shortName: standard.shortName, controls: standard.controls }] : [];
+  }), [input.standardIds]);
   const blocked = useMemo(() => {
     if (!plan) return [];
     const groups = new Map<string, number>();
@@ -768,6 +773,8 @@ function ReadyStep({ input, plan, scope }: StepProps) {
             <p>{requestPhrase(plan.boundedRequests)}</p>
           </div>
         </div>
+
+        <ApplicationLayerMap standards={mapStandards} tier={input.tier} systemName={input.systemName} />
 
         {byPillar.length ? (
           <div style={{ marginTop: 20 }}>

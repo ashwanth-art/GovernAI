@@ -1,6 +1,8 @@
 import { resolve4, resolve6, resolveCname } from "node:dns/promises";
 import { connect } from "node:tls";
 import { Broker, redact, resolvePublic } from "./broker.mjs";
+import { evaluateLayerExport } from "./security-layers.mjs";
+import { collectEntra, collectAuthorizationMatrix } from "./collectors-identity.mjs";
 
 const now = () => new Date().toISOString();
 const check = (id, status, summary, detail = {}) => ({ id, status, summary, ...detail });
@@ -138,6 +140,12 @@ export async function collectGitHubSource(context, profile) {
 export async function collectExport(context, profile) {
   const url = new URL(profile.config.url);
   const response = await context.broker.fetch(url.toString(), { headers: profile.config.token ? { Authorization: `Bearer ${profile.config.token}` } : {}, allowedOrigins: [url.origin], limit: 500000 });
+  if (profile.kind === "security_export") {
+    if (!response.ok) { await context.save(record("security_export", response.source, [check("security-export-unavailable", "not_assessed", `Connected security export unavailable (HTTP ${response.status}).`)])); return; }
+    const result = evaluateLayerExport(response.json, context.target.origin);
+    await context.save(record("security_export", response.source, result.observations, { assets: result.assets, edges: result.edges, scope: result.scope, export: { schemaVersion: "1.0", generatedAt: response.json.generatedAt, procedures: result.bankingProcedures } }));
+    return;
+  }
   const layer = { documents: "governance", auth: "authentication", observability: "monitoring", banking_export: "banking" }[profile.kind];
   const detail = { profileId: profile.id, scope: profile.targetOrigin };
   if (response.ok && profile.kind === "documents") {
@@ -168,6 +176,7 @@ export async function collectAuthentication(context, profile) {
     observations.push(check("auth-role-boundary", [401, 403].includes(response.status) ? "pass" : response.ok ? "fail" : "not_assessed", `Explicitly configured forbidden resource returned HTTP ${response.status} with the configured identity.`));
   }
   await context.save(record("authentication", `${url.origin}${url.pathname}`, observations));
+  await collectAuthorizationMatrix(context, profile);
 }
 
 export async function collectLayers({ input, profiles, save, audit, owner, jobId, signal, progress }) {
@@ -180,6 +189,7 @@ export async function collectLayers({ input, profiles, save, audit, owner, jobId
     ...profiles.filter(profile => profile.targetOrigin === target.origin).map(profile => ({ layer: profile.kind, run: async () => {
       if (profile.kind === "azure") return collectAzure(context, profile);
       if (profile.kind === "aws") { const { collectAws } = await import("./collectors-aws.mjs"); return collectAws(context, profile); }
+      if (profile.kind === "entra") return collectEntra(context, profile);
       if (profile.kind === "github") return collectGitHubSource(context, profile);
       if (profile.kind === "auth") return collectAuthentication(context, profile);
       return collectExport(context, profile);

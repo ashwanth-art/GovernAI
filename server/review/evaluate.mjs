@@ -13,13 +13,13 @@ export function technicalManifest(evidence) {
     const status = readings.some(reading => reading.status === "fail") ? "fail"
       : readings.some(reading => reading.status === "partial") ? "partial"
         : readings.some(reading => reading.status === "not_assessed") ? "not_assessed" : "pass";
-    return [`artifact-review-${id}`, { status, summary: readings.map(reading => `${reading.summary} Evidence ${reading.evidenceId}; SHA-256 ${reading.hash}; source ${reading.source}.`).join(" "), confidence: status === "not_assessed" ? 0 : 0.95, collectedAt: readings[0].collectedAt, artifactRef: readings.map(reading => reading.evidenceId).join(",") }];
+    return [`artifact-review-${id}`, { status, summary: readings.map(reading => `${reading.summary}${reading.assetId ? ` Asset ${reading.assetId}.` : ""} Evidence ${reading.evidenceId}; SHA-256 ${reading.hash}; source ${reading.source}${reading.sourceRef ? `; upstream ${reading.sourceRef}` : ""}.`).join(" "), confidence: status === "not_assessed" ? 0 : 0.95, collectedAt: readings[0].collectedAt, artifactRef: readings.map(reading => reading.evidenceId).join(",") }];
   }));
 }
 
 export function exportedManifest(evidence) {
   const procedures = {};
-  for (const item of evidence.filter(record => record.layer === "banking" || record.layer === "monitoring")) {
+  for (const item of evidence.filter(record => ["banking", "monitoring", "security_export"].includes(record.layer))) {
     const manifest = item.export;
     if (manifest?.schemaVersion !== "1.0" || !manifest.procedures || typeof manifest.procedures !== "object") continue;
     for (const [id, reading] of Object.entries(manifest.procedures)) {

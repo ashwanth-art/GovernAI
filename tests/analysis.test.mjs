@@ -2,6 +2,32 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { baseInput, request, session, targetState } from "./harness.mjs";
+import { securityRules, evaluateLayerExport } from "../server/review/security-layers.mjs";
+import { technicalManifest, exportedManifest } from "../server/review/evaluate.mjs";
+
+test("seven-pillar collected measurements reach real reports and exact IAM findings map to selected banking packs", async () => {
+  const now = new Date().toISOString(), origin = new URL(baseInput.credentials.chatbotEndpoint).origin;
+  const source = { schemaVersion: "2.0", targetOrigin: origin, generatedAt: now, scope: { id: "isolated-bank-app-fixture", complete: true, assetIds: ["app-scope"] }, measurements: securityRules.map(rule => ({ ruleId: rule.id, assetId: "app-scope", sourceRef: "https://security.target.test/records/fixture", collectedAt: now, fields: Object.fromEntries(Object.entries(rule.fields).map(([field, condition]) => [field, condition === "true" ? true : condition === "false" ? false : condition === "zero" ? 0 : 10])) })) };
+  source.measurements.find(item => item.ruleId === "iam-mfa").fields.privilegedMfaEnforced = false;
+  const collected = evaluateLayerExport(source, origin);
+  const evidence = [{ ...collected, id: "security-fixture", layer: "security_export", source: "https://security.target.test/export", collectedAt: now, hash: "fixture-hash", export: { schemaVersion: "1.0", generatedAt: now, procedures: collected.bankingProcedures } }];
+  const previous = process.env.REVIEW_ENCRYPTION_KEY;
+  process.env.REVIEW_ENCRYPTION_KEY = "isolated-seven-pillar-bridge";
+  try {
+    const response = await request("/api/assessments", { method: "POST", headers: { "content-type": "application/json", "x-arq-review-token": process.env.REVIEW_ENCRYPTION_KEY }, body: JSON.stringify({ ...baseInput, industryId: "finance", tier: 3, standardIds: ["deployment_review", "rbi_it_governance", "nist_csf"], credentials: { ...baseInput.credentials, repoUrl: "https://ci.target.test/source", stagingUrl: "https://ci.target.test/staging", modelRegistryUrl: "https://ci.target.test/models" }, reviewManifest: { schemaVersion: "1.0", generatedAt: now, procedures: { ...exportedManifest(evidence), ...technicalManifest(evidence) } } }) });
+    assert.equal(response.status, 200);
+    const result = await response.json(), controls = result.reports.flatMap(report => report.controls);
+    const deployment = result.reports.find(report => report.standardId === "deployment_review");
+    assert.equal(deployment.totalControls, 69);
+    assert.equal(deployment.controls.filter(control => control.status === "pass").length, 29);
+    assert.equal(deployment.controls.find(control => control.id === "DEP-SECURITY-IAM-MFA").status, "fail");
+    const bankControls = controls.filter(control => control.evaluationRuleId === "artifact.bank-privileged-access");
+    assert.equal(bankControls.length, 2); assert.ok(bankControls.every(control => control.status === "fail"));
+    const shared = result.analysis.findings.find(finding => bankControls.every(control => finding.breaches.some(breach => breach.controlId === control.id)));
+    assert.ok(shared); assert.match(shared.detail, /privilegedMfaEnforced=false/);
+    assert.ok(deployment.controls.some(control => control.status === "not_assessed"));
+  } finally { if (previous === undefined) delete process.env.REVIEW_ENCRYPTION_KEY; else process.env.REVIEW_ENCRYPTION_KEY = previous; }
+});
 
 test("deployment verdicts reject caller injection and accept only the trusted collector bridge", async () => {
   const original = process.env.REVIEW_ENCRYPTION_KEY;

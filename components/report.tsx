@@ -1,5 +1,7 @@
 "use client";
 import { ReviewEvidence } from "@/components/review-console";
+import { ApplicationLayerMap } from "@/components/application-layer-map";
+import { mapStandardsFromResult } from "@/lib/application-map";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Disc, Meter, Pill, Sev, sevHue, Tag } from "@/components/kit";
@@ -73,6 +75,7 @@ export function Report({
   coverageOnly?: boolean;
 }) {
   const result = useMemo(() => evaluatedReportView(rawResult), [rawResult]);
+  const layerStandards = useMemo(() => mapStandardsFromResult(rawResult), [rawResult]);
   const { analysis, scope, liveEvidence } = result;
   const { posture } = analysis;
   const hostRef = useRef<HTMLDivElement>(null);
@@ -297,6 +300,8 @@ export function Report({
           </div>
         </section>
         ) : null}
+
+        <ApplicationLayerMap standards={layerStandards} tier={scope.tier} systemName={scope.systemName} completed onOpenPillar={setOpenPillar} />
 
         {/* ---- II · area by area --------------------------------------- */}
         <section className="chapter" id={coverageOnly ? "monitor-areas" : "areas"}>

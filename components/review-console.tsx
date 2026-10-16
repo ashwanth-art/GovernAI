@@ -6,7 +6,9 @@ import { jsonOptions, reviewRequest } from "@/lib/review-client";
 
 const examples: Record<string, object> = {
   azure: { tenantId: "", clientId: "", clientSecret: "", subscriptionId: "", resourceGroup: "" },
-  aws: { accountId: "", regions: ["ap-south-1"], accessKeyId: "", secretAccessKey: "", sessionToken: "", tagKey: "Application", tagValue: "", logGroupPrefix: "", alarmPrefix: "", trailArns: [] },
+  aws: { accountId: "", regions: ["ap-south-1"], accessKeyId: "", secretAccessKey: "", sessionToken: "", tagKey: "Application", tagValue: "", logGroupPrefix: "", alarmPrefix: "", trailArns: [], includeIdentityAudit: false, iamUserNames: [], maximumCredentialAgeDays: 90, maximumCredentialIdleDays: 90, accessAnalyzerArn: "" },
+  entra: { tenantId: "", clientId: "", clientSecret: "", principalIds: [], requiredConditionalAccessPolicyIds: [], requireTimeBoundRoles: false, privilegedRoleDefinitionIds: [] },
+  security_export: { url: "https://your-app.example/security-evidence.json", token: "" },
   github: { repository: "owner/repository", token: "" },
   auth: { url: "https://your-app.example/api/protected", token: "", forbiddenUrl: "" },
   documents: { url: "https://your-app.example/policy.txt", token: "", allowModel: false, asOf: "2026-10-16" },
@@ -29,6 +31,9 @@ export function ReviewConnections({ target }: { target: string }) {
       <label className="field"><span>Connection type</span><select value={kind} onChange={e => { setKind(e.target.value); setConfig(JSON.stringify(examples[e.target.value], null, 2)); }}>{Object.keys(examples).map(value => <option key={value} value={value}>{value}</option>)}</select></label></div>
     <label className="field"><span>Configuration JSON · secret fields are never returned</span><textarea aria-label="Read-only connection configuration" rows={10} value={config} onChange={e => setConfig(e.target.value)} autoComplete="off" spellCheck={false} /></label>
     <p className="faint">Target: {target}. Document text is sent to a model only when allowModel is explicitly true. Exports must include actual control evidence; availability alone is not a pass.</p>
+    {kind === "security_export" ? <p>Connect an export from IAM/PAM, endpoint security, application tests, data protection, network testing, response workflows or SIEM. Only fresh, typed measurements for declared assets are evaluated. <a href={`/api/reviews/security-template?target=${encodeURIComponent(target)}`}>Download the seven-pillar evidence contract</a>.</p> : null}
+    {kind === "entra" ? <p>Requires separately consented Microsoft Graph read permissions. MFA registration is not enforcement. This connector reads selected users/service principals and direct directory-role assignments; Conditional Access applicability and PIM effectiveness need additional evidence.</p> : null}
+    {kind === "auth" ? <p>Use dedicated test identities and approved read-only resources only. Optional identities/tests support up to six identities and twenty allow/deny GET cases. Every identity needs a successful allow baseline before a denial can pass.</p> : null}
     <button className="btn" type="button" disabled={busy || !name.trim()} onClick={async () => { setBusy(true); setError(""); try { await reviewRequest("/connections", jsonOptions({ name, kind, targetOrigin: new URL(target).origin, config: JSON.parse(config) })); setConfig(JSON.stringify(examples[kind], null, 2)); setName(""); await load(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); } }}>Save encrypted connection</button>
     {error ? <p role="alert">{error}</p> : null}
   </details>;
@@ -61,6 +66,7 @@ export function ReviewEvidence({ result }: { result: AssessmentResult }) {
     <p>{review.toolCalls} brokered reads · {review.rounds} collection round(s) · {review.connectionCount} scoped connection(s)</p>
     <p>Layers collected: {review.layers.map(layer => layer.layer).join(", ")}. Connections not configured: {review.connectionsNotConfigured.join(", ") || "none"}.</p>
     <p>Evidence coverage before the pass/fail-only report filter: {review.originalCoverage.evaluated}/{review.originalCoverage.total} controls. {review.unresolved.length} controls still lack sufficient evidence.</p>
+    {review.securityPillars ? <details><summary>Seven-pillar evidence coverage</summary><p>Pass/fail refers to observed checks only. Missing checks and source-declared completeness do not establish whole-bank coverage.</p><ul>{review.securityPillars.map(pillar => <li key={pillar.id}>{pillar.name}: {pillar.passed} passed · {pillar.failed} failed · {pillar.unresolved} inconclusive · {pillar.missingRuleIds.length} expanded checks without evidence</li>)}</ul></details> : null}
     {review.modelReviews.map((model, i) => <p key={i}>{model.model ?? model.role ?? "Model review"}: {model.summary ?? model.reason ?? model.status}</p>)}
     <ul>{review.evidence.map(record => <li key={record.id}>{record.layer} · {record.source}<small className="review-hash">{record.collectedAt} · SHA-256 {record.hash}</small></li>)}</ul>
     <a className="btn" href={`/api/reviews/${review.jobId}/evidence`} target="_blank" rel="noreferrer">Open source observations</a>
