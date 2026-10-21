@@ -2,6 +2,28 @@ import { redact } from "./broker.mjs";
 
 const ranks = { fail: 0, partial: 1, pass: 2, not_assessed: 3 };
 const normalize = text => String(text).replace(/\s+/g, " ").trim();
+
+/** Internal checks are observations, not additional regulatory clauses. Only
+ * direct collector readings may settle them; model/target assertions cannot. */
+export function evaluateTechnicalControls(controls, evidence, tier) {
+  const procedures = technicalManifest(evidence);
+  return controls.map(control => {
+    const ids = control.evidenceProcedureIds ?? [];
+    const readings = ids.map(id => procedures[id]);
+    const missing = ids.filter(id => !procedures[id]);
+    const status = tier < control.tierMinimum || !ids.length ? "not_assessed"
+      : readings.some(item => item?.status === "fail") ? "fail"
+        : missing.length || readings.some(item => item?.status === "not_assessed") ? "not_assessed"
+          : readings.some(item => item?.status === "partial") ? "partial" : "pass";
+    const explanation = tier < control.tierMinimum ? `Not run: this technical check requires Tier ${control.tierMinimum}.`
+      : missing.length ? `No scoped collector reading was produced for ${missing.join(", ")}. Connect the relevant read-only source to run this check.` : "";
+    return { ...control, status, applicabilityStatus: "applicable", applicabilityReason: "Internal technical check; not a separate compliance obligation.",
+      score: status === "pass" ? 1 : status === "partial" ? 0.5 : 0,
+      confidence: ["pass", "fail", "partial"].includes(status) ? 0.95 : 0,
+      evidence: [...readings.filter(Boolean).map(item => item.summary), explanation].filter(Boolean).join(" "),
+    };
+  });
+}
 export function technicalManifest(evidence) {
   const groups = new Map();
   for (const item of evidence) for (const observation of item.observations ?? []) {

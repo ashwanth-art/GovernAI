@@ -52,7 +52,7 @@ const startingInput: AssessmentInput = {
   organization: "ACI Infotech",
   systemName: "ACI Knowledge Assistant",
   industryId: "finance",
-  standardIds: ["rbi_it_governance", "rbi_it_outsourcing", "rbi_free_ai", "rbi_kyc_aml", "rbi_digital_payments", "iso27001", "iso42001", "dpdp_act", "deployment_review"],
+  standardIds: ["rbi_it_governance", "rbi_it_outsourcing", "rbi_free_ai", "rbi_kyc_aml", "rbi_digital_payments", "iso27001", "iso42001", "dpdp_act"],
   tier: 1,
   credentials: { ...DEMO_CREDENTIALS },
   architecture: {
@@ -169,6 +169,7 @@ export function AssessmentWorkspace() {
         setInput((current) => ({
           ...current,
           ...parsed,
+          standardIds: parsed.standardIds?.filter(id => id !== "deployment_review") ?? current.standardIds,
           // Never restored from storage, by design.
           credentials: current.credentials,
         }));

@@ -2493,7 +2493,7 @@ export async function runAssessment(
 export function safeCatalog() {
   return {
     industries,
-    standards: [...standardById.values()].map((standard) => ({
+    standards: [...standardById.values()].filter(standard => standard.id !== "deployment_review").map((standard) => ({
       ...standard,
       controls: undefined,
       totalControls: standard.controls.length,

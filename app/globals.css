@@ -1992,6 +1992,13 @@ table.tbl td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .layer-map-state.fail { color: #9c3026; background: #fff1ee; border-color: #ebc9c3; }
 .layer-map-state.pass { color: #177a54; background: #eef7ef; border-color: #bcdcc8; }
 .layer-map-pillar { background: none; border: 0; padding: 0; cursor: pointer; color: #177a54; text-align: left; font-size: 11px; }
+.layer-map-result { font-size: 12px; line-height: 1.65; margin: 4px 0; overflow-wrap: anywhere; }
+.layer-map-support { margin-top: 8px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; }
+.technical-assessments { display: grid; gap: 8px; min-width: 0; }
+.technical-assessment { border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; overflow-wrap: anywhere; }
+.technical-assessment > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; padding: 12px 0; font-size: 12px; }
+.technical-assessment p { font-size: 12px; line-height: 1.65; margin: 8px 0; }
+.technical-assessment > small { display: block; color: var(--muted); font-size: 11px; padding-bottom: 12px; }
 @media (max-width: 560px) { .layer-map { padding: 15px; } .layer-map-standard li { flex-wrap: wrap; } .layer-map-path { gap: 7px; } }
 .review-panel { border: 1px solid var(--line, #dfe4dc); border-radius: 12px; padding: 18px; margin: 22px 0; overflow-wrap: anywhere; }
 .review-panel summary { cursor: pointer; font-weight: 650; }

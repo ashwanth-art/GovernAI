@@ -210,6 +210,8 @@ test("catalog exposes all industries, standards, and tier-specific fields", asyn
   const catalog = await response.json();
   assert.equal(catalog.industries.length, 16);
   assert.ok(catalog.standards.length >= 30);
+  assert.ok(!catalog.standards.some(standard => standard.id === "deployment_review"));
+  assert.ok(catalog.industries.every(industry => industry.recommendations.every(item => item.standardId !== "deployment_review")));
   assert.ok(catalog.standards.every((standard) => standard.officialReference?.url.startsWith("https://")));
   assert.equal(
     catalog.standards.find((standard) => standard.id === "sr_11_7").officialReference.status,
@@ -217,7 +219,7 @@ test("catalog exposes all industries, standards, and tier-specific fields", asyn
   );
   assert.deepEqual(
     catalog.industries.find((item) => item.id === "healthcare").recommendations.map((item) => item.standardId),
-    ["hipaa", "iso42001", "nist_ai_rmf", "dpdp_act", "deployment_review"],
+    ["hipaa", "iso42001", "nist_ai_rmf", "dpdp_act"],
   );
 
   // Every industry must recommend standards that exist. A typo here would ship a
@@ -556,7 +558,7 @@ test("Tier 3 reaches a verdict on every control of every standard", async () => 
   // banking fixture for this full-evidence test only.
   const template = await (await request("/api/banking/evidence-template")).json();
   const reviewCatalog = await (await request("/api/review-catalog")).json();
-  const reviewProcedures = Object.fromEntries(reviewCatalog.standards.find(item => item.id === "deployment_review").controls.flatMap(control => control.evidenceProcedureIds.map(id => [id, { status: "pass", summary: "Trusted deployment collector fixture; not target-published evidence." }])));
+  const reviewProcedures = Object.fromEntries(reviewCatalog.technicalControls.flatMap(control => control.evidenceProcedureIds.map(id => [id, { status: "pass", summary: "Trusted deployment collector fixture; not target-published evidence." }])));
   process.env.REVIEW_ENCRYPTION_KEY = "test-trusted-review-token";
   targetState.bankingProcedures = Object.fromEntries(Object.entries(template.measurementContract).map(([id, rule]) => [id, {
     status: "pass", summary: "Banking test fixture measurement export.",

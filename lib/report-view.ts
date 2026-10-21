@@ -1,10 +1,11 @@
 import { buildAnalysis } from "./analysis";
+import { technicalChecksFromResult } from "./application-map";
 import type { AssessmentResult, StandardReport } from "./types";
 
 /** Presentation scope: completed pass/fail evaluations only. Raw results remain intact. */
 export function evaluatedReportView(source: AssessmentResult): AssessmentResult {
   const keep = (control: StandardReport["controls"][number]) => control.status === "pass" || control.status === "fail";
-  const reports = source.reports.map(report => {
+  const reports = source.reports.filter(report => report.standardId !== "deployment_review").map(report => {
     const controls = report.controls.filter(keep);
     const passed = controls.filter(control => control.status === "pass").length;
     return { ...report, controls, totalControls: controls.length, applicableControls: controls.length,
@@ -18,5 +19,6 @@ export function evaluatedReportView(source: AssessmentResult): AssessmentResult 
     liveEvidence: { probes: source.liveEvidence.probes, startedAt: source.liveEvidence.startedAt },
     availableProcedureIds: [...reports.flatMap(report => report.controls), ...owasp].flatMap(control => control.evidenceProcedureIds ?? []),
   });
-  return { ...source, scope: { ...source.scope, selectedStandards: reports.map(report => report.shortName) }, reports, owasp, analysis };
+  return { ...source, review: source.review ? { ...source.review, technicalAssessments: technicalChecksFromResult(source) } : undefined,
+    scope: { ...source.scope, selectedStandards: reports.map(report => report.shortName) }, reports, owasp, analysis };
 }

@@ -1,12 +1,12 @@
 "use client";
 import { ReviewEvidence } from "@/components/review-console";
-import { ApplicationLayerMap } from "@/components/application-layer-map";
-import { mapStandardsFromResult } from "@/lib/application-map";
+import { ApplicationLayerMap, TechnicalAssessmentList } from "@/components/application-layer-map";
+import { mapStandardsFromResult, technicalChecksFromResult } from "@/lib/application-map";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Disc, Meter, Pill, Sev, sevHue, Tag } from "@/components/kit";
 import { duration, measuredPercent, rulePhrase } from "@/lib/metrics";
-import { pillarHue, pillarLabel } from "@/lib/pillars";
+import { pillarHue, pillarLabel, primaryPillar } from "@/lib/pillars";
 import { verdictLabels } from "@/lib/posture";
 import { methodLabel, methodPlain, statusMeaning, tierLabel } from "@/lib/terms";
 import { evaluatedReportView } from "@/lib/report-view";
@@ -301,7 +301,7 @@ export function Report({
         </section>
         ) : null}
 
-        <ApplicationLayerMap standards={layerStandards} tier={scope.tier} systemName={scope.systemName} completed onOpenPillar={setOpenPillar} />
+        <ApplicationLayerMap standards={layerStandards} tier={scope.tier} systemName={scope.systemName} completed onOpenPillar={setOpenPillar} technicalChecks={technicalChecksFromResult(rawResult)} />
 
         {/* ---- II · area by area --------------------------------------- */}
         <section className="chapter" id={coverageOnly ? "monitor-areas" : "areas"}>
@@ -1281,6 +1281,11 @@ function PillarSheet({
         </header>
 
         <div className="sheet-body" ref={bodyRef}>
+          {technicalChecksFromResult(result).some(check => primaryPillar(check) === pillar && ["pass", "fail", "partial"].includes(check.status)) && <section className="sh-sec">
+            <h4>Automatic technical observations</h4>
+            <p className="sh-lede">Read-only checks supporting this pillar. These results are separate from regulatory clause verdicts and are not added to standard coverage counts.</p>
+            <TechnicalAssessmentList checks={technicalChecksFromResult(result).filter(check => primaryPillar(check) === pillar && ["pass", "fail", "partial"].includes(check.status))} />
+          </section>}
           {/* ---- what we found, with the fix under each ---------------- */}
           <section className="sh-sec lead">
             <h4>What failed here, and the fix for each</h4>

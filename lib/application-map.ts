@@ -1,5 +1,6 @@
 import { primaryPillar } from "./pillars";
-import type { AccessTier, AssessmentResult, Control, ControlStatus } from "./types";
+import { supportingTechnicalChecks, assessmentMethod } from "./deployment-evaluation";
+import type { AccessTier, AssessmentResult, Control, ControlStatus, ControlResult } from "./types";
 
 export const applicationLayers = [
   { id: "identity", name: "Users & identities", examples: "IAM · MFA · privileged access · sessions", sources: "Identity provider, IAM/PAM, HR reconciliation and approved test accounts" },
@@ -11,7 +12,7 @@ export const applicationLayers = [
   { id: "visibility", name: "Visibility & analytics", examples: "Monitoring · audit logs · detection · correlation", sources: "CloudWatch, CloudTrail, SIEM/SOC and detection-test records" },
 ] as const;
 export type ApplicationLayerId = typeof applicationLayers[number]["id"];
-export type MapControl = Control & { status?: ControlStatus };
+export type MapControl = Control & { status?: ControlStatus; evidence?: string; method?: string; supportingChecks?: ControlResult[] };
 export interface MapStandard { id: string; shortName: string; controls: MapControl[] }
 
 /** Technical grouping, not an additional official/regulatory crosswalk. A
@@ -55,5 +56,12 @@ export function buildApplicationMap(standards: MapStandard[], tier: AccessTier) 
 }
 
 export function mapStandardsFromResult(result: AssessmentResult): MapStandard[] {
-  return result.reports.map(report => ({ id: report.standardId, shortName: report.shortName, controls: report.controls }));
+  const technical = technicalChecksFromResult(result);
+  return result.reports.filter(report => report.standardId !== "deployment_review").map(report => ({ id: report.standardId, shortName: report.shortName,
+    controls: report.controls.map(control => ({ ...control, method: assessmentMethod(control), supportingChecks: supportingTechnicalChecks(control, technical) })) }));
+}
+
+/** Old saved reports remain readable; new runs need no separate pack. */
+export function technicalChecksFromResult(result: AssessmentResult): ControlResult[] {
+  return result.review?.technicalAssessments ?? result.reports.find(report => report.standardId === "deployment_review")?.controls ?? [];
 }

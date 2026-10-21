@@ -1,6 +1,8 @@
 import { verdictLabels } from "./posture";
 import { statusLabel } from "./terms";
 import { evaluatedReportView } from "./report-view";
+import { technicalChecksFromResult } from "./application-map";
+import { pillarLabel, pillarOrder, primaryPillar } from "./pillars";
 import type { AssessmentResult, StandardReport } from "./types";
 
 /**
@@ -222,6 +224,11 @@ export function createReportHtml(rawResult: AssessmentResult, rawReport?: Standa
     .join("")}</ul></section>`;
 
   const review = rawResult.review;
+  const technical = technicalChecksFromResult(rawResult).filter(check => ["pass", "fail", "partial"].includes(check.status));
+  const technicalSection = technical.length ? `<section><h2>Automatic technical observations</h2><p>Internal checks run without a separate compliance pack. These observations support the selected standards; they do not replace a clause verdict or increase regulatory coverage.</p>${pillarOrder.map(pillar => {
+    const checks = technical.filter(check => primaryPillar(check) === pillar);
+    return checks.length ? `<h3>${esc(pillarLabel(pillar))}</h3>${checks.map(check => `<article><h4>${esc(check.name)} — ${esc(statusLabel(check.status))}</h4><p><strong>Method:</strong> ${esc(check.objective ?? check.evaluationRuleId)}</p><p><strong>Result:</strong> ${esc(check.evidence)}</p></article>`).join("")}` : "";
+  }).join("")}</section>` : "";
   const reviewSection = review ? `<section><h2>Deployment review provenance</h2>
     <p>Durable job ${esc(review.jobId)} · ${review.toolCalls} brokered reads · ${review.assets.length} assets · ${review.evidence.length} evidence records.</p>
     <p>Coverage before the pass/fail presentation filter: ${review.originalCoverage.evaluated}/${review.originalCoverage.total}. Not connected: ${esc(review.connectionsNotConfigured.join(", ") || "none")}.</p>
@@ -237,7 +244,7 @@ export function createReportHtml(rawResult: AssessmentResult, rawReport?: Standa
     <p><strong>${esc(result.scope.organization)}</strong> · ${esc(result.scope.systemName)} · ${esc(result.scope.industry)}<br/>
     Assessment <code>${esc(result.assessmentId)}</code> · Tier ${result.scope.tier} · ${esc(new Date(result.generatedAt).toLocaleString())}<br/>
     Frameworks: ${esc(result.scope.selectedStandards.join(", "))}</p>
-    ${postureSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${evidenceSection}${reviewSection}${notesHtml}
+    ${postureSection}${findingsSection}${remediationSection}${checksSection}${gapsSection}${reportsHtml}${owaspHtml}${technicalSection}${evidenceSection}${reviewSection}${notesHtml}
     <script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250))</script>
     </body></html>`;
 }

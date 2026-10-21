@@ -3,7 +3,18 @@ import test from "node:test";
 import { encryption, digest } from "../server/review/store.mjs";
 import { Broker, privateAddress, redact, validateProfile } from "../server/review/broker.mjs";
 import { createReviewService, sessionIdentity } from "../server/review/service.mjs";
-import { technicalManifest, exportedManifest, verifyModelAssessment, reviewWithModels } from "../server/review/evaluate.mjs";
+import { technicalManifest, exportedManifest, verifyModelAssessment, reviewWithModels, evaluateTechnicalControls } from "../server/review/evaluate.mjs";
+
+test("internal technical checks run without selecting a deployment standard and explain unavailable readings", () => {
+  const control = { id: "DEP-TLS", name: "TLS", tierMinimum: 3, evidenceProcedureIds: ["artifact-review-tls-valid"] };
+  const evidence = [{ id: "e1", hash: "h", source: "https://example.com", collectedAt: new Date().toISOString(), observations: [{ id: "tls-valid", status: "pass", summary: "TLS chain and hostname valid." }] }];
+  assert.equal(evaluateTechnicalControls([control], evidence, 3)[0].status, "pass");
+  assert.match(evaluateTechnicalControls([control], evidence, 3)[0].evidence, /Evidence e1/);
+  const missing = evaluateTechnicalControls([control], [], 3)[0];
+  assert.equal(missing.status, "not_assessed"); assert.match(missing.evidence, /No scoped collector reading.*artifact-review-tls-valid/);
+  assert.match(evaluateTechnicalControls([control], evidence, 1)[0].evidence, /requires Tier 3/);
+  assert.equal(evaluateTechnicalControls([{ ...control, evidenceProcedureIds: [] }], [], 3)[0].status, "not_assessed");
+});
 
 test("saved inputs and evidence use authenticated encryption, not reversible encoding", () => {
   const cipher = encryption("ab".repeat(32)), value = { secret: "never-plaintext", facts: [1, 2] };

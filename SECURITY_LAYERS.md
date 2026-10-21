@@ -1,7 +1,8 @@
 # Seven-pillar evidence review
 
-The existing six setup steps and pass/fail-only report remain unchanged. The
-versioned `deployment_review` pack release `2026.10-draft.2` has 69 Tier 3 checks:
+The existing six setup steps and pass/fail-only standard report remain unchanged.
+Deployment Review is now an internal evaluation library, not a selectable or
+recommended compliance pack. Its versioned definitions (`2026.10-draft.2`) retain 69 Tier 3 checks:
 28 existing deployment checks, 11 additional identity checks, and 30 typed security
 measurement rules spanning identity, devices, applications/workloads, data,
 networks/environment, automation/orchestration, and visibility/analytics.
@@ -11,7 +12,9 @@ claim that banking regulations prescribe exactly seven layers.
 The existing Ready step and completed report include an interactive application
 layer map: application → seven technical layers → selected standard/control IDs.
 Selecting a layer reveals its controls, required tier, existing report pillar and
-planned/pass/fail/inconclusive/evidence-needed state. Passed/failed rows link to
+planned/pass/fail/inconclusive/not-assessed state. Completed rows show the actual
+method, recorded evidence/result and explicitly mapped supporting technical checks.
+Passed/failed rows link to
 the respective report pillar. The report map uses raw selected-control results,
 so unobserved objectives are not silently lost through the main report's pass/fail
 projection. No new setup step or applicability questionnaire is introduced.
@@ -31,6 +34,19 @@ expandable evidence section, even though the main report shows only pass/fail.
 expanded checks across all seven pillars. It does not turn a small observed sample
 into a whole-environment completeness claim. Historical reports without this field
 continue to render.
+
+`review.technicalAssessments` contains the automatically evaluated technical rules
+with methods, outcomes and timestamped/hash-linked observation summaries. Only
+collector observations can settle these rules. Missing readings name the procedure
+that could not be collected. The layer map and existing pillar sheets show these
+separately from regulatory verdicts; they do not inflate standard control counts.
+`lib/deployment-evaluation.ts` defines explicit supporting relationships by exact
+rule ID. These are authored supporting-evidence links, not equivalence mappings:
+a header/MFA subcheck cannot establish a broader access-control obligation. The
+existing full-measurement banking bridge still applies only when all required
+measurements are available. Unmapped technical observations remain standalone.
+Old saved reports with a Deployment Review selection remain readable; current
+setup drops that implementation pack on restore, and new reviews migrate it out.
 
 ## Connections (inside the existing Connect step)
 

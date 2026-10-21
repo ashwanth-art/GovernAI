@@ -16,6 +16,7 @@ const { artifactCheck, resolveCheck } = require("../lib/checks.ts");
 const { deploymentReviewPack } = require("../lib/framework-packs/deployment-review.ts");
 const { primaryPillar, domainFor } = require("../lib/pillars.ts");
 const { buildApplicationMap, mapStandardsFromResult } = require("../lib/application-map.ts");
+const { supportingTechnicalChecks, assessmentMethod } = require("../lib/deployment-evaluation.ts");
 
 test("application map includes only selected controls, all seven layers and truthful planned/evidence-gap states", () => {
   const selected = [{ id: deploymentReviewPack.standard.id, shortName: "Deployment Review", controls: deploymentReviewPack.controls }];
@@ -26,10 +27,27 @@ test("application map includes only selected controls, all seven layers and trut
   const shallow = buildApplicationMap(selected, 1);
   assert.ok(shallow.layers.flatMap(layer => layer.controls).every(control => control.state === "needs_deeper_tier"));
   const result = { reports: [{ standardId: "deployment_review", shortName: "Deployment Review", controls: deploymentReviewPack.controls.map((control, index) => ({ ...control, status: index === 0 ? "pass" : index === 1 ? "fail" : "not_assessed" })) }] };
-  const completed = buildApplicationMap(mapStandardsFromResult(result), 3);
+  const completed = buildApplicationMap([{ ...result.reports[0], id: "deployment_review" }], 3);
   assert.equal(completed.evaluated, 2); assert.equal(completed.total, 69);
   assert.equal(completed.layers.flatMap(layer => layer.controls).filter(control => control.state === "not_assessed").length, 67);
   assert.deepEqual(buildApplicationMap([], 3).layers.map(layer => layer.controls.length), [0, 0, 0, 0, 0, 0, 0]);
+});
+
+test("technical checks support explicit selected control rules without replacing regulatory verdicts", () => {
+  const check = { ...deploymentReviewPack.controls.find(control => control.evaluationRuleId === "artifact.review-frontend-csp"), status: "fail", evidence: "Live GET: enforcing CSP header absent." };
+  const control = { ...check, id: "ISO-EXAMPLE", evaluationRuleId: "adapter.deployment-posture", status: "not_assessed", evidence: "Deployment configuration source not connected." };
+  const result = { reports: [{ standardId: "iso27001", shortName: "ISO 27001", controls: [control] }], review: { technicalAssessments: [check] } };
+  const rows = mapStandardsFromResult(result);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].controls[0].status, "not_assessed");
+  assert.equal(rows[0].controls[0].evidence, control.evidence);
+  assert.equal(rows[0].controls[0].supportingChecks[0].status, "fail");
+  assert.match(rows[0].controls[0].method, /configuration/);
+  assert.deepEqual(supportingTechnicalChecks({ ...control, evaluationRuleId: "artifact.bank-customer-diligence" }, [check]), []);
+  assert.match(assessmentMethod({ ...control, evaluationRuleId: "probe.grounding" }), /live endpoint probe/);
+  const legacy = mapStandardsFromResult({ reports: [{ standardId: "deployment_review", controls: [check] }, ...result.reports] });
+  assert.equal(legacy.length, 1);
+  assert.equal(legacy[0].controls[0].supportingChecks[0].evidence, check.evidence);
 });
 
 test("new evaluations map into their existing report pillars and specific domains", () => {

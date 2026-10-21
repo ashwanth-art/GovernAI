@@ -841,7 +841,7 @@ export const standards: StandardDefinition[] = standardSeeds.map((seed) => {
 });
 // Packs without a legacy catalog seed remain discoverable in the same picker.
 for (const [id, standard] of pilotStandardsById) {
-  if (!standards.some(entry => entry.id === id)) standards.push(standard);
+  if (id !== "deployment_review" && !standards.some(entry => entry.id === id)) standards.push(standard);
 }
 
 const industryCatalog: IndustryDefinition[] = [
@@ -1018,11 +1018,12 @@ export const industries: IndustryDefinition[] = industryCatalog.map((industry) =
   recommendations: [
     ...industry.recommendations,
     { standardId: "dpdp_act", reason: "Indian digital-personal-data duties" },
-    { standardId: "deployment_review", reason: "Direct deployment, frontend, authentication and cloud evidence" },
   ],
 }));
 
 export const standardById = new Map(standards.map((standard) => [standard.id, standard]));
+// Compatibility for old stored runs/API clients only; not a selectable standard.
+standardById.set("deployment_review", pilotStandardsById.get("deployment_review")!);
 export const industryById = new Map(industries.map((industry) => [industry.id, industry]));
 
 export const tierCoverageLabel = (standard: StandardDefinition, tier: AccessTier) =>

@@ -2,7 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { ReviewStore, digest } from "./store.mjs";
 import { validateProfile, redact, resolvePublic } from "./broker.mjs";
 import { collectLayers } from "./collectors.mjs";
-import { technicalManifest, exportedManifest, reviewWithModels } from "./evaluate.mjs";
+import { technicalManifest, exportedManifest, reviewWithModels, evaluateTechnicalControls } from "./evaluate.mjs";
 import { enterpriseIdentity } from "./identity.mjs";
 import { summarizeSecurityPillars, layerExportTemplate } from "./security-layers.mjs";
 
@@ -49,6 +49,8 @@ export function createReviewService({ engineFetch, store: suppliedStore, enabled
   }
   async function validate(input) {
     if (!input || typeof input !== "object") throw new Error("Assessment input must be an object.");
+    // Migrate saved selections without making clients select an implementation pack.
+    if (Array.isArray(input.standardIds)) input = { ...input, standardIds: input.standardIds.filter(id => id !== "deployment_review") };
     const validation = await engineFetch(new Request("http://review.internal/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ standardIds: input.standardIds, tier: input.tier, access: {} }) }));
     if (!validation.ok) throw new Error("Select valid standards and access depth before starting a review.");
     const target = new URL(input.credentials?.chatbotEndpoint);
@@ -71,7 +73,7 @@ export function createReviewService({ engineFetch, store: suppliedStore, enabled
     const input = job.input;
     const ownerProfiles = await store.profiles(job.owner, true);
     const profiles = ownerProfiles.filter(profile => profile.targetOrigin === new URL(input.credentials.chatbotEndpoint).origin);
-    const { standards } = await loadCatalog();
+    const { standards, technicalControls = [] } = await loadCatalog();
     const selected = standards.filter(standard => input.standardIds.includes(standard.id));
     const controls = selected.flatMap(standard => standard.controls.map(control => ({ ...control, standardId: standard.id, packRelease: standard.pack?.release })));
     const evidence = [];
@@ -127,6 +129,7 @@ export function createReviewService({ engineFetch, store: suppliedStore, enabled
       controlPlan: plan, unresolved, originalCoverage: { evaluated: observed.length, total: all.length, percent: all.length ? Math.round(observed.length / all.length * 100) : 0 },
       modelReviews: model.reviews, connectionCount: profiles.length, connectionsNotConfigured: ["azure", "aws", "entra", "auth", "documents", "banking_export", "security_export"].filter(kind => !profiles.some(profile => profile.kind === kind)),
       securityPillars: summarizeSecurityPillars(evidence),
+      technicalAssessments: evaluateTechnicalControls(technicalControls, evidence, input.tier),
       integrity: digest(evidence.map(record => ({ id: record.id, hash: record.hash }))),
     };
     await progress("Persisting evidence, review history and control outcomes");
