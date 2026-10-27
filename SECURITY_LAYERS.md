@@ -1,5 +1,10 @@
 # Seven-pillar evidence review
 
+Agent/MCP extension (2026-10-27): 16 additional internal checks bring the
+technical library to 85. See [AGENT_MCP_SECURITY.md](AGENT_MCP_SECURITY.md) for
+native versus exported-test assurance, opt-in fixture safety and the separate
+target-side gateway integration. The gateway is not enabled on reviewed targets.
+
 The existing six setup steps and pass/fail-only standard report remain unchanged.
 Deployment Review is now an internal evaluation library, not a selectable or
 recommended compliance pack. Its versioned definitions (`2026.10-draft.2`) retain 69 Tier 3 checks:

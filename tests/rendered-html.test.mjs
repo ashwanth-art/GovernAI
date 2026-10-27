@@ -558,6 +558,8 @@ test("Tier 3 reaches a verdict on every control of every standard", async () => 
   // banking fixture for this full-evidence test only.
   const template = await (await request("/api/banking/evidence-template")).json();
   const reviewCatalog = await (await request("/api/review-catalog")).json();
+  assert.equal(reviewCatalog.technicalControls.length, 85);
+  assert.ok(reviewCatalog.technicalControls.some(control => control.evaluationRuleId === "artifact.review-mcp-tool-integrity"));
   const reviewProcedures = Object.fromEntries(reviewCatalog.technicalControls.flatMap(control => control.evidenceProcedureIds.map(id => [id, { status: "pass", summary: "Trusted deployment collector fixture; not target-published evidence." }])));
   process.env.REVIEW_ENCRYPTION_KEY = "test-trusted-review-token";
   targetState.bankingProcedures = Object.fromEntries(Object.entries(template.measurementContract).map(([id, rule]) => [id, {

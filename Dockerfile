@@ -41,6 +41,7 @@ COPY --from=builder /app/dist ./dist
 COPY server ./server
 # The Node-only collector shares this rule contract with the bundled framework.
 COPY lib/security-layer-rules.json ./lib/security-layer-rules.json
+COPY lib/agent-mcp-rules.json ./lib/agent-mcp-rules.json
 
 # Run unprivileged. The node image ships a `node` user; nothing is written at runtime.
 USER node

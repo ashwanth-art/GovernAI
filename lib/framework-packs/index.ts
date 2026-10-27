@@ -9,6 +9,7 @@ import type { FrameworkPack } from "./schema";
 import { libraryProcedureIds } from "../verification-library";
 import { bankingFrameworkPacks } from "./banking";
 import { deploymentReviewPack } from "./deployment-review";
+import { agentMcpControls } from "../agent-mcp";
 
 export {
   dpdpAct2023Pack,
@@ -107,6 +108,7 @@ const retiredProcedureIds = [
  * never be closed.
  */
 export const pilotEvidenceProcedureIds = new Set([
+  ...agentMcpControls.flatMap(control => control.evidenceProcedureIds ?? []),
   ...[...pilotFrameworkPacks, owaspLlm2025Pack].flatMap((pack) =>
     pack.controls.flatMap((control) => control.evidenceProcedureIds),
   ),

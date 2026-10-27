@@ -3,6 +3,7 @@ import { connect } from "node:tls";
 import { Broker, redact, resolvePublic } from "./broker.mjs";
 import { evaluateLayerExport } from "./security-layers.mjs";
 import { collectEntra, collectAuthorizationMatrix } from "./collectors-identity.mjs";
+import { collectAgentMcp } from "./agent-mcp.mjs";
 
 const now = () => new Date().toISOString();
 const check = (id, status, summary, detail = {}) => ({ id, status, summary, ...detail });
@@ -192,6 +193,8 @@ export async function collectLayers({ input, profiles, save, audit, owner, jobId
       if (profile.kind === "entra") return collectEntra(context, profile);
       if (profile.kind === "github") return collectGitHubSource(context, profile);
       if (profile.kind === "auth") return collectAuthentication(context, profile);
+      if (profile.kind === "agent_mcp" && input.tier >= 3) return collectAgentMcp(context, profile);
+      if (profile.kind === "agent_mcp") return;
       return collectExport(context, profile);
     } })),
   ];

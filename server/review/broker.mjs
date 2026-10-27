@@ -2,6 +2,7 @@ import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import https from "node:https";
 import http from "node:http";
+import { validateAgentProfile } from "./agent-mcp.mjs";
 
 export function redact(value) {
   if (Array.isArray(value)) return value.map(redact);
@@ -89,9 +90,10 @@ export class Broker {
 }
 
 export function validateProfile(value) {
-  const kinds = ["azure", "aws", "entra", "security_export", "github", "observability", "auth", "documents", "banking_export"];
+  const kinds = ["azure", "aws", "entra", "security_export", "agent_mcp", "github", "observability", "auth", "documents", "banking_export"];
   if (!value || !kinds.includes(value.kind) || typeof value.name !== "string" || !value.name.trim() || !value.config || typeof value.config !== "object" || Array.isArray(value.config)) throw new Error("A connection needs a name, supported kind, target origin and configuration object.");
   const target = new URL(value.targetOrigin);
+  if (value.kind === "agent_mcp") validateAgentProfile(value.config);
   if (target.protocol !== "https:" || target.username || target.password) throw new Error("Connection target must be an HTTPS origin.");
   if (value.kind === "azure" && (!/^[\w-]{36}$/.test(value.config.subscriptionId ?? "") || !/^[\w.()-]{1,90}$/.test(value.config.resourceGroup ?? ""))) throw new Error("Azure connections require a subscription ID and one resource group.");
   if (value.kind === "aws" && (!/^\d{12}$/.test(value.config.accountId ?? "") || !Array.isArray(value.config.regions) || !value.config.regions.length || value.config.regions.length > 5 || !value.config.regions.every(region => /^[a-z]{2}(?:-gov)?-[a-z]+-\d$/.test(region)))) throw new Error("AWS connections require an account ID and one to five explicit regions.");
